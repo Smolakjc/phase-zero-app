@@ -1,0 +1,34 @@
+# --- Node.js / Next.js ---
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+
+# --- Python / FastAPI ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.Python
+
+# --- Segredos e Tokens da NASA (NUNCA SUBIR!) ---
+.env
+.env.local
+.env.*.local
+nasa_token.txt
+
+# --- Arquivos Brutos Gigantes da NASA (>100MB bloqueiam o GitHub) ---
+*.h5
+*.hdf5
+*.nc
+*.tif
+*.tiff
+
+# --- Sistema Operacional / IDEs ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

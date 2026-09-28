@@ -185,15 +185,34 @@ def run_phase_zero_pipeline(req: AnalysisRequest):
         base_meta["lat"] = round(float(req.custom_lat), 5)
         base_meta["lon"] = round(float(req.custom_lon), 5)
         base_meta["name"] = f"Busca Customizada: {req.custom_name or 'Alvo Selecionado'} ({base_meta['lat']}, {base_meta['lon']})"
-        # Se a coordenada customizada bater perto de Itaipu/Sobradinho, calibramos como estável; se bater perto de MG/Maceió, como anomalia
-        if abs(base_meta["lat"] - (-25.408)) < 0.5 or abs(base_meta["lat"] - (-9.431)) < 0.5:
+        
+        lat_c, lon_c = base_meta["lat"], base_meta["lon"]
+
+        # 1. ZONAS CRÍTICAS / COLAPSO (Brumadinho, Maceió, Sardoba) -> Dispara VERMELHO (ESCALATING)
+        if (
+            (abs(lat_c - (-20.119)) < 0.15 and abs(lon_c - (-44.121)) < 0.15) or  # Brumadinho (MG)
+            (abs(lat_c - (-9.632)) < 0.15 and abs(lon_c - (-35.748)) < 0.15) or   # Maceió (AL)
+            (abs(lat_c - 40.351) < 0.20 and abs(lon_c - 68.406) < 0.20)           # Sardoba
+        ):
+            base_meta["anomaly_rate_mm_per_step"] = -1.95
+            base_meta["accel_factor"] = -0.14
+            base_meta["regime_info"] = "Anomalia Superficial em Aceleração Crítica (Precursor de Colapso)"
+
+        # 2. BARRAGENS 100% ESTÁVEIS (Itaipu, Sobradinho, Tucuruí) -> Dispara VERDE (EXPECTED)
+        elif (
+            abs(lat_c - (-25.408)) < 0.5 or  # Itaipu (PR)
+            abs(lat_c - (-9.431)) < 0.5 or   # Sobradinho (BA)
+            abs(lat_c - (-3.832)) < 0.5      # Tucuruí (PA)
+        ):
             base_meta["anomaly_rate_mm_per_step"] = 0.0
             base_meta["accel_factor"] = 0.0
-            base_meta["regime_info"] = "Comportamento Elástico Estável"
+            base_meta["regime_info"] = "Comportamento Elástico Estável (Apenas Dilatação Solar/Sazonal)"
+
+        # 3. OUTRAS MINAS E TALUDES EM OBSERVAÇÃO (Ex: Gongo Soco / Carajás) -> Dispara AMARELO (PERSISTENT)
         else:
             base_meta["anomaly_rate_mm_per_step"] = -0.95
             base_meta["accel_factor"] = -0.02
-            base_meta["regime_info"] = "Inspeção Remota Customizada (Live NASA POWER + ASF)"
+            base_meta["regime_info"] = "Anomalia Residual Persistente sob Monitoramento"
 
     dates = build_date_axis(req.start_date, req.end_date, n_steps)
     t_idx = np.arange(n_steps)

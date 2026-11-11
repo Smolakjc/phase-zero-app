@@ -1,0 +1,36 @@
+{
+  "name": "phase-zero-monorepo",
+  "version": "5.0.0",
+  "private": true,
+  "description": "PHASE-ZERO v5.0 — Environmental Compensation for SAR-Based Surface Anomaly Detection (100% TypeScript Monorepo)",
+  "workspaces": [
+    "packages/shared",
+    "backend",
+    "frontend"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently -n BACKEND,FRONTEND -c cyan,magenta \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
+    "build": "npm run build --workspace=packages/shared && npm run build --workspace=backend && npm run build --workspace=frontend",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "npm run test:e2e --workspace=frontend",
+    "lint": "eslint \"packages/*/src/**/*.ts\" \"backend/src/**/*.ts\" \"frontend/{app,components,hooks,lib}/**/*.{ts,tsx}\"",
+    "typecheck": "npm run typecheck --workspace=packages/shared && npm run typecheck --workspace=backend && npm run typecheck --workspace=frontend",
+    "extract": "npm run extract --workspace=backend --"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "concurrently": "^9.0.1",
+    "eslint": "^8.57.0",
+    "prettier": "^3.3.3",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.3",
+    "zod": "^3.23.8"
+  }
+}
+

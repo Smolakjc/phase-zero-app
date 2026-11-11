@@ -1,11 +1,16 @@
-# --- Node.js / Next.js ---
+# --- Node.js / Next.js / TypeScript ---
 node_modules/
 .next/
+dist/
 out/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
 npm-debug.log*
 yarn-debug.log*
 
-# --- Python / FastAPI ---
+# --- Python (apenas legado/golden script) ---
 __pycache__/
 *.py[cod]
 *$py.class
@@ -22,6 +27,7 @@ nasa_token.txt
 
 # --- Arquivos Brutos Gigantes da NASA (>100MB bloqueiam o GitHub) ---
 *.h5
+!backend/src/__tests__/fixtures/*.h5
 *.hdf5
 *.nc
 *.tif

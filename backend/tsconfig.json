@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "outDir": "dist",
+    "noEmit": true,
+    "paths": {
+      "@phase-zero/shared": ["../packages/shared/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "../packages/shared/src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}
+

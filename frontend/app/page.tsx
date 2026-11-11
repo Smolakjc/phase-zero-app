@@ -1,7 +1,17 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
+import type { DamCatalogItem } from "@phase-zero/shared";
+import { DamMapPanel } from "../components/map/DamMapPanel";
+import { FALLBACK_DAMS, fetchDamCatalog, findDamByCoords } from "../lib/dams";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+const SCENARIO_TO_DAM_ID: Record<string, string> = {
+  itaipu_normal: "itaipu_pr",
+  gongo_soco_active: "sul_superior_gongo_soco",
+  maceio_subsidence: "maceio_mutange",
+  brumadinho_hist: "brumadinho_b1",
+};
 
 export default function PhaseZeroDashboard() {
   const [scenarioId, setScenarioId] = useState("gongo_soco_active");
@@ -14,9 +24,13 @@ export default function PhaseZeroDashboard() {
   const [startDate, setStartDate] = useState("2026-03-01");
   const [endDate, setEndDate] = useState("2026-09-15");
 
-  const [customLat, setCustomLat] = useState("-25.408");
-  const [customLon, setCustomLon] = useState("-54.588");
-  const [customName, setCustomName] = useState("Usina de Itaipu (PR)");
+  const [customLat, setCustomLat] = useState("-19.9419");
+  const [customLon, setCustomLon] = useState("-43.5997");
+  const [customName, setCustomName] = useState("Barragem Sul Superior / Mina Gongo Soco (Barão de Cocais, MG)");
+  const [dams, setDams] = useState<DamCatalogItem[]>(FALLBACK_DAMS);
+  const [selectedDamId, setSelectedDamId] = useState<string | null>("sul_superior_gongo_soco");
+  const [isFreePoint, setIsFreePoint] = useState(false);
+
   const [earthdataToken, setEarthdataToken] = useState("");
   const [showTokenModal, setShowTokenModal] = useState(false);
   const [loadingAnalysis, setLoadingAnalysis] = useState(false);
@@ -24,6 +38,8 @@ export default function PhaseZeroDashboard() {
   const [data, setData] = useState<any>(null);
   const [selectedPixel, setSelectedPixel] = useState<any>(null);
   const screenPointsRef = useRef<any[]>([]);
+  const analyzeAbortRef = useRef<AbortController | null>(null);
+  const skipNextEffectRef = useRef<boolean>(false);
 
   const [rotAzimuth, setRotAzimuth] = useState(34);
   const [rotPitch, setRotPitch] = useState(54);
@@ -32,6 +48,12 @@ export default function PhaseZeroDashboard() {
   useEffect(() => {
     const saved = localStorage.getItem("nasa_earthdata_token");
     if (saved) setEarthdataToken(saved);
+
+    const ctrl = new AbortController();
+    fetchDamCatalog(API_BASE, ctrl.signal).then((list) => {
+      setDams(list);
+    });
+    return () => ctrl.abort();
   }, []);
 
   const saveToken = (val: string) => {
@@ -48,10 +70,17 @@ export default function PhaseZeroDashboard() {
     name?: string
   ) => {
     const activeSc = overrideScenario || scenarioId;
+    if (analyzeAbortRef.current) {
+      analyzeAbortRef.current.abort();
+    }
+    const ctrl = new AbortController();
+    analyzeAbortRef.current = ctrl;
+
     setLoadingAnalysis(true);
     fetch(`${API_BASE}/api/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      signal: ctrl.signal,
       body: JSON.stringify({
         scenario_id: activeSc,
         apply_ionosphere: applyIono,
@@ -76,19 +105,76 @@ export default function PhaseZeroDashboard() {
           setSelectedPixel(found);
         }
       })
-      .catch((err) => console.error("Erro ao conectar ao FastAPI:", err))
-      .finally(() => setLoadingAnalysis(false));
+      .catch((err: unknown) => {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        console.error("Erro ao conectar ao backend:", err);
+      })
+      .finally(() => {
+        if (analyzeAbortRef.current === ctrl) {
+          setLoadingAnalysis(false);
+        }
+      });
   };
 
   useEffect(() => {
+    if (skipNextEffectRef.current) {
+      skipNextEffectRef.current = false;
+      return;
+    }
     runAnalysis();
   }, [scenarioId, applyIono, applyTropo, applyTides, applyPower, minCoherence]);
 
   const handleSelectScenario = (id: string, defaultStart: string, defaultEnd: string) => {
+    if (scenarioId !== id) {
+      skipNextEffectRef.current = true;
+    }
     setScenarioId(id);
     setStartDate(defaultStart);
     setEndDate(defaultEnd);
+    const mappedDamId = SCENARIO_TO_DAM_ID[id] ?? null;
+    const matchedDam = mappedDamId ? dams.find((d) => d.id === mappedDamId) ?? null : null;
+    if (matchedDam) {
+      setSelectedDamId(matchedDam.id);
+      setIsFreePoint(false);
+      setCustomLat(String(matchedDam.lat));
+      setCustomLon(String(matchedDam.lon));
+      setCustomName(matchedDam.name);
+    }
     runAnalysis(id, defaultStart, defaultEnd);
+  };
+
+  const handleSelectDam = (dam: DamCatalogItem) => {
+    if (scenarioId !== "custom") {
+      skipNextEffectRef.current = true;
+    }
+    setSelectedDamId(dam.id);
+    setIsFreePoint(false);
+    setScenarioId("custom");
+    setStartDate(dam.default_start);
+    setEndDate(dam.default_end);
+    setCustomLat(String(dam.lat));
+    setCustomLon(String(dam.lon));
+    setCustomName(dam.name);
+    runAnalysis("custom", dam.default_start, dam.default_end, dam.lat, dam.lon, dam.name);
+  };
+
+  const handleSelectFreePoint = (lat: number, lon: number) => {
+    const nearby = findDamByCoords(dams, lat, lon);
+    if (nearby) {
+      handleSelectDam(nearby);
+      return;
+    }
+    if (scenarioId !== "custom") {
+      skipNextEffectRef.current = true;
+    }
+    const label = "Ponto Livre no Mapa";
+    setSelectedDamId(null);
+    setIsFreePoint(true);
+    setScenarioId("custom");
+    setCustomLat(String(lat));
+    setCustomLon(String(lon));
+    setCustomName(label);
+    runAnalysis("custom", startDate, endDate, lat, lon, label);
   };
 
   useEffect(() => {
@@ -343,13 +429,25 @@ export default function PhaseZeroDashboard() {
         </div>
       )}
 
+      {/* MAPA INTERATIVO DE BARRAGENS */}
+      <DamMapPanel
+        dams={dams}
+        selectedDamId={selectedDamId}
+        activeLat={Number.isFinite(parseFloat(customLat)) ? parseFloat(customLat) : -19.9419}
+        activeLon={Number.isFinite(parseFloat(customLon)) ? parseFloat(customLon) : -43.5997}
+        isFreePoint={isFreePoint}
+        loading={loadingAnalysis}
+        onSelectDam={handleSelectDam}
+        onSelectFreePoint={handleSelectFreePoint}
+      />
+
       {/* BARRA DE DATAS E BUSCA LIVRE */}
       <div className="animate-enter-2 bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 flex flex-col 2xl:flex-row items-start 2xl:items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300">
           <span className="px-2 py-1 rounded bg-sky-950/90 text-sky-300 font-mono font-bold border border-sky-800">
             FLUXO DE ANÁLISE:
           </span>
-          <span><b>1º</b> Escolha um Exemplo ou digite qualquer Lat/Lon e Datas</span>
+          <span><b>1º</b> Selecione uma barragem no mapa ou informe Lat/Lon</span>
           <span className="text-slate-600">→</span>
           <span><b>2º</b> Ative/Desative os 4 filtros à direita</span>
           <span className="text-slate-600">→</span>
@@ -357,56 +455,72 @@ export default function PhaseZeroDashboard() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full 2xl:w-auto">
-          <div className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded border border-slate-800 text-xs">
+          <label className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded border border-slate-800 text-xs">
             <span className="text-slate-400 font-mono">Início:</span>
             <input
               type="date"
+              aria-label="Data de início"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               className="bg-transparent text-sky-300 font-mono focus:outline-none"
             />
-          </div>
-          <div className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded border border-slate-800 text-xs">
+          </label>
+          <label className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded border border-slate-800 text-xs">
             <span className="text-slate-400 font-mono">Fim:</span>
             <input
               type="date"
+              aria-label="Data de fim"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               className="bg-transparent text-sky-300 font-mono focus:outline-none"
             />
-          </div>
+          </label>
 
           <input
             type="text"
+            aria-label="Nome do Local"
             value={customName}
             onChange={(e) => setCustomName(e.target.value)}
             placeholder="Nome do Local"
-            className="px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-xs text-white w-36"
+            className="px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-xs text-white w-44"
           />
           <input
             type="text"
+            aria-label="Latitude"
             value={customLat}
             onChange={(e) => setCustomLat(e.target.value)}
             placeholder="Lat"
-            className="px-2 py-1.5 rounded bg-slate-950 border border-slate-800 text-xs font-mono text-sky-300 w-20"
+            className="px-2 py-1.5 rounded bg-slate-950 border border-slate-800 text-xs font-mono text-sky-300 w-24"
           />
           <input
             type="text"
+            aria-label="Longitude"
             value={customLon}
             onChange={(e) => setCustomLon(e.target.value)}
             placeholder="Lon"
-            className="px-2 py-1.5 rounded bg-slate-950 border border-slate-800 text-xs font-mono text-sky-300 w-20"
+            className="px-2 py-1.5 rounded bg-slate-950 border border-slate-800 text-xs font-mono text-sky-300 w-24"
           />
           <button
+            type="button"
             onClick={() => runAnalysis(scenarioId, startDate, endDate)}
             className="px-3.5 py-1.5 rounded bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs transition"
           >
             {loadingAnalysis ? "Processando..." : "🔄 Atualizar Período"}
           </button>
           <button
+            type="button"
             onClick={() => {
+              const latNum = parseFloat(customLat);
+              const lonNum = parseFloat(customLon);
+              if (!Number.isFinite(latNum) || !Number.isFinite(lonNum)) return;
+              const matched = findDamByCoords(dams, latNum, lonNum);
+              setSelectedDamId(matched ? matched.id : null);
+              setIsFreePoint(!matched);
+              if (scenarioId !== "custom") {
+                skipNextEffectRef.current = true;
+              }
               setScenarioId("custom");
-              runAnalysis("custom", startDate, endDate, parseFloat(customLat), parseFloat(customLon), customName);
+              runAnalysis("custom", startDate, endDate, latNum, lonNum, customName);
             }}
             className="px-3.5 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition"
           >

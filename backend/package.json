@@ -1,23 +1,29 @@
 {
   "name": "phase-zero-backend",
   "version": "5.0.0",
-  "description": "API do PHASE-ZERO: triagem de anomalias de deformação (InSAR NISAR) corrigidas por clima NASA POWER.",
-  "type": "module",
   "private": true,
-  "main": "src/server.js",
-  "engines": {
-    "node": ">=20"
-  },
+  "type": "module",
+  "description": "PHASE-ZERO v5.0 Backend API (Fastify + TypeScript)",
+  "main": "src/server.ts",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
-    "test": "node --test"
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "extract": "tsx src/scripts/extract-h5.ts"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.21.0",
+    "@fastify/cors": "^9.0.1",
+    "@phase-zero/shared": "*",
+    "fastify": "^4.28.1",
+    "fastify-type-provider-zod": "^2.0.0",
     "h5wasm": "^0.7.8",
     "proj4": "^2.12.0",
     "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/proj4": "^2.5.5"
   }
 }

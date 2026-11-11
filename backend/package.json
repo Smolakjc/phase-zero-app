@@ -1,0 +1,23 @@
+{
+  "name": "phase-zero-backend",
+  "version": "5.0.0",
+  "description": "API do PHASE-ZERO: triagem de anomalias de deformação (InSAR NISAR) corrigidas por clima NASA POWER.",
+  "type": "module",
+  "private": true,
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.0",
+    "h5wasm": "^0.7.8",
+    "proj4": "^2.12.0",
+    "zod": "^3.23.8"
+  }
+}

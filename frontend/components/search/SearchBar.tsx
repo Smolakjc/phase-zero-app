@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { ScenarioMeta } from "@phase-zero/shared";
 import { CustomSearchInput } from "../../hooks/useAnalysis";
+import { DataSourceBadges } from "../badges/DataSourceBadges";
+import { AlertTriangleIcon, CrosshairIcon, RefreshIcon } from "../icons/SurveyIcons";
 
 export interface SearchBarProps {
   startDate: string;
@@ -10,20 +13,22 @@ export interface SearchBarProps {
   initialLon?: number;
   initialName?: string;
   loading: boolean;
+  meta?: ScenarioMeta | null;
   onUpdatePeriod: (startDate: string, endDate: string) => void;
   onSearchCustom: (input: CustomSearchInput) => void;
 }
 
 /**
- * Barra de período e busca de coordenadas livres com validação inline (`R-F2`).
+ * Barra operacional de coordenadas, janela temporal e procedência dos dados (`R-F2`).
  */
 export function SearchBar({
   startDate,
   endDate,
-  initialLat = -25.408,
-  initialLon = -54.588,
-  initialName = "Usina de Itaipu (PR)",
+  initialLat = -19.9419,
+  initialLon = -43.5997,
+  initialName = "Barragem Sul Superior / Mina Gongo Soco (Barão de Cocais, MG)",
   loading,
+  meta,
   onUpdatePeriod,
   onSearchCustom,
 }: SearchBarProps) {
@@ -65,7 +70,6 @@ export function SearchBar({
 
   const handleLatChange = (raw: string) => {
     setCoordsEdited(true);
-    // Suporta colar par "lat, lon" copiado direto do Google Maps (ex: "-20.119, -44.121")
     if (raw.includes(",") && raw.split(",").length === 2) {
       const [p1, p2] = raw.split(",").map((s) => s.trim());
       if (p1 && p2 && Number.isFinite(Number(p1)) && Number.isFinite(Number(p2))) {
@@ -100,135 +104,140 @@ export function SearchBar({
   if (!isDateValid) {
     validationMessage = "A data de início deve ser anterior à data de fim.";
   } else if (!isLatValid) {
-    validationMessage = "Latitude inválida (deve estar entre -90 e 90).";
+    validationMessage = "Latitude inválida (intervalo permitido: -90 a 90).";
   } else if (!isLonValid) {
-    validationMessage = "Longitude inválida (deve estar entre -180 e 180).";
+    validationMessage = "Longitude inválida (intervalo permitido: -180 a 180).";
   }
 
   return (
-    <div className="animate-enter-2 bg-slate-900/90 border border-slate-800 rounded-xl p-3.5 space-y-2">
-      <div className="flex flex-col 2xl:flex-row items-start 2xl:items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300">
-          <span className="px-2 py-1 rounded bg-sky-950/90 text-sky-300 font-mono font-bold border border-sky-800">
-            FLUXO DE ANÁLISE:
-          </span>
-          <span>
-            <b>1º</b> Escolha um Exemplo ou digite qualquer Lat/Lon e Datas
-          </span>
-          <span className="text-slate-600">→</span>
-          <span>
-            <b>2º</b> Ative/Desative os 4 filtros à direita
-          </span>
-          <span className="text-slate-600">→</span>
-          <span>
-            <b>3º</b> Veja as 3 Métricas e clique na Malha 3D
-          </span>
+    <section
+      aria-label="Parâmetros de alvo e período"
+      className="bg-[#0a0d12] border-b border-[#222933]"
+    >
+      <div className="max-w-[1640px] mx-auto px-4 lg:px-6 py-2 space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <label className="flex items-center gap-1.5 bg-[#131820] px-2.5 py-1 rounded-md border border-[#222933] text-xs focus-within:border-[#3b9eeb]">
+              <span className="text-[#8a96a8]">Alvo</span>
+              <input
+                type="text"
+                aria-label="Nome do Local"
+                data-testid="custom-name-input"
+                value={customName}
+                onChange={(e) => {
+                  setCoordsEdited(true);
+                  setCustomName(e.target.value);
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="Nome do local"
+                className="bg-transparent text-[#eef2f6] placeholder:text-[#687588] w-36 sm:w-44 focus:outline-none"
+              />
+            </label>
+
+            <label className="flex items-center gap-1.5 bg-[#131820] px-2 py-1 rounded-md border border-[#222933] text-xs focus-within:border-[#3b9eeb]">
+              <span className="text-[#8a96a8]">Lat</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                aria-label="Latitude"
+                data-testid="custom-lat-input"
+                value={customLat}
+                onChange={(e) => handleLatChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="-19.9419"
+                className={`bg-transparent font-mono tabular-nums w-[72px] focus:outline-none ${
+                  isLatValid ? "text-[#eef2f6]" : "text-[#fda4af]"
+                }`}
+              />
+            </label>
+
+            <label className="flex items-center gap-1.5 bg-[#131820] px-2 py-1 rounded-md border border-[#222933] text-xs focus-within:border-[#3b9eeb]">
+              <span className="text-[#8a96a8]">Lon</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                aria-label="Longitude"
+                data-testid="custom-lon-input"
+                value={customLon}
+                onChange={(e) => {
+                  setCoordsEdited(true);
+                  setCustomLon(e.target.value);
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="-43.5997"
+                className={`bg-transparent font-mono tabular-nums w-[72px] focus:outline-none ${
+                  isLonValid ? "text-[#eef2f6]" : "text-[#fda4af]"
+                }`}
+              />
+            </label>
+
+            <label className="flex items-center gap-1.5 bg-[#131820] px-2 py-1 rounded-md border border-[#222933] text-xs focus-within:border-[#3b9eeb]">
+              <span className="text-[#8a96a8]">De</span>
+              <input
+                type="date"
+                aria-label="Data de início"
+                data-testid="start-date-input"
+                value={sDate}
+                onChange={(e) => setSDate(e.target.value)}
+                className="bg-transparent font-mono tabular-nums text-[#eef2f6] focus:outline-none w-[112px]"
+              />
+            </label>
+
+            <label className="flex items-center gap-1.5 bg-[#131820] px-2 py-1 rounded-md border border-[#222933] text-xs focus-within:border-[#3b9eeb]">
+              <span className="text-[#8a96a8]">Até</span>
+              <input
+                type="date"
+                aria-label="Data de fim"
+                data-testid="end-date-input"
+                value={eDate}
+                onChange={(e) => setEDate(e.target.value)}
+                className="bg-transparent font-mono tabular-nums text-[#eef2f6] focus:outline-none w-[112px]"
+              />
+            </label>
+
+            <button
+              type="button"
+              data-testid="update-period-btn"
+              disabled={!canUpdatePeriod}
+              onClick={() => {
+                if (coordsEdited && canSearchCustom) {
+                  triggerCustomSearch();
+                } else {
+                  onUpdatePeriod(sDate, eDate);
+                }
+              }}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#131820] hover:bg-[#1a222d] border border-[#313b49] disabled:opacity-40 disabled:cursor-not-allowed text-[#eef2f6] font-medium text-xs transition-colors cursor-pointer whitespace-nowrap"
+            >
+              <RefreshIcon className="w-3.5 h-3.5 text-[#8a96a8]" />
+              <span>{loading ? "Processando..." : "Atualizar"}</span>
+            </button>
+
+            <button
+              type="button"
+              data-testid="search-custom-btn"
+              disabled={!canSearchCustom}
+              onClick={triggerCustomSearch}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#3b9eeb] hover:bg-[#57aff0] disabled:opacity-40 disabled:cursor-not-allowed text-[#08111b] font-bold text-xs transition-colors cursor-pointer whitespace-nowrap"
+            >
+              <CrosshairIcon className="w-3.5 h-3.5" />
+              <span>Analisar</span>
+            </button>
+          </div>
+
+          {meta && <DataSourceBadges meta={meta} />}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 w-full 2xl:w-auto">
-          <label className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded border border-slate-800 text-xs">
-            <span className="text-slate-400 font-mono">Início:</span>
-            <input
-              type="date"
-              aria-label="Data de início"
-              data-testid="start-date-input"
-              value={sDate}
-              onChange={(e) => setSDate(e.target.value)}
-              className="bg-transparent text-sky-300 font-mono focus:outline-none"
-            />
-          </label>
-          <label className="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded border border-slate-800 text-xs">
-            <span className="text-slate-400 font-mono">Fim:</span>
-            <input
-              type="date"
-              aria-label="Data de fim"
-              data-testid="end-date-input"
-              value={eDate}
-              onChange={(e) => setEDate(e.target.value)}
-              className="bg-transparent text-sky-300 font-mono focus:outline-none"
-            />
-          </label>
-
-          <input
-            type="text"
-            aria-label="Nome do Local"
-            data-testid="custom-name-input"
-            value={customName}
-            onChange={(e) => {
-              setCoordsEdited(true);
-              setCustomName(e.target.value);
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Nome do Local"
-            className="px-2.5 py-1.5 rounded bg-slate-950 border border-slate-800 text-xs text-white w-36"
-          />
-          <input
-            type="text"
-            inputMode="decimal"
-            aria-label="Latitude"
-            data-testid="custom-lat-input"
-            value={customLat}
-            onChange={(e) => handleLatChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Lat"
-            className={`px-2 py-1.5 rounded bg-slate-950 border text-xs font-mono text-sky-300 w-24 ${
-              isLatValid ? "border-slate-800" : "border-rose-500"
-            }`}
-          />
-          <input
-            type="text"
-            inputMode="decimal"
-            aria-label="Longitude"
-            data-testid="custom-lon-input"
-            value={customLon}
-            onChange={(e) => {
-              setCoordsEdited(true);
-              setCustomLon(e.target.value);
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Lon"
-            className={`px-2 py-1.5 rounded bg-slate-950 border text-xs font-mono text-sky-300 w-24 ${
-              isLonValid ? "border-slate-800" : "border-rose-500"
-            }`}
-          />
-
-          <button
-            type="button"
-            data-testid="update-period-btn"
-            disabled={!canUpdatePeriod}
-            onClick={() => {
-              if (coordsEdited && canSearchCustom) {
-                triggerCustomSearch();
-              } else {
-                onUpdatePeriod(sDate, eDate);
-              }
-            }}
-            className="px-3.5 py-1.5 rounded bg-sky-600 hover:bg-sky-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs transition"
+        {validationMessage && (
+          <div
+            role="alert"
+            data-testid="search-validation-error"
+            className="inline-flex items-center gap-1.5 text-xs text-[#fda4af]"
           >
-            {loading ? "Processando..." : "🔄 Atualizar Período"}
-          </button>
-          <button
-            type="button"
-            data-testid="search-custom-btn"
-            disabled={!canSearchCustom}
-            onClick={triggerCustomSearch}
-            className="px-3.5 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs transition"
-          >
-            🌍 Buscar Lat/Lon Live
-          </button>
-        </div>
+            <AlertTriangleIcon className="w-3.5 h-3.5 shrink-0" />
+            <span>{validationMessage}</span>
+          </div>
+        )}
       </div>
-
-      {validationMessage && (
-        <div
-          role="alert"
-          data-testid="search-validation-error"
-          className="text-xs font-mono text-rose-400"
-        >
-          ⚠️ {validationMessage}
-        </div>
-      )}
-    </div>
+    </section>
   );
 }
-

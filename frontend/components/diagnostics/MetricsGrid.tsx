@@ -9,26 +9,34 @@ export interface MetricsGridProps {
 
 export function MetricsGrid({ status }: MetricsGridProps) {
   return (
-    <div className="grid grid-cols-3 gap-2 text-center font-mono">
-      <div className="bg-slate-900 p-2 rounded border border-slate-800">
-        <span className="text-[10px] text-slate-400 block">1. Velocidade</span>
-        <span data-testid="metric-velocity" className="text-xs font-bold text-white">
-          {status.residual_trend_mm_per_pass} mm/ciclo
+    <div className="grid grid-cols-3 gap-2">
+      <div className="bg-[#080b0f] px-2.5 py-2 rounded-md border border-[#222933]">
+        <span className="text-[11px] text-[#8a96a8] block">Velocidade</span>
+        <span
+          data-testid="metric-velocity"
+          className="text-xs font-mono tabular-nums font-semibold text-[#eef2f6] mt-0.5 block"
+        >
+          {status.residual_trend_mm_per_pass} <span className="text-[#8a96a8] font-normal">mm/c</span>
         </span>
       </div>
-      <div className="bg-slate-900 p-2 rounded border border-slate-800">
-        <span className="text-[10px] text-slate-400 block">2. Aceleração</span>
-        <span data-testid="metric-acceleration" className="text-xs font-bold text-white">
-          {status.acceleration_index_mm} mm
+      <div className="bg-[#080b0f] px-2.5 py-2 rounded-md border border-[#222933]">
+        <span className="text-[11px] text-[#8a96a8] block">Aceleração</span>
+        <span
+          data-testid="metric-acceleration"
+          className="text-xs font-mono tabular-nums font-semibold text-[#eef2f6] mt-0.5 block"
+        >
+          {status.acceleration_index_mm} <span className="text-[#8a96a8] font-normal">mm</span>
         </span>
       </div>
-      <div className="bg-slate-900 p-2 rounded border border-slate-800">
-        <span className="text-[10px] text-slate-400 block">3. Score (γ)</span>
-        <span data-testid="metric-score" className="text-xs font-bold text-sky-400">
+      <div className="bg-[#080b0f] px-2.5 py-2 rounded-md border border-[#222933]">
+        <span className="text-[11px] text-[#8a96a8] block">Score (γ)</span>
+        <span
+          data-testid="metric-score"
+          className="text-xs font-mono tabular-nums font-semibold text-[#3b9eeb] mt-0.5 block"
+        >
           {status.max_weighted_anomaly_score}
         </span>
       </div>
     </div>
   );
 }
-

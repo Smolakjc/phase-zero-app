@@ -9,12 +9,15 @@ export interface CoherenceSliderProps {
 
 export function CoherenceSlider({ value, onChange }: CoherenceSliderProps) {
   return (
-    <div className="mt-3 p-3 rounded-xl bg-slate-950 border border-slate-800">
-      <div className="flex justify-between text-xs font-mono mb-1">
-        <label htmlFor="min-coherence-slider" className="text-slate-300">
-          Filtro de Qualidade: Coerência Mínima (γ)
+    <div className="p-3 rounded-md bg-[#080b0f] border border-[#222933] space-y-2">
+      <div className="flex justify-between items-center text-xs">
+        <label htmlFor="min-coherence-slider" className="text-[#cbd5e1] font-medium">
+          Coerência Mínima (γ)
         </label>
-        <span data-testid="coherence-value" className="text-sky-400 font-bold">
+        <span
+          data-testid="coherence-value"
+          className="font-mono tabular-nums text-[#3b9eeb] font-semibold"
+        >
           {value.toFixed(2)}
         </span>
       </div>
@@ -27,9 +30,11 @@ export function CoherenceSlider({ value, onChange }: CoherenceSliderProps) {
         step={0.05}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full accent-sky-400 cursor-pointer"
+        className="pz-range w-full"
       />
+      <p className="text-[11px] text-[#8a96a8]">
+        Blocos com coerência abaixo deste limiar ficam mascarados na malha.
+      </p>
     </div>
   );
 }
-

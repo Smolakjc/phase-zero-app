@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Mapa de Orientação ISOM — PHASE-ZERO</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@600;700&family=Fira+Sans:wght@400;600&display=swap">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1440px; height: 900px; overflow: hidden; background: #0D1318; color: #E2E8F0; font-family: 'Fira Sans', sans-serif; }
+  .shell { display: grid; grid-template-columns: 1fr 440px; height: 900px; }
+  .map-field { position: relative; background: #0B1015; border-right: 2px solid #24303C; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .top-row { display: flex; justify-content: space-between; align-items: center; }
+  h1 { font-family: 'Archivo Narrow', sans-serif; font-size: 24px; letter-spacing: 0.03em; }
+  .course-pill { padding: 6px 12px; border: 1px solid #C026D3; color: #F0ABFC; font-size: 12px; font-weight: 600; border-radius: 99px; }
+  .terrain-canvas { flex: 1; background: #10171E; border: 1px solid #273441; border-radius: 6px; position: relative; }
+  .legend-pane { background: #111820; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .section { border-top: 1px solid #253240; padding-top: 12px; }
+  .s-title { font-family: 'Archivo Narrow', sans-serif; font-size: 15px; text-transform: uppercase; letter-spacing: 0.05em; color: #E879F9; margin-bottom: 8px; }
+  .table-row { display: grid; grid-template-columns: 24px 1fr 80px; gap: 8px; padding: 6px 0; font-size: 12px; border-bottom: 1px solid #1C2630; align-items: center; }
+  .ctrl-num { font-weight: 700; color: #E879F9; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <main class="map-field">
+    <div class="top-row">
+      <h1>PHASE-ZERO · Carta Topográfica e Malha InSAR</h1>
+      <span class="course-pill">Trajetória Ativa: Gongo Soco (MG)</span>
+    </div>
+    <div class="terrain-canvas">
+      <svg viewBox="0 0 920 520" width="100%" height="100%">
+        <path d="M40 400 Q260 220 520 340 T880 140" stroke="#1E293B" stroke-width="1.5" fill="none"/>
+        <path d="M60 320 Q290 150 560 260 T860 80" stroke="#1E293B" stroke-width="1.5" fill="none"/>
+        <circle cx="420" cy="240" r="18" fill="none" stroke="#C026D3" stroke-width="2.5"/>
+        <line x1="436" y1="226" x2="640" y2="120" stroke="#C026D3" stroke-width="2.5" stroke-dasharray="6 4"/>
+        <circle cx="640" cy="120" r="10" fill="none" stroke="#C026D3" stroke-width="2.5"/>
+      </svg>
+    </div>
+    <div style="height:210px;background:#10171E;border:1px solid #273441;border-radius:6px;padding:12px">
+      <div style="font-size:12px;font-weight:600;color:#CBD5E1">Série de Deconvolução Temporal &amp; Loop Termo-Mecânico</div>
+    </div>
+  </main>
+  <aside class="legend-pane">
+    <div class="s-title">Legenda ISOM &amp; Diagnóstico</div>
+    <div style="padding:12px;border:1px solid #C026D3;border-radius:6px;background:#1A1322">
+      <div style="font-size:15px;font-weight:700;color:#FACC15">AMARELO · Deformação Lenta</div>
+      <div style="font-size:12px;color:#CBD5E1;margin-top:4px">Vel -0.72 mm/ciclo · Score 11.4</div>
+    </div>
+    <div class="section">
+      <div class="s-title">Estágios de Compensação</div>
+      <div class="table-row"><span class="ctrl-num">01</span><span>Ionospheric Split-Spectrum</span><span style="color:#22C55E">ATIVO</span></div>
+      <div class="table-row"><span class="ctrl-num">02</span><span>Wet &amp; Hydrostatic Tropo</span><span style="color:#22C55E">ATIVO</span></div>
+      <div class="table-row"><span class="ctrl-num">03</span><span>Solid Earth Tides</span><span style="color:#22C55E">ATIVO</span></div>
+      <div class="table-row"><span class="ctrl-num">04</span><span>NASA POWER Model</span><span style="color:#22C55E">ATIVO</span></div>
+    </div>
+    <div class="section">
+      <div class="s-title">Pontos de Controle (Barragens)</div>
+      <div class="table-row"><span class="ctrl-num">C1</span><span>Sul Superior (Barão de Cocais)</span><span>RED</span></div>
+      <div class="table-row"><span class="ctrl-num">C2</span><span>Brumadinho B1 (Histórico)</span><span>RED</span></div>
+      <div class="table-row"><span class="ctrl-num">C3</span><span>Usina de Itaipu (PR)</span><span>GREEN</span></div>
+    </div>
+  </aside>
+</div>
+</body>
+</html>

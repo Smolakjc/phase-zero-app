@@ -46,8 +46,8 @@ export function TerrainCanvas({
   } | null>(null);
 
   const [size, setSize] = useState<{ width: number; height: number }>({
-    width: 960,
-    height: 450,
+    width: 680,
+    height: 390,
   });
 
   useEffect(() => {
@@ -57,8 +57,8 @@ export function TerrainCanvas({
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (!entry) return;
-      const w = Math.max(320, Math.floor(entry.contentRect.width));
-      const h = w < 640 ? 380 : 450;
+      const w = Math.max(300, Math.floor(entry.contentRect.width));
+      const h = w < 520 ? 350 : 390;
       setSize({ width: w, height: h });
     });
 
@@ -80,6 +80,23 @@ export function TerrainCanvas({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
 
+    // Grade cartográfica de referência sutil no fundo
+    ctx.strokeStyle = "rgba(148, 163, 184, 0.05)";
+    ctx.lineWidth = 1;
+    const gridStep = 40;
+    for (let x = gridStep; x < width; x += gridStep) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+    }
+    for (let y = gridStep; y < height; y += gridStep) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+
     const dims = deriveGridDimensions(pixels);
     const { nodes, segments } = buildMesh(pixels, {
       width,
@@ -89,8 +106,8 @@ export function TerrainCanvas({
       dims,
     });
 
-    // Desenha arestas da malha 3D
-    ctx.lineWidth = 1.1;
+    // Arestas da malha 3D
+    ctx.lineWidth = 1.05;
     for (let i = 0; i < segments.length; i += 1) {
       const seg = segments[i];
       ctx.strokeStyle = getMeshEdgeColor(seg.masked);
@@ -100,17 +117,25 @@ export function TerrainCanvas({
       ctx.stroke();
     }
 
-    // Ordena nós por profundidade (painter's algorithm)
+    // Nós ordenados por profundidade
     const sorted = sortByDepth(nodes);
     for (let i = 0; i < sorted.length; i += 1) {
       const item = sorted[i];
       const { x, y, px } = item;
       const isSelected = selectedPixelId === px.id;
-      const radius = isSelected ? 11.0 : px.masked ? 4.8 : 7.4;
+      const radius = isSelected ? 9.5 : px.masked ? 4.2 : 6.4;
+
+      if (isSelected) {
+        ctx.strokeStyle = "rgba(59, 158, 235, 0.55)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 4, 0, Math.PI * 2);
+        ctx.stroke();
+      }
 
       ctx.fillStyle = getPixelNodeColor(px);
-      ctx.strokeStyle = isSelected ? "#ffffff" : "rgba(15, 23, 42, 0.9)";
-      ctx.lineWidth = isSelected ? 3.0 : 1.0;
+      ctx.strokeStyle = isSelected ? "#eef2f6" : "rgba(12, 15, 20, 0.9)";
+      ctx.lineWidth = isSelected ? 2.5 : 1.0;
 
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -119,40 +144,59 @@ export function TerrainCanvas({
     }
     renderedNodesRef.current = sorted;
 
-    // Vetor LOS
+    // Vetor LOS com seta vetorial
     const cx = width / 2.0;
     const cy = height / 2.0 + 25.0;
-    const startX = cx + losVector.losUnitVectorX * 180;
-    const startY = 62 + losVector.losUnitVectorY * 55;
-    ctx.strokeStyle = "#38bdf8";
-    ctx.lineWidth = 2.4;
-    ctx.setLineDash([6, 4]);
+    const startX = cx + losVector.losUnitVectorX * 165;
+    const startY = 58 + losVector.losUnitVectorY * 50;
+    const endX = cx;
+    const endY = cy - 22;
+
+    ctx.strokeStyle = "#3b9eeb";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 4]);
     ctx.beginPath();
     ctx.moveTo(startX, startY);
-    ctx.lineTo(cx, cy - 20);
+    ctx.lineTo(endX, endY);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Textos informativos no HUD
-    ctx.fillStyle = "#38bdf8";
-    ctx.font = "bold 12px monospace";
-    ctx.fillText(
-      `🛰️ VETOR LOS [X:${losVector.losUnitVectorX}, Y:${losVector.losUnitVectorY} | Incidência:${losVector.incidenceAngle}°]`,
-      18,
-      26,
+    const angle = Math.atan2(endY - startY, endX - startX);
+    const headLen = 8;
+    ctx.fillStyle = "#3b9eeb";
+    ctx.beginPath();
+    ctx.moveTo(endX, endY);
+    ctx.lineTo(
+      endX - headLen * Math.cos(angle - Math.PI / 6),
+      endY - headLen * Math.sin(angle - Math.PI / 6),
     );
-    ctx.fillStyle = "#10b981";
-    ctx.fillText(
-      `⛰️ RELEVO DEM REAL AUTO-ESCALADO (${dims.rows}×${dims.cols}): Min ${dims.minElev.toFixed(1)}m | Máx ${dims.maxElev.toFixed(1)}m`,
-      18,
-      46,
+    ctx.lineTo(
+      endX - headLen * Math.cos(angle + Math.PI / 6),
+      endY - headLen * Math.sin(angle + Math.PI / 6),
     );
-    ctx.fillStyle = "#94a3b8";
+    ctx.closePath();
+    ctx.fill();
+
+    // Leituras geodésicas limpas sem emojis
+    ctx.fillStyle = "#6ab6f0";
+    ctx.font = "600 11px monospace";
     ctx.fillText(
-      "👆 Clique em qualquer nó da malha 3D (ou arraste para girar) para inspecionar a série temporal!",
-      18,
-      height - 16,
+      `LOS [X:${losVector.losUnitVectorX} Y:${losVector.losUnitVectorY} | Inc:${losVector.incidenceAngle}°]`,
+      14,
+      22,
     );
+    ctx.fillStyle = "#86efac";
+    ctx.fillText(
+      `DEM ${dims.rows}x${dims.cols} · Min ${dims.minElev.toFixed(1)}m · Max ${dims.maxElev.toFixed(1)}m`,
+      14,
+      40,
+    );
+    ctx.fillStyle = "#8a96a8";
+    const hint =
+      width < 460
+        ? "Arraste para orbitar · Clique num nó para inspecionar"
+        : "Arraste para orbitar a malha · Clique num nó para inspecionar o pixel";
+    ctx.fillText(hint, 14, height - 14);
   }, [pixels, selectedPixelId, losVector, azimuthDeg, pitchDeg, size]);
 
   useEffect(() => {
@@ -208,9 +252,8 @@ export function TerrainCanvas({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        className="w-full bg-[#02050b] rounded-xl border border-slate-800/90 cursor-grab active:cursor-grabbing shadow-inner"
+        className="block w-full bg-[#080b0f] rounded-md border border-[#222933] cursor-grab active:cursor-grabbing"
       />
     </div>
   );
 }
-

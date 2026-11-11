@@ -4,6 +4,7 @@ import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import type * as LeafletNS from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { DamCatalogItem, DamPhysicalStatus, StatusCode } from "@phase-zero/shared";
+import { ChevronDownIcon, SearchIcon } from "../icons/SurveyIcons";
 
 export interface DamMapPanelProps {
   dams: readonly DamCatalogItem[];
@@ -24,19 +25,19 @@ const TILE_LAYERS: Record<
   { label: string; url: string; attribution: string; maxZoom: number }
 > = {
   dark: {
-    label: "Mapa Escuro",
-    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-    attribution: "&copy; OpenStreetMap &copy; CARTO",
-    maxZoom: 19,
+    label: "Escuro",
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+    attribution: "Tiles &copy; Esri Dark Gray",
+    maxZoom: 16,
   },
   satellite: {
-    label: "Satélite Real",
+    label: "Satélite",
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     attribution: "Tiles &copy; Esri World Imagery",
     maxZoom: 18,
   },
   streets: {
-    label: "Topográfico / Ruas",
+    label: "Topográfico",
     url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     attribution: "&copy; OpenStreetMap contributors",
     maxZoom: 19,
@@ -50,27 +51,27 @@ const REGION_PRESETS: readonly {
   zoom: number;
 }[] = [
   { id: "br", label: "Brasil", center: [-15.8, -46.5], zoom: 4 },
-  { id: "mg", label: "Quadrilátero (MG)", center: [-20.08, -43.78], zoom: 9 },
+  { id: "mg", label: "MG", center: [-20.08, -43.78], zoom: 9 },
   { id: "sul", label: "Sul", center: [-27.2, -53.1], zoom: 6 },
-  { id: "ne", label: "Norte / Nordeste", center: [-7.2, -42.5], zoom: 5 },
+  { id: "ne", label: "N / NE", center: [-7.2, -42.5], zoom: 5 },
 ];
 
 const RISK_HEX: Record<StatusCode, string> = {
-  GREEN: "#10b981",
-  YELLOW: "#f59e0b",
+  GREEN: "#22c55e",
+  YELLOW: "#eab308",
   RED: "#f43f5e",
 };
 
 const RISK_BADGE_CLASSES: Record<StatusCode, string> = {
-  GREEN: "bg-emerald-950/90 text-emerald-300 border-emerald-700/70",
-  YELLOW: "bg-amber-950/90 text-amber-300 border-amber-700/70",
-  RED: "bg-rose-950/90 text-rose-300 border-rose-700/70",
+  GREEN: "bg-[#0d2016] text-[#86efac] border-[#1f5e39]",
+  YELLOW: "bg-[#20190a] text-[#fde047] border-[#854d0e]",
+  RED: "bg-[#230f16] text-[#fda4af] border-[#9f1239]",
 };
 
 const PHYSICAL_BADGE_CLASSES: Record<DamPhysicalStatus, string> = {
-  standing: "bg-sky-950/80 text-sky-300 border-sky-800",
-  decommissioning: "bg-amber-950/80 text-amber-200 border-amber-700/80",
-  collapsed: "bg-fuchsia-950/80 text-fuchsia-200 border-fuchsia-700/80",
+  standing: "bg-[#132538] text-[#93c5fd] border-[#254d73]",
+  decommissioning: "bg-[#20190a] text-[#fde047] border-[#854d0e]",
+  collapsed: "bg-[#26122c] text-[#f0abfc] border-[#86198f]",
 };
 
 function escapeHtml(text: string): string {
@@ -89,14 +90,16 @@ function buildMarkerIcon(
   const isCollapsed = dam.physical_status === "collapsed";
   const isDecomm = dam.physical_status === "decommissioning";
   const fill = isCollapsed ? "#d946ef" : RISK_HEX[dam.risk_tier];
-  const size = isSelected ? 22 : 15;
+  const size = isSelected ? 20 : 14;
   const borderStyle = isCollapsed || isDecomm ? "dashed" : "solid";
-  const borderColor = isSelected ? "#ffffff" : isCollapsed ? "#f5d0fe" : "#0f172a";
+  const borderColor = isSelected ? "#eef2f6" : isCollapsed ? "#f5d0fe" : "#0c0f14";
+  const radius = isCollapsed ? "3px" : "9999px";
+  const transform = isCollapsed ? "transform:rotate(45deg);" : "";
   const halo = isSelected
-    ? "box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.45), 0 0 12px rgba(56, 189, 248, 0.75);"
+    ? "box-shadow: 0 0 0 4px rgba(59, 158, 235, 0.45);"
     : "box-shadow: 0 1px 4px rgba(0, 0, 0, 0.65);";
 
-  const html = `<span style="display:block;width:${size}px;height:${size}px;border-radius:9999px;background:${fill};border:2px ${borderStyle} ${borderColor};${halo}transition:transform 0.15s ease;"></span>`;
+  const html = `<span style="display:block;width:${size}px;height:${size}px;border-radius:${radius};background:${fill};border:2px ${borderStyle} ${borderColor};${transform}${halo}transition:transform 0.15s ease;"></span>`;
 
   return L.divIcon({
     className: "phase-zero-dam-marker",
@@ -164,7 +167,6 @@ export function DamMapPanel({
     return { total: dams.length, standing, decommissioning, collapsed };
   }, [dams]);
 
-  // Inicializa o mapa Leaflet apenas no cliente quando o painel está aberto
   useEffect(() => {
     if (!isOpen) return;
     const container = mapContainerRef.current;
@@ -184,6 +186,7 @@ export function DamMapPanel({
         maxZoom: 18,
         zoomControl: true,
       });
+      map.attributionControl?.setPrefix("Leaflet");
 
       const cfg = TILE_LAYERS[baseLayer];
       const tiles = L.tileLayer(cfg.url, {
@@ -218,7 +221,6 @@ export function DamMapPanel({
     };
   }, [isOpen]);
 
-  // Atualiza camada base (Escuro / Satélite / Ruas) sem recriar o mapa
   useEffect(() => {
     const L = leafletRef.current;
     const map = mapRef.current;
@@ -234,7 +236,6 @@ export function DamMapPanel({
     }).addTo(map);
   }, [baseLayer, mapReady]);
 
-  // Renderiza marcadores filtrados no mapa e marcador de ponto livre
   useEffect(() => {
     const L = leafletRef.current;
     const map = mapRef.current;
@@ -253,11 +254,11 @@ export function DamMapPanel({
       });
 
       const popupHtml = `
-        <div style="min-width:220px;font-family:ui-sans-serif,system-ui,sans-serif;color:#e2e8f0;">
-          <div style="font-weight:700;font-size:12px;color:#38bdf8;margin-bottom:3px;">${escapeHtml(dam.name)}</div>
-          <div style="font-size:11px;color:#cbd5e1;margin-bottom:4px;">${escapeHtml(dam.location)} (${dam.lat.toFixed(4)}, ${dam.lon.toFixed(4)})</div>
+        <div style="min-width:210px;font-family:var(--font-sans),system-ui,sans-serif;color:#eef2f6;">
+          <div style="font-weight:700;font-size:12px;color:#3b9eeb;margin-bottom:3px;">${escapeHtml(dam.name)}</div>
+          <div style="font-size:11px;color:#a1adbf;margin-bottom:4px;">${escapeHtml(dam.location)} (${dam.lat.toFixed(4)}, ${dam.lon.toFixed(4)})</div>
           <div style="font-size:11px;margin-bottom:3px;"><strong>Situação:</strong> ${escapeHtml(dam.physical_status_label)}</div>
-          <div style="font-size:11px;color:#94a3b8;"><strong>Janela sugerida:</strong> ${escapeHtml(dam.default_start)} a ${escapeHtml(dam.default_end)}</div>
+          <div style="font-size:11px;color:#8a96a8;"><strong>Janela:</strong> ${escapeHtml(dam.default_start)} a ${escapeHtml(dam.default_end)}</div>
         </div>
       `;
 
@@ -274,9 +275,6 @@ export function DamMapPanel({
       });
 
       marker.addTo(group);
-      if (isSelected) {
-        marker.openPopup();
-      }
     }
 
     if (freeMarkerRef.current) {
@@ -286,10 +284,10 @@ export function DamMapPanel({
 
     if (isFreePoint && Number.isFinite(activeLat) && Number.isFinite(activeLon)) {
       freeMarkerRef.current = L.circleMarker([activeLat, activeLon], {
-        radius: 9,
-        color: "#ffffff",
-        weight: 2.5,
-        fillColor: "#06b6d4",
+        radius: 8,
+        color: "#eef2f6",
+        weight: 2,
+        fillColor: "#3b9eeb",
         fillOpacity: 0.9,
       })
         .bindTooltip(`Ponto livre: ${activeLat.toFixed(4)}, ${activeLon.toFixed(4)}`, {
@@ -320,50 +318,53 @@ export function DamMapPanel({
   return (
     <section
       aria-labelledby="dam-map-heading"
-      className="animate-enter-2 bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3"
+      className="bg-[#131820] border border-[#222933] rounded-lg p-4 flex flex-col gap-3"
     >
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        <div>
+      <div className="flex flex-wrap items-start justify-between gap-2.5">
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h2
               id="dam-map-heading"
-              className="text-sm font-mono font-bold uppercase tracking-wider text-sky-400"
+              className="text-sm font-bold text-[#eef2f6]"
             >
-              Mapa Interativo de Barragens (De Pé, Descaracterização e Históricas)
+              Mapa Geográfico de Barragens
             </h2>
             {selectedDam && (
               <span
-                className={`px-2 py-0.5 text-[11px] font-mono rounded border ${PHYSICAL_BADGE_CLASSES[selectedDam.physical_status]}`}
+                className={`px-2 py-0.5 text-[11px] font-medium rounded border ${PHYSICAL_BADGE_CLASSES[selectedDam.physical_status]}`}
               >
                 {selectedDam.physical_status_label}
               </span>
             )}
             {isFreePoint && (
-              <span className="px-2 py-0.5 text-[11px] font-mono rounded border bg-cyan-950/80 text-cyan-300 border-cyan-700">
+              <span className="px-2 py-0.5 text-[11px] font-mono tabular-nums rounded border bg-[#132538] text-[#93c5fd] border-[#254d73]">
                 Ponto Livre ({activeLat.toFixed(4)}, {activeLon.toFixed(4)})
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Clique em um marcador para selecionar a barragem (com janela de datas automática) ou
-            clique em qualquer ponto do mapa para análise livre.
+          <p className="text-xs text-[#8a96a8] mt-0.5">
+            Selecione uma estrutura monitorada ou clique no mapa para consulta livre.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           {isOpen && (
             <>
-              <div className="flex items-center rounded-lg bg-slate-950 p-0.5 border border-slate-800">
+              <div
+                role="group"
+                aria-label="Camada do mapa"
+                className="inline-flex items-center rounded-md bg-[#080b0f] p-0.5 border border-[#222933]"
+              >
                 {(Object.keys(TILE_LAYERS) as BaseLayerId[]).map((layerId) => (
                   <button
                     key={layerId}
                     type="button"
                     aria-pressed={baseLayer === layerId}
                     onClick={() => setBaseLayer(layerId)}
-                    className={`px-2.5 py-1.5 min-h-[28px] rounded-md text-[11px] font-mono font-bold transition ${
+                    className={`px-2 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer ${
                       baseLayer === layerId
-                        ? "bg-sky-600 text-white"
-                        : "text-slate-300 hover:bg-slate-800"
+                        ? "bg-[#132538] text-[#eef2f6] border border-[#3b9eeb]"
+                        : "text-[#a1adbf] hover:text-[#eef2f6] border border-transparent"
                     }`}
                   >
                     {TILE_LAYERS[layerId].label}
@@ -371,13 +372,13 @@ export function DamMapPanel({
                 ))}
               </div>
 
-              <div className="flex flex-wrap items-center gap-1">
+              <div className="hidden sm:inline-flex items-center gap-1">
                 {REGION_PRESETS.map((reg) => (
                   <button
                     key={reg.id}
                     type="button"
                     onClick={() => handleRegionZoom(reg.center, reg.zoom)}
-                    className="px-2.5 py-1.5 min-h-[28px] rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-800 text-[11px] font-mono text-slate-300 transition"
+                    className="px-2 py-1 rounded-md bg-[#080b0f] hover:bg-[#1a222d] border border-[#222933] text-[11px] text-[#a1adbf] hover:text-[#eef2f6] transition-colors cursor-pointer"
                   >
                     {reg.label}
                   </button>
@@ -390,106 +391,110 @@ export function DamMapPanel({
             type="button"
             aria-expanded={isOpen}
             onClick={() => setIsOpen((prev) => !prev)}
-            className="px-3 py-1.5 min-h-[28px] rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-mono font-bold text-sky-300 transition"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#181e28] hover:bg-[#222b39] border border-[#313b49] text-xs font-medium text-[#eef2f6] transition-colors cursor-pointer"
           >
-            {isOpen ? "Ocultar Mapa" : "Mostrar Mapa de Barragens"}
+            <span>{isOpen ? "Ocultar" : "Mostrar"}</span>
+            <ChevronDownIcon
+              className={`w-3.5 h-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`}
+            />
           </button>
         </div>
       </div>
 
       {isOpen && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          {/* MAPA LEAFLET */}
-          <div className="lg:col-span-8 flex flex-col gap-2">
-            <div className="relative rounded-xl overflow-hidden border border-slate-800 bg-[#02050b]">
-              <div
-                ref={mapContainerRef}
-                role="region"
-                aria-label="Mapa geográfico interativo das barragens monitoradas"
-                className="w-full h-[360px] md:h-[420px] z-0"
-              />
-              {loading && (
-                <div className="pointer-events-none absolute top-3 right-3 z-[400] px-2.5 py-1 rounded-md bg-slate-950/90 border border-sky-700 text-[11px] font-mono text-sky-300">
-                  Atualizando análise...
-                </div>
-              )}
-            </div>
-
-            {/* LEGENDA */}
-            <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-300">
-              <div className="flex flex-wrap items-center gap-4">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-emerald-500 border border-slate-900 inline-block" />
-                  De pé (Estável)
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-amber-500 border border-slate-900 inline-block" />
-                  Monitoramento / Atenção
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-rose-500 border border-dashed border-slate-200 inline-block" />
-                  Alerta / Descaracterização
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-fuchsia-500 border-2 border-dashed border-fuchsia-200 inline-block" />
-                  Rompida / Histórica (janela pré-ruptura)
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-3 h-3 rounded-full bg-cyan-500 border border-white inline-block" />
-                  Ponto Livre
-                </span>
+        <div className="flex flex-col gap-3">
+          <div className="relative rounded-md overflow-hidden border border-[#222933] bg-[#080b0f]">
+            <div
+              ref={mapContainerRef}
+              role="region"
+              aria-label="Mapa geográfico interativo das barragens monitoradas"
+              className="w-full h-[250px] z-0"
+            />
+            {loading && (
+              <div className="pointer-events-none absolute top-2.5 right-2.5 z-[400] px-2.5 py-1 rounded bg-[#0c0f14]/90 border border-[#3b9eeb] text-[11px] text-[#93c5fd]">
+                Atualizando análise...
               </div>
-              <span className="text-slate-500">
-                {filteredDams.length} de {dams.length} estruturas no mapa
-              </span>
-            </div>
+            )}
           </div>
 
-          {/* LISTA + BUSCA + FILTROS */}
-          <div className="lg:col-span-4 flex flex-col gap-2.5 bg-slate-950 border border-slate-800 rounded-xl p-3 h-[420px] md:h-[462px]">
-            <div>
-              <label
-                htmlFor={searchInputId}
-                className="block text-[11px] font-mono text-slate-400 mb-1"
-              >
-                Buscar barragem, município ou estado
-              </label>
-              <input
-                id={searchInputId}
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Ex: Brumadinho, Itaipu, Mariana, RS..."
-                className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-100 placeholder:text-slate-500"
-              />
+          <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 rounded-md bg-[#080b0f] border border-[#222933] text-[11px] text-[#a1adbf]">
+            <div className="flex flex-wrap items-center gap-3.5">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#22c55e] inline-block" aria-hidden="true" />
+                Estável
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#eab308] inline-block" aria-hidden="true" />
+                Atenção
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span
+                  className="w-2.5 h-2.5 rounded-full bg-[#f43f5e] border border-dashed border-[#eef2f6] inline-block"
+                  aria-hidden="true"
+                />
+                Descaracterização / Alerta
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span
+                  className="w-2.5 h-2.5 rotate-45 rounded-[2px] bg-[#d946ef] border border-dashed border-[#f5d0fe] inline-block"
+                  aria-hidden="true"
+                />
+                Histórica / Rompida
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#3b9eeb] border border-[#eef2f6] inline-block" aria-hidden="true" />
+                Ponto Livre
+              </span>
+            </div>
+            <span className="font-mono tabular-nums text-[#8a96a8]">
+              {filteredDams.length}/{dams.length}
+            </span>
+          </div>
+
+          <div className="bg-[#080b0f] border border-[#222933] rounded-md p-2.5 space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="relative flex-1 min-w-[180px]">
+                <label htmlFor={searchInputId} className="sr-only">
+                  Buscar barragem, município ou estado
+                </label>
+                <SearchIcon className="w-3.5 h-3.5 text-[#8a96a8] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  id={searchInputId}
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Filtrar barragem, município ou UF..."
+                  className="w-full pl-8 pr-2.5 py-1.5 rounded bg-[#131820] border border-[#222933] focus:border-[#3b9eeb] text-xs text-[#eef2f6] placeholder:text-[#687588] focus:outline-none"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-1" role="group" aria-label="Filtrar por situação da barragem">
+                {(
+                  [
+                    { id: "all", label: `Todas (${counts.total})` },
+                    { id: "standing", label: `De pé (${counts.standing})` },
+                    { id: "decommissioning", label: `Descaract. (${counts.decommissioning})` },
+                    { id: "collapsed", label: `Rompidas (${counts.collapsed})` },
+                  ] as const
+                ).map((flt) => (
+                  <button
+                    key={flt.id}
+                    type="button"
+                    aria-pressed={statusFilter === flt.id}
+                    onClick={() => setStatusFilter(flt.id)}
+                    className={`px-2 py-1 rounded text-[11px] font-medium border transition-colors cursor-pointer ${
+                      statusFilter === flt.id
+                        ? "bg-[#132538] text-[#eef2f6] border-[#3b9eeb]"
+                        : "bg-[#131820] text-[#a1adbf] border-[#222933] hover:text-[#eef2f6]"
+                    }`}
+                  >
+                    {flt.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filtrar por situação da barragem">
-              {(
-                [
-                  { id: "all", label: `Todas (${counts.total})` },
-                  { id: "standing", label: `De pé (${counts.standing})` },
-                  { id: "decommissioning", label: `Descaract. (${counts.decommissioning})` },
-                  { id: "collapsed", label: `Rompidas (${counts.collapsed})` },
-                ] as const
-              ).map((flt) => (
-                <button
-                  key={flt.id}
-                  type="button"
-                  aria-pressed={statusFilter === flt.id}
-                  onClick={() => setStatusFilter(flt.id)}
-                  className={`px-2 py-1 min-h-[26px] rounded text-[11px] font-mono border transition ${
-                    statusFilter === flt.id
-                      ? "bg-sky-600 text-white border-sky-400 font-bold"
-                      : "bg-slate-900 text-slate-300 border-slate-800 hover:bg-slate-800"
-                  }`}
-                >
-                  {flt.label}
-                </button>
-              ))}
-            </div>
-
-            <ul className="flex-1 overflow-y-auto space-y-1.5 pr-1">
+            <ul className="max-h-[126px] overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-1.5 pr-1">
               {filteredDams.map((dam) => {
                 const isSelected = dam.id === selectedDamId;
                 return (
@@ -498,29 +503,25 @@ export function DamMapPanel({
                       type="button"
                       onClick={() => handleFocusDamFromList(dam)}
                       aria-pressed={isSelected}
-                      className={`w-full text-left p-2.5 rounded-lg border transition ${
+                      className={`w-full text-left px-2.5 py-2 rounded border transition-colors cursor-pointer ${
                         isSelected
-                          ? "bg-sky-950/70 border-sky-500 shadow-md shadow-sky-950/50"
-                          : "bg-slate-900/80 border-slate-800 hover:border-slate-700 hover:bg-slate-900"
+                          ? "bg-[#132538] border-[#3b9eeb]"
+                          : "bg-[#131820] border-[#222933] hover:border-[#313b49] hover:bg-[#171d27]"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <span className="text-xs font-bold text-slate-100 leading-snug">
+                        <span className="text-xs font-semibold text-[#eef2f6] leading-snug line-clamp-1">
                           {dam.name}
                         </span>
                         <span
-                          className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold border ${RISK_BADGE_CLASSES[dam.risk_tier]}`}
+                          className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold border ${RISK_BADGE_CLASSES[dam.risk_tier]}`}
                         >
                           {dam.risk_tier}
                         </span>
                       </div>
-                      <div className="mt-1 flex flex-wrap items-center justify-between gap-1 text-[10px] font-mono">
-                        <span
-                          className={`px-1.5 py-0.5 rounded border ${PHYSICAL_BADGE_CLASSES[dam.physical_status]}`}
-                        >
-                          {dam.physical_status_label}
-                        </span>
-                        <span className="text-slate-400">
+                      <div className="mt-1 flex items-center justify-between gap-2 text-[10px] text-[#8a96a8]">
+                        <span className="truncate">{dam.physical_status_label}</span>
+                        <span className="font-mono tabular-nums shrink-0">
                           {dam.default_start.slice(0, 4)}–{dam.default_end.slice(0, 4)}
                         </span>
                       </div>
@@ -529,7 +530,7 @@ export function DamMapPanel({
                 );
               })}
               {filteredDams.length === 0 && (
-                <li className="text-xs font-mono text-slate-500 text-center py-8">
+                <li className="sm:col-span-2 text-xs text-[#8a96a8] text-center py-5">
                   Nenhuma barragem encontrada para esse filtro.
                 </li>
               )}

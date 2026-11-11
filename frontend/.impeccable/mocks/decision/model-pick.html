@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Caderno Técnico de Barragens Alpinas — PHASE-ZERO</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@500;600;700&family=Fira+Code:wght@400;600&display=swap">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1440px; height: 900px; overflow: hidden; background: #111315; color: #F4F6F8; font-family: 'Public Sans', sans-serif; }
+  .mono { font-family: 'Fira Code', monospace; font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 1440px; height: 900px; display: grid; grid-template-rows: 64px 1fr; }
+  header { display: flex; justify-content: space-between; align-items: center; padding: 0 28px; background: #16191D; border-bottom: 1px solid #2A2F36; }
+  .h-title { font-size: 19px; font-weight: 700; }
+  .tabs { display: flex; gap: 8px; }
+  .tab { padding: 7px 12px; border: 1px solid #2E343C; background: #191C20; color: #AEB6C2; font-size: 12px; font-weight: 600; border-radius: 4px; }
+  .tab.act { border-color: #4EA8DE; background: #1C2B36; color: #FFFFFF; }
+  .grid { display: grid; grid-template-columns: 320px 1fr 340px; height: 100%; }
+  .left { background: #15181C; border-right: 1px solid #2A2F36; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .center { padding: 18px; display: grid; grid-template-rows: 1.25fr 1fr; gap: 14px; background: #111315; }
+  .right { background: #15181C; border-left: 1px solid #2A2F36; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: #191C20; border: 1px solid #2A2F36; border-radius: 4px; padding: 12px; }
+  .label { font-size: 12px; font-weight: 700; color: #E2E8F0; margin-bottom: 8px; }
+  .row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #242930; font-size: 12px; color: #CBD5E1; }
+  .well { background: #0E1012; border: 1px solid #242930; border-radius: 4px; height: calc(100% - 28px); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="h-title">PHASE-ZERO</div>
+      <div style="font-size:12px;color:#9CA3AF">Monitoramento Geotécnico InSAR · NISAR / Sentinel-1</div>
+    </div>
+    <div class="tabs">
+      <div class="tab">Itaipu (PR)</div>
+      <div class="tab act">Gongo Soco (MG)</div>
+      <div class="tab">Maceió (AL)</div>
+      <div class="tab">Brumadinho (2018-2019)</div>
+    </div>
+  </header>
+  <div class="grid">
+    <aside class="left">
+      <div class="label">Catálogo de Estruturas (21)</div>
+      <div class="card mono" style="font-size:11px;color:#9CA3AF">Buscar barragem ou município...</div>
+      <div class="card">
+        <div class="row"><span>Sul Superior (MG)</span><span class="mono" style="color:#FACC15">RED</span></div>
+        <div class="row"><span>B3/B4 Maravilhas</span><span class="mono" style="color:#F43F5E">RED</span></div>
+        <div class="row"><span>Brumadinho B1</span><span class="mono" style="color:#E879F9">HIST</span></div>
+        <div class="row"><span>Usina de Itaipu</span><span class="mono" style="color:#22C55E">GREEN</span></div>
+      </div>
+      <div class="card">
+        <div class="label">Coordenadas &amp; Janela</div>
+        <div class="mono" style="font-size:11px;color:#CBD5E1">-19.9419, -43.5997</div>
+        <div class="mono" style="font-size:11px;color:#9CA3AF;margin-top:4px">2026-03-01 — 2026-09-15</div>
+      </div>
+    </aside>
+    <main class="center">
+      <section class="card">
+        <div class="label">Viewport Topográfico 3D &amp; Mapa Sincronizado</div>
+        <div class="well"></div>
+      </section>
+      <section class="card">
+        <div class="label">Deconvolução Temporal &amp; Loop Termo-Mecânico</div>
+        <div class="well"></div>
+      </section>
+    </main>
+    <aside class="right">
+      <div class="label">Diagnóstico de Estabilidade</div>
+      <div class="card" style="border-color:#A16207">
+        <div class="mono" style="font-size:11px;color:#FACC15">ATENÇÃO GEOTÉCNICA</div>
+        <div style="font-size:16px;font-weight:700;margin-top:4px">Deformação Residual</div>
+      </div>
+      <div class="card">
+        <div class="row"><span>Velocidade</span><span class="mono">-0.72 mm/ciclo</span></div>
+        <div class="row"><span>Aceleração</span><span class="mono">-1.15 mm</span></div>
+        <div class="row"><span>Score (γ)</span><span class="mono" style="color:#4EA8DE">11.4</span></div>
+      </div>
+      <div class="card">
+        <div class="label">Camadas de Compensação</div>
+        <div class="row"><span>Ionosfera (Banda L)</span><span class="mono">ON</span></div>
+        <div class="row"><span>Troposfera Úmida/Seca</span><span class="mono">ON</span></div>
+        <div class="row"><span>Marés Terrestres</span><span class="mono">ON</span></div>
+        <div class="row"><span>NASA POWER TS/SW</span><span class="mono">ON</span></div>
+      </div>
+    </aside>
+  </div>
+</div>
+</body>
+</html>

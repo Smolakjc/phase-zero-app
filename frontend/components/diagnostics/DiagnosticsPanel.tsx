@@ -24,22 +24,31 @@ export function DiagnosticsPanel({
   onSetMinCoherenceDraft,
 }: DiagnosticsPanelProps) {
   return (
-    <div className="lg:col-span-4 bg-slate-900/90 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3">
-      <div>
-        <h2 className="text-sm font-mono font-bold uppercase tracking-wider text-sky-400 mb-2.5">
-          2. Diagnóstico &amp; Métricas de Decisão
+    <aside
+      aria-labelledby="diagnostics-heading"
+      className="bg-[#10141b] border border-[#222933] rounded-lg p-4 flex flex-col gap-3.5 h-full"
+    >
+      <div className="flex items-center justify-between border-b border-[#222933] pb-2.5">
+        <h2 id="diagnostics-heading" className="text-sm font-bold text-[#eef2f6]">
+          Diagnóstico Estrutural
         </h2>
+        <span className="text-[11px] text-[#8a96a8]">Pixel de referência</span>
+      </div>
 
-        <StatusCard status={status} />
+      <StatusCard status={status} />
 
-        <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 mb-3 space-y-2">
-          <div className="text-[11px] font-mono uppercase text-sky-400 font-bold">
-            📊 Índices Atuais Calculados vs. Regras de Cor:
-          </div>
-          <MetricsGrid status={status} />
-          <ThresholdLegend />
+      <div className="p-3 rounded-md bg-[#131820] border border-[#222933] space-y-2.5">
+        <div className="text-xs font-semibold text-[#cbd5e1]">
+          Métricas Decisórias e Limiares
         </div>
+        <MetricsGrid status={status} />
+        <ThresholdLegend />
+      </div>
 
+      <div className="space-y-2">
+        <div className="text-xs font-semibold text-[#cbd5e1]">
+          Estágios de Compensação Física
+        </div>
         <CompensationToggles
           applyIonosphere={params.apply_ionosphere}
           applyTroposphere={params.apply_troposphere}
@@ -50,10 +59,9 @@ export function DiagnosticsPanel({
           onToggleSolidTides={(v) => onSetParam("apply_solid_tides", v)}
           onToggleNasaPower={(v) => onSetParam("apply_nasa_power", v)}
         />
-
-        <CoherenceSlider value={minCoherenceDraft} onChange={onSetMinCoherenceDraft} />
       </div>
-    </div>
+
+      <CoherenceSlider value={minCoherenceDraft} onChange={onSetMinCoherenceDraft} />
+    </aside>
   );
 }
-

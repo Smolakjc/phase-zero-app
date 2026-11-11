@@ -2,6 +2,7 @@
 
 import React from "react";
 import { ScenarioItem } from "@phase-zero/shared";
+import { stripDecorativeEmojis } from "../../lib/colors";
 
 export interface ScenarioSelectorProps {
   scenarios: readonly ScenarioItem[];
@@ -9,15 +10,28 @@ export interface ScenarioSelectorProps {
   onSelect: (id: string, defaultStart: string, defaultEnd: string) => void;
 }
 
+const SCENARIO_DOT_COLOR: Record<string, string> = {
+  itaipu_normal: "bg-[#22c55e]",
+  gongo_soco_active: "bg-[#eab308]",
+  maceio_subsidence: "bg-[#f43f5e]",
+  brumadinho_hist: "bg-[#f43f5e]",
+};
+
 export function ScenarioSelector({
   scenarios,
   activeScenarioId,
   onSelect,
 }: ScenarioSelectorProps) {
   return (
-    <div className="flex flex-wrap gap-2" role="group" aria-label="Cenários Calibrados">
+    <nav
+      className="flex flex-wrap items-center gap-1.5 shrink-0"
+      aria-label="Cenários calibrados"
+    >
       {scenarios.map((sc) => {
         const isActive = activeScenarioId === sc.id;
+        const cleanLabel = stripDecorativeEmojis(sc.label);
+        const dotClass = SCENARIO_DOT_COLOR[sc.id] ?? "bg-[#3b9eeb]";
+
         return (
           <button
             key={sc.id}
@@ -25,17 +39,20 @@ export function ScenarioSelector({
             data-testid={`scenario-btn-${sc.id}`}
             aria-pressed={isActive}
             onClick={() => onSelect(sc.id, sc.default_start, sc.default_end)}
-            className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all duration-200 border ${
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold whitespace-nowrap transition-colors border cursor-pointer ${
               isActive
-                ? "bg-sky-600 text-white border-sky-400 scale-[1.02] shadow-lg shadow-sky-900/50"
-                : "bg-slate-900/90 text-slate-300 border-slate-800 hover:bg-slate-800"
+                ? "bg-[#132538] text-[#eef2f6] border-[#3b9eeb]"
+                : "bg-[#131820] text-[#a1adbf] border-[#222933] hover:border-[#313b49] hover:text-[#eef2f6]"
             }`}
           >
-            {sc.label}
+            <span
+              className={`w-2 h-2 rounded-full shrink-0 ${dotClass}`}
+              aria-hidden="true"
+            />
+            <span>{cleanLabel}</span>
           </button>
         );
       })}
-    </div>
+    </nav>
   );
 }
-

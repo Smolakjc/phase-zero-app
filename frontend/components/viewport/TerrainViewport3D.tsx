@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { GridPixel, ScenarioMeta } from "@phase-zero/shared";
+import { stripDecorativeEmojis } from "../../lib/colors";
+import { RotateResetIcon } from "../icons/SurveyIcons";
 import { PixelInfoBar } from "./PixelInfoBar";
 import { TerrainCanvas } from "./TerrainCanvas";
 
@@ -16,7 +18,7 @@ const DEFAULT_AZIMUTH = 34;
 const DEFAULT_PITCH = 54;
 
 /**
- * Painel completo do Viewport Topográfico 3D (`K-F1` + `K-F2`).
+ * Painel do Viewport Topográfico 3D (`K-F1` + `K-F2`).
  */
 export function TerrainViewport3D({
   meta,
@@ -27,21 +29,27 @@ export function TerrainViewport3D({
   const [rotAzimuth, setRotAzimuth] = useState<number>(DEFAULT_AZIMUTH);
   const [rotPitch, setRotPitch] = useState<number>(DEFAULT_PITCH);
 
+  const cleanName = stripDecorativeEmojis(meta.name);
+  const cleanRegime = stripDecorativeEmojis(meta.regime_info);
+
   return (
-    <div className="lg:col-span-8 bg-slate-900/90 border border-slate-800 rounded-xl p-4 flex flex-col justify-between">
-      <div className="flex flex-wrap justify-between items-center mb-2 gap-2">
-        <div>
-          <h2 className="text-sm font-mono font-bold uppercase tracking-wider text-sky-400">
-            1. Viewport Topográfico 3D Interativo (Malha Auto-Normalizada 80m)
+    <section
+      aria-labelledby="terrain-3d-heading"
+      className="bg-[#131820] border border-[#222933] rounded-lg p-4 flex flex-col justify-between gap-3"
+    >
+      <div className="flex flex-wrap justify-between items-start gap-2.5">
+        <div className="min-w-0">
+          <h2 id="terrain-3d-heading" className="text-sm font-bold text-[#eef2f6]">
+            Malha Topográfica 3D (80m × 80m)
           </h2>
-          <p className="text-xs text-slate-400">
-            {meta.name} — <span className="text-slate-300">{meta.regime_info}</span>
+          <p className="text-xs text-[#8a96a8] mt-0.5 truncate" title={`${cleanName} — ${cleanRegime}`}>
+            <span className="text-[#cbd5e1]">{cleanName}</span> · {cleanRegime}
           </p>
         </div>
 
-        <div className="flex items-center gap-3 text-xs font-mono bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
-          <label className="flex items-center gap-1.5 text-slate-300">
-            Girar:
+        <div className="flex flex-wrap items-center gap-3 text-xs bg-[#080b0f] px-2.5 py-1.5 rounded-md border border-[#222933]">
+          <label className="flex items-center gap-1.5 text-[#a1adbf]">
+            <span>Azimute</span>
             <input
               type="range"
               aria-label="Girar malha 3D"
@@ -49,11 +57,11 @@ export function TerrainViewport3D({
               max={85}
               value={rotAzimuth}
               onChange={(e) => setRotAzimuth(Number(e.target.value))}
-              className="w-20 accent-sky-400 cursor-pointer"
+              className="pz-range w-16"
             />
           </label>
-          <label className="flex items-center gap-1.5 text-slate-300">
-            Inclinar:
+          <label className="flex items-center gap-1.5 text-[#a1adbf]">
+            <span>Inclinação</span>
             <input
               type="range"
               aria-label="Inclinar malha 3D"
@@ -61,7 +69,7 @@ export function TerrainViewport3D({
               max={78}
               value={rotPitch}
               onChange={(e) => setRotPitch(Number(e.target.value))}
-              className="w-20 accent-sky-400 cursor-pointer"
+              className="pz-range w-16"
             />
           </label>
           <button
@@ -71,9 +79,10 @@ export function TerrainViewport3D({
               setRotAzimuth(DEFAULT_AZIMUTH);
               setRotPitch(DEFAULT_PITCH);
             }}
-            className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700"
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#181e28] hover:bg-[#222b39] text-[#eef2f6] border border-[#313b49] text-[11px] font-medium transition-colors cursor-pointer"
           >
-            Reset 3D
+            <RotateResetIcon className="w-3 h-3 text-[#3b9eeb]" />
+            <span>Reset</span>
           </button>
         </div>
       </div>
@@ -92,7 +101,6 @@ export function TerrainViewport3D({
       />
 
       <PixelInfoBar pixel={selectedPixel} />
-    </div>
+    </section>
   );
 }
-

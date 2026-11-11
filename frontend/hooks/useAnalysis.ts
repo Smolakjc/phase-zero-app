@@ -12,11 +12,13 @@ import React, {
 import {
   AnalysisRequest,
   AnalysisResponse,
+  DamCatalogItem,
   GridPixel,
   REFERENCE_PIXEL_ID,
   ScenarioItem,
 } from "@phase-zero/shared";
-import { analyze, FALLBACK_SCENARIOS, getScenarios } from "../lib/api";
+import { analyze, FALLBACK_SCENARIOS, getApiBaseUrl, getScenarios } from "../lib/api";
+import { FALLBACK_DAMS, fetchDamCatalog, findDamByCoords } from "../lib/dams";
 import {
   clearStoredToken,
   getStoredToken,
@@ -31,9 +33,19 @@ export interface CustomSearchInput {
   name: string;
 }
 
+const SCENARIO_TO_DAM_ID: Record<string, string> = {
+  itaipu_normal: "itaipu_pr",
+  gongo_soco_active: "sul_superior_gongo_soco",
+  maceio_subsidence: "maceio_mutange",
+  brumadinho_hist: "brumadinho_b1",
+};
+
 export interface AnalysisContextValue {
   params: AnalysisRequest;
   scenarios: ScenarioItem[];
+  dams: DamCatalogItem[];
+  selectedDamId: string | null;
+  isFreePoint: boolean;
   data: AnalysisResponse | null;
   selectedPixel: GridPixel | null;
   loading: boolean;
@@ -43,6 +55,8 @@ export interface AnalysisContextValue {
   setParam: <K extends keyof AnalysisRequest>(key: K, value: AnalysisRequest[K]) => void;
   setMinCoherenceDraft: (value: number) => void;
   selectScenario: (scenarioId: string, defaultStart: string, defaultEnd: string) => void;
+  selectDam: (dam: DamCatalogItem) => void;
+  selectFreePoint: (lat: number, lon: number) => void;
   updatePeriod: (startDate: string, endDate: string) => void;
   runCustom: (input: CustomSearchInput) => void;
   selectPixel: (pixel: GridPixel) => void;
@@ -60,9 +74,9 @@ const DEFAULT_PARAMS: AnalysisRequest = {
   min_coherence: 0.4,
   start_date: "2026-03-01",
   end_date: "2026-09-15",
-  custom_lat: -25.408,
-  custom_lon: -54.588,
-  custom_name: "Usina de Itaipu (PR)",
+  custom_lat: -19.9419,
+  custom_lon: -43.5997,
+  custom_name: "Barragem Sul Superior / Mina Gongo Soco (Barão de Cocais, MG)",
   earthdata_token: "",
 };
 
@@ -74,6 +88,9 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     DEFAULT_PARAMS.min_coherence,
   );
   const [scenarios, setScenarios] = useState<ScenarioItem[]>(FALLBACK_SCENARIOS);
+  const [dams, setDams] = useState<DamCatalogItem[]>(FALLBACK_DAMS);
+  const [selectedDamId, setSelectedDamId] = useState<string | null>("sul_superior_gongo_soco");
+  const [isFreePoint, setIsFreePoint] = useState<boolean>(false);
   const [data, setData] = useState<AnalysisResponse | null>(null);
   const [selectedPixel, setSelectedPixel] = useState<GridPixel | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -84,7 +101,6 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
   const selectedPixelIdRef = useRef<string>(REFERENCE_PIXEL_ID);
   const hasLoadedOnceRef = useRef<boolean>(false);
 
-  // Carrega token salvo em localStorage e lista de cenários ao montar
   useEffect(() => {
     const saved = getStoredToken();
     if (saved) {
@@ -94,10 +110,12 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     getScenarios(ctrl.signal).then((list) => {
       if (list.length > 0) setScenarios(list);
     });
+    fetchDamCatalog(getApiBaseUrl(), ctrl.signal).then((list) => {
+      if (list.length > 0) setDams(list);
+    });
     return () => ctrl.abort();
   }, []);
 
-  // Debounce de 300 ms para o slider de coerência mínima (S-F2)
   useEffect(() => {
     if (Math.abs(minCoherenceDraft - params.min_coherence) < 1e-6) {
       return;
@@ -108,7 +126,6 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     return () => window.clearTimeout(timer);
   }, [minCoherenceDraft, params.min_coherence]);
 
-  // Efeito principal de análise com cancelamento via AbortController
   useEffect(() => {
     const ctrl = new AbortController();
     if (!hasLoadedOnceRef.current) {
@@ -169,14 +186,60 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
   const selectScenario = useCallback(
     (scenarioId: string, defaultStart: string, defaultEnd: string) => {
       selectedPixelIdRef.current = REFERENCE_PIXEL_ID;
+      const mappedDamId = SCENARIO_TO_DAM_ID[scenarioId] ?? null;
+      const matchedDam = mappedDamId
+        ? dams.find((d) => d.id === mappedDamId) ?? null
+        : null;
+
+      setSelectedDamId(matchedDam ? matchedDam.id : null);
+      setIsFreePoint(false);
       setParams((prev) => ({
         ...prev,
         scenario_id: scenarioId,
         start_date: defaultStart,
         end_date: defaultEnd,
+        custom_lat: matchedDam ? matchedDam.lat : prev.custom_lat,
+        custom_lon: matchedDam ? matchedDam.lon : prev.custom_lon,
+        custom_name: matchedDam ? matchedDam.name : prev.custom_name,
       }));
     },
-    [],
+    [dams],
+  );
+
+  const selectDam = useCallback((dam: DamCatalogItem) => {
+    selectedPixelIdRef.current = REFERENCE_PIXEL_ID;
+    setSelectedDamId(dam.id);
+    setIsFreePoint(false);
+    setParams((prev) => ({
+      ...prev,
+      scenario_id: "custom",
+      start_date: dam.default_start,
+      end_date: dam.default_end,
+      custom_lat: dam.lat,
+      custom_lon: dam.lon,
+      custom_name: dam.name,
+    }));
+  }, []);
+
+  const selectFreePoint = useCallback(
+    (lat: number, lon: number) => {
+      const nearby = findDamByCoords(dams, lat, lon);
+      if (nearby) {
+        selectDam(nearby);
+        return;
+      }
+      selectedPixelIdRef.current = REFERENCE_PIXEL_ID;
+      setSelectedDamId(null);
+      setIsFreePoint(true);
+      setParams((prev) => ({
+        ...prev,
+        scenario_id: "custom",
+        custom_lat: lat,
+        custom_lon: lon,
+        custom_name: "Ponto Livre no Mapa",
+      }));
+    },
+    [dams, selectDam],
   );
 
   const updatePeriod = useCallback((startDate: string, endDate: string) => {
@@ -187,18 +250,24 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const runCustom = useCallback((input: CustomSearchInput) => {
-    selectedPixelIdRef.current = REFERENCE_PIXEL_ID;
-    setParams((prev) => ({
-      ...prev,
-      scenario_id: "custom",
-      start_date: input.startDate,
-      end_date: input.endDate,
-      custom_lat: input.lat,
-      custom_lon: input.lon,
-      custom_name: input.name,
-    }));
-  }, []);
+  const runCustom = useCallback(
+    (input: CustomSearchInput) => {
+      selectedPixelIdRef.current = REFERENCE_PIXEL_ID;
+      const matched = findDamByCoords(dams, input.lat, input.lon);
+      setSelectedDamId(matched ? matched.id : null);
+      setIsFreePoint(!matched);
+      setParams((prev) => ({
+        ...prev,
+        scenario_id: "custom",
+        start_date: input.startDate,
+        end_date: input.endDate,
+        custom_lat: input.lat,
+        custom_lon: input.lon,
+        custom_name: input.name,
+      }));
+    },
+    [dams],
+  );
 
   const selectPixel = useCallback((pixel: GridPixel) => {
     selectedPixelIdRef.current = pixel.id;
@@ -223,6 +292,9 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     () => ({
       params,
       scenarios,
+      dams,
+      selectedDamId,
+      isFreePoint,
       data,
       selectedPixel,
       loading,
@@ -232,6 +304,8 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
       setParam,
       setMinCoherenceDraft,
       selectScenario,
+      selectDam,
+      selectFreePoint,
       updatePeriod,
       runCustom,
       selectPixel,
@@ -242,6 +316,9 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     [
       params,
       scenarios,
+      dams,
+      selectedDamId,
+      isFreePoint,
       data,
       selectedPixel,
       loading,
@@ -251,6 +328,8 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
       setParam,
       setMinCoherenceDraft,
       selectScenario,
+      selectDam,
+      selectFreePoint,
       updatePeriod,
       runCustom,
       selectPixel,

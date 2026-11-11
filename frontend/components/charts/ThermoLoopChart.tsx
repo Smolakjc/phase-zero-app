@@ -14,9 +14,9 @@ export interface ThermoLoopChartProps {
 const VIEW_W = 500;
 const VIEW_H = 240;
 const X_LEFT = 55;
-const X_RIGHT = 465;
+const X_RIGHT = 468;
 const Y_TOP = 24;
-const Y_BOTTOM = 205;
+const Y_BOTTOM = 204;
 
 /**
  * Gráfico SVG do Loop Termo-Mecânico (TS °C × Deslocamento LOS mm) auto-escalado (`K-F4`).
@@ -53,19 +53,19 @@ export function ThermoLoopChart({
   return (
     <ChartFrame
       className="lg:col-span-5"
-      title={`4. Thermo-Mechanical Response Loop [${pixel.id}]`}
-      subtitle="Temperatura Superficial TS (°C) vs. Deslocamento Corrigido (mm)."
+      title={`Loop Termo-Mecânico (${pixel.id})`}
+      subtitle="Temperatura superficial TS (°C) vs. deslocamento corrigido (mm)."
       rightSlot={
-        <span className="text-xs font-mono text-sky-300 bg-slate-950 px-2.5 py-1 rounded border border-slate-800">
-          Taxa: {residualTrendMmPerPass} mm/ciclo
+        <span className="text-[11px] font-mono tabular-nums text-[#6ab6f0] bg-[#080b0f] px-2.5 py-1 rounded-md border border-[#222933]">
+          Taxa: {residualTrendMmPerPass} mm/c
         </span>
       }
     >
-      <div className="relative">
+      <div className="space-y-2">
         <svg
           data-testid="thermo-loop-chart"
           viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-          className="w-full h-[230px] bg-[#02050b] rounded-xl border border-slate-800"
+          className="block w-full h-[220px] bg-[#080b0f] rounded-md border border-[#222933]"
         >
           <HorizontalGridLines
             ticks={ticks}
@@ -79,30 +79,39 @@ export function ThermoLoopChart({
             y1={Y_TOP}
             x2={(X_LEFT + X_RIGHT) / 2}
             y2={Y_BOTTOM}
-            stroke="#1e293b"
+            stroke="#18202c"
             strokeWidth="1"
           />
-          <text x={320} y={228} fill="#64748b" fontSize="10" fontFamily="monospace">
-            Temp. Superficial TS ({minTemp.toFixed(0)}°C–{maxTemp.toFixed(0)}°C) →
+          <text x={305} y={226} fill="#8a96a8" fontSize="10" fontFamily="monospace">
+            TS ({minTemp.toFixed(0)}°C–{maxTemp.toFixed(0)}°C)
           </text>
-          <text x={12} y={16} fill="#64748b" fontSize="10" fontFamily="monospace">
-            ↑ Deslocamento LOS (mm)
+          <text x={14} y={16} fill="#8a96a8" fontSize="10" fontFamily="monospace">
+            Desloc. LOS (mm)
           </text>
 
-          <Polyline points={points} stroke="#38bdf8" strokeWidth={2.4} />
+          <Polyline points={points} stroke="#3b9eeb" strokeWidth={2.2} />
 
           {loop.map((pt, idx) => {
             const p = points[idx];
+            const isFirst = idx === 0;
             const isLast = idx === loop.length - 1;
             return (
               <circle
                 key={`${pt.date}-${idx}`}
                 cx={p.x}
                 cy={p.y}
-                r={isLast ? 6.5 : 3.5}
-                fill={isLast ? "#f43f5e" : "#38bdf8"}
-                stroke={hoverIdx === idx ? "#ffffff" : "none"}
-                strokeWidth={2}
+                r={isLast ? 6 : isFirst ? 4.5 : 3.2}
+                fill={isLast ? "#f43f5e" : isFirst ? "#080b0f" : "#3b9eeb"}
+                stroke={
+                  hoverIdx === idx
+                    ? "#eef2f6"
+                    : isFirst
+                      ? "#eef2f6"
+                      : isLast
+                        ? "#080b0f"
+                        : "none"
+                }
+                strokeWidth={isFirst || hoverIdx === idx ? 1.8 : 1.2}
                 className="cursor-pointer"
                 onMouseEnter={() => setHoverIdx(idx)}
                 onMouseLeave={() => setHoverIdx(null)}
@@ -114,12 +123,12 @@ export function ThermoLoopChart({
         {hoverIdx !== null && loop[hoverIdx] && (
           <div
             data-testid="thermo-tooltip"
-            className="mt-2 flex flex-wrap gap-3 text-xs font-mono bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-slate-300"
+            className="flex flex-wrap items-center gap-3 text-xs font-mono tabular-nums bg-[#080b0f] px-3 py-1.5 rounded-md border border-[#222933] text-[#cbd5e1]"
           >
-            <span className="text-sky-400 font-bold">📅 {loop[hoverIdx].date}</span>
+            <span className="text-[#3b9eeb] font-semibold">{loop[hoverIdx].date}</span>
             <span>TS: {loop[hoverIdx].surface_temp_c} °C</span>
-            <span>Deslocamento: {loop[hoverIdx].displacement_mm} mm</span>
-            <span className="text-rose-400 font-bold">
+            <span>Desloc.: {loop[hoverIdx].displacement_mm} mm</span>
+            <span className="text-[#fda4af] font-semibold">
               Residual: {loop[hoverIdx].residual_mm} mm
             </span>
           </div>
@@ -128,4 +137,3 @@ export function ThermoLoopChart({
     </ChartFrame>
   );
 }
-

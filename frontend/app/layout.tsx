@@ -1,10 +1,26 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
+import { Archivo, Fira_Code } from "next/font/google";
 import React from "react";
 
+const archivo = Archivo({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const firaCode = Fira_Code({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "PHASE-ZERO // NISAR Surface Anomaly Detection",
-  description: "Environmental Compensation for SAR-Based Surface Anomaly Detection",
+  title: "PHASE-ZERO — Triagem Interferométrica InSAR e Compensação Ambiental",
+  description:
+    "Sistema de triagem e compensação ambiental para detecção de anomalias de superfície via radar SAR (NISAR Banda L e Sentinel-1 Banda C).",
 };
 
 export const viewport: Viewport = {
@@ -13,8 +29,8 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
-      <body className="min-h-screen bg-[#050811] text-slate-100 antialiased selection:bg-sky-500 selection:text-white">
+    <html lang="pt-BR" className={`${archivo.variable} ${firaCode.variable}`}>
+      <body className="min-h-screen bg-[#0c0f14] text-[#eef2f6] font-sans antialiased">
         {children}
       </body>
     </html>

@@ -1,0 +1,254 @@
+{
+  "title": "Escolha a direção visual do PHASE-ZERO",
+  "question": "A direção sorteada para o painel operacional foi Atlas Geodésico de Campo. Escolha uma direção para construir, peça outro sorteio (mais seguro ou mais ousado) ou adote o padrão da categoria.",
+  "options": [
+    {
+      "id": "assigned",
+      "kind": "assigned",
+      "kicker": "THE ROLL",
+      "label": "Atlas Geodésico de Campo",
+      "lineage": "Cartas geológicas CPRM/IBGE e boletins noturnos de observatório sísmico",
+      "thesis": "Painel de triagem InSAR tratado como prancha cartográfica de precisão em basalto fosco, com uma única cor cobalto reservada ao vetor radar e ao alvo ativo.",
+      "palette": [
+        "#0C0F14",
+        "#131820",
+        "#EEF2F6",
+        "#3B9EEB",
+        "#22C55E",
+        "#F43F5E"
+      ],
+      "materials": [
+        "basalto fosco",
+        "linhas capilares 1px",
+        "tipografia tabular"
+      ],
+      "viewport": "Barra operacional superior com os 4 cenários e procedência NASA; abaixo, mapa de barragens e malha topográfica 3D lado a lado com o painel de diagnóstico físico fixo à direita e séries temporais sincronizadas logo abaixo.",
+      "risk": "Pode parecer austero demais se a hierarquia entre o status da barragem e os controles de filtro perder contraste.",
+      "raised": [
+        {
+          "from": "variable-font-specimen",
+          "raise": "Leitura paramétrica contínua: alterar o slider de coerência ou clicar na malha 3D atualiza coordenadas, elevação e métricas tabulares em sincronia visual."
+        },
+        {
+          "from": "digital-design-canon-monochrome-product-marketing",
+          "raise": "Contenção cromática rígida: cobalto exclusivo para seleção ativa e vetor LOS; verde, âmbar e carmim restritos ao diagnóstico estrutural real."
+        },
+        {
+          "from": "aww2-zoo-gardens-guide-map",
+          "raise": "Diferenciação geométrica no mapa: marcadores sólidos, tracejados e vazados distinguem barragens de pé, em descaracterização e rompidas sem depender só de cor."
+        },
+        {
+          "from": "rw-manual-acetate-tab-board",
+          "raise": "Separação explícita de camadas nos gráficos: sinal bruto, modelo térmico NASA POWER e anomalia residual isolados com legenda interativa clara."
+        }
+      ],
+      "html": ".impeccable/mocks/decision/assigned.html",
+      "comp": ".impeccable/mocks/decision/assigned.webp"
+    },
+    {
+      "id": "model-pick",
+      "kind": "pick",
+      "kicker": "IMPECCABLE’S PICK",
+      "label": "Caderno Técnico de Barragens Alpinas",
+      "lineage": "Monografias suíças de engenharia hidroestrutural em concreto e grafite",
+      "thesis": "Estação analítica silenciosa em grafite mineral e pedra fundida com grelha editorial rígida e painéis sem brilho decorativo.",
+      "palette": [
+        "#111315",
+        "#191C20",
+        "#F4F6F8",
+        "#4EA8DE"
+      ],
+      "materials": [
+        "grafite mineral",
+        "filetes técnicos",
+        "sem glow"
+      ],
+      "viewport": "Cabeçalho enxuto com seletor de cenários e busca Lat/Lon; coluna principal dividindo o viewport 3D em destaque e o mapa logo ao lado, com rack de filtros físicos alinhado à direita.",
+      "risk": "Direção segura e clássica de engenharia; corre o risco de parecer mais conservadora que o Atlas Geodésico.",
+      "html": ".impeccable/mocks/decision/model-pick.html",
+      "comp": ".impeccable/mocks/decision/model-pick.webp"
+    },
+    {
+      "id": "challenger-orienteering",
+      "kind": "challenger",
+      "catalogId": "notation-diagram-systems-orienteering-map",
+      "verdict": "competitive",
+      "label": "Mapa de Orientação & Legenda ISOM",
+      "lineage": "Cartas topográficas ISOM de orientação com curvas de nível e rota em magenta",
+      "thesis": "Terreno topográfico neutro e legível na base, com toda a trajetória de inspeção e vetor LOS destacados em uma única tinta violeta-magenta.",
+      "palette": [
+        "#0D1318",
+        "#161E26",
+        "#E2E8F0",
+        "#C026D3"
+      ],
+      "materials": [
+        "curvas de nível",
+        "legenda codificada",
+        "vetor único"
+      ],
+      "viewport": "Mapa geográfico e relevo 3D como camada cartográfica contínua à esquerda, pareados a uma tabela-legenda codificada de barragens e métricas à direita.",
+      "case": "Funde muito bem na separação entre base topográfica e camadas de anomalia; perde apenas na familiaridade para leitura de séries temporais longas.",
+      "risk": "O acento magenta pode competir com marcadores de barragens rompidas se não houver separação de tons.",
+      "html": ".impeccable/mocks/decision/challenger-orienteering.html",
+      "comp": ".impeccable/mocks/decision/challenger-orienteering.webp",
+      "hero": "https://impeccable.style/worlds/cards/notation-diagram-systems-orienteering-map-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/notation-diagram-systems-orienteering-map.webp"
+    },
+    {
+      "id": "challenger-gateboard",
+      "kind": "challenger",
+      "catalogId": "vernacular-ephemera-boarding-pass-and-gate-board",
+      "verdict": "competitive",
+      "label": "Painel de Triagem & Passe Segmentado",
+      "lineage": "Quadros operacionais de embarque com ranking em tempo real e destaque de alteração",
+      "thesis": "Barra superior como ficha técnica segmentada da barragem ativa e lista lateral ranqueada por criticidade que evidencia mudanças de estado.",
+      "palette": [
+        "#0A0D12",
+        "#141922",
+        "#F8FAFC",
+        "#F59E0B"
+      ],
+      "materials": [
+        "colunas tabulares",
+        "ficha segmentada",
+        "destaque de alerta"
+      ],
+      "viewport": "Ficha segmentada no topo com alvo, sensor, período e score; abaixo, lista ranqueada de barragens e diagnóstico em colunas fixas ao lado da malha 3D.",
+      "case": "Excelente para triagem rápida das 21 barragens e leitura das 3 métricas; sacrifica um pouco a imersão espacial do mapa.",
+      "risk": "Pode lembrar painel de despacho aeroportuário se o mapa perder espaço útil.",
+      "html": ".impeccable/mocks/decision/challenger-gateboard.html",
+      "comp": ".impeccable/mocks/decision/challenger-gateboard.webp",
+      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-boarding-pass-and-gate-board-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/vernacular-ephemera-boarding-pass-and-gate-board.webp"
+    },
+    {
+      "id": "challenger-specimen",
+      "kind": "challenger",
+      "catalogId": "variable-font-specimen",
+      "verdict": "declined",
+      "label": "Espécime Tipográfico Variável",
+      "lineage": "Catálogos interativos de fundição tipográfica em papel claro",
+      "thesis": "Sliders contínuos que transformam uma grade gigante de glifos com leitura paramétrica.",
+      "palette": [
+        "#FAF9F6",
+        "#111111",
+        "#E11D48"
+      ],
+      "materials": [
+        "papel claro",
+        "grade tipográfica"
+      ],
+      "viewport": "Um único número gigante domina a tela sobre fundo claro.",
+      "case": "Inadequado para análise geoespacial: tipografia gigante não comporta mapa, malha 3D e dois gráficos.",
+      "kept": "Leitura numérica tabular responsiva aos sliders em tempo real.",
+      "risk": "Sacrifica a densidade operacional necessária ao painel.",
+      "hero": "https://impeccable.style/worlds/cards/variable-font-specimen-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/variable-font-specimen.webp"
+    },
+    {
+      "id": "challenger-monochrome",
+      "kind": "challenger",
+      "catalogId": "digital-design-canon-monochrome-product-marketing",
+      "verdict": "declined",
+      "label": "Monocromia Editorial de Produto",
+      "lineage": "Páginas de apresentação monocromáticas de software em escala neutra",
+      "thesis": "Seções alternando afirmação e prova visual em escala neutra quase pura.",
+      "palette": [
+        "#FFFFFF",
+        "#0F172A",
+        "#2563EB"
+      ],
+      "materials": [
+        "escala neutra",
+        "botões fantasma"
+      ],
+      "viewport": "Página vertical de marketing em fluxo de texto e capturas.",
+      "case": "Formato de landing page promocional inadequado para uma ferramenta interativa de monitoramento.",
+      "kept": "Disciplina de usar uma única cor de acento funcional e eliminar ruído decorativo.",
+      "risk": "Transformaria uma estação técnica em vitrine estática.",
+      "hero": "https://impeccable.style/worlds/cards/digital-design-canon-monochrome-product-marketing-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/digital-design-canon-monochrome-product-marketing.webp"
+    },
+    {
+      "id": "challenger-gardens",
+      "kind": "challenger",
+      "catalogId": "aww2-zoo-gardens-guide-map",
+      "verdict": "declined",
+      "label": "Mapa Ilustrado de Jardins",
+      "lineage": "Guias dobráveis ilustrados com áreas orgânicas de cor chapada",
+      "thesis": "Zonas geográficas desenhadas como lóbulos coloridos planos com cápsulas lúdicas.",
+      "palette": [
+        "#F5F1E4",
+        "#8ED462",
+        "#2C2E2A",
+        "#FF705D"
+      ],
+      "materials": [
+        "cor chapada",
+        "cápsulas lúdicas"
+      ],
+      "viewport": "Mapa orgânico lúdico em papel creme com etiquetas em cápsula.",
+      "case": "Estética recreativa incompatível com análise geotécnica de risco e rompimento de barragens.",
+      "kept": "Codificação visual distinta por forma geométrica além da cor no mapa.",
+      "risk": "Passaria tom informal inadequado ao domínio de segurança de barragens.",
+      "hero": "https://impeccable.style/worlds/cards/aww2-zoo-gardens-guide-map-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/aww2-zoo-gardens-guide-map.webp"
+    },
+    {
+      "id": "challenger-manual",
+      "kind": "challenger",
+      "catalogId": "rw-manual-acetate-tab-board",
+      "verdict": "declined",
+      "label": "Manual com Abas de Acetato",
+      "lineage": "Manuais técnicos impressos com folhas de acetato perfuradas e divisórias coloridas",
+      "thesis": "Camadas sobrepostas em acetato translúcido sobre divisórias de cor sólida e abas laterais.",
+      "palette": [
+        "#F59E0B",
+        "#1E293B",
+        "#F8FAFC"
+      ],
+      "materials": [
+        "acetato leitoso",
+        "abas escalonadas"
+      ],
+      "viewport": "Livro técnico aberto com abas laterais verticais e sobreposições translúcidas.",
+      "case": "Metáfora de manual impresso entra em conflito com manipulação direta de mapa Leaflet e canvas 3D.",
+      "kept": "Isolamento nítido entre sinal bruto, modelo climático e anomalia residual.",
+      "risk": "Tornaria a navegação lateral um recurso estilístico artificial.",
+      "hero": "https://impeccable.style/worlds/cards/rw-manual-acetate-tab-board-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/rw-manual-acetate-tab-board.webp"
+    }
+  ],
+  "reroll": {
+    "registers": [
+      "safer",
+      "bolder"
+    ]
+  },
+  "buildPath": {
+    "value": "code",
+    "toggle": true
+  },
+  "canon": true,
+  "canonCard": {
+    "kind": "canon",
+    "label": "Padrão de Categoria — Painel Dark Técnico",
+    "thesis": "Layout padrão de dashboard escuro com barra superior, cartões alinhados e acento azul-céu.",
+    "palette": [
+      "#0F172A",
+      "#1E293B",
+      "#F8FAFC",
+      "#38BDF8"
+    ],
+    "materials": [
+      "grade modular",
+      "cartões escuros"
+    ],
+    "viewport": "Arranjo tradicional do setor executado sem desvios, com tipografia limpa e sem emojis.",
+    "risk": "Visual previsível por escolha, menos autoral que as outras direções.",
+    "html": ".impeccable/mocks/decision/canon.html",
+    "comp": ".impeccable/mocks/decision/canon.webp"
+  },
+  "steer": true
+}

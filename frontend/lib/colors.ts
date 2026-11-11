@@ -5,15 +5,25 @@ import {
 } from "@phase-zero/shared";
 
 /**
- * Escala de cores única para canvas 3D, gráficos SVG e cards de diagnóstico (`K-F5`).
+ * Escala cromática única para canvas 3D, gráficos SVG e diagnóstico (`K-F5`).
  */
 
 export const STATUS_CARD_CLASSES: Record<StatusCode, string> = {
-  GREEN:
-    "bg-emerald-950/90 border-emerald-500 text-emerald-300 shadow-lg shadow-emerald-950/50",
-  YELLOW:
-    "bg-amber-950/90 border-amber-500 text-amber-300 shadow-lg shadow-amber-950/50",
-  RED: "bg-rose-950/90 border-rose-500 text-rose-300 shadow-lg shadow-rose-950/50",
+  GREEN: "bg-[#0d2016] border-[#1f5e39] text-[#bbf7d0]",
+  YELLOW: "bg-[#20190a] border-[#854d0e] text-[#fef08a]",
+  RED: "bg-[#230f16] border-[#9f1239] text-[#fecdd3]",
+};
+
+export const STATUS_DOT_CLASSES: Record<StatusCode, string> = {
+  GREEN: "bg-[#22c55e]",
+  YELLOW: "bg-[#eab308]",
+  RED: "bg-[#f43f5e]",
+};
+
+export const STATUS_TIER_LABEL: Record<StatusCode, string> = {
+  GREEN: "Estável",
+  YELLOW: "Atenção",
+  RED: "Alerta Crítico",
 };
 
 export const STATUS_STROKE_HEX: Record<StatusCode, string> = {
@@ -27,6 +37,19 @@ export const STATUS_EMOJI: Record<StatusCode, string> = {
   YELLOW: "🟡",
   RED: "🔴",
 };
+
+/**
+ * Remove emojis decorativos enviados em rótulos legados do backend,
+ * preservando apenas o texto técnico limpo para renderização com ícones SVG.
+ */
+export function stripDecorativeEmojis(text: string): string {
+  return text
+    .replace(/\p{Extended_Pictographic}|\uFE0F/gu, "")
+    .replace(/\(\s*(Verde|Amarelo|Vermelho)\s*:\s*/gi, "($1: ")
+    .replace(/\(\s*\)/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
 
 export function getStatusStrokeColor(code: StatusCode): string {
   return STATUS_STROKE_HEX[code] ?? STATUS_STROKE_HEX.RED;
@@ -61,4 +84,3 @@ export function getPixelNodeColor(
 export function getMeshEdgeColor(masked: boolean): string {
   return masked ? "rgba(51, 65, 85, 0.28)" : "rgba(56, 189, 248, 0.25)";
 }
-

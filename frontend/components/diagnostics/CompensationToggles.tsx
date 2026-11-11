@@ -26,36 +26,36 @@ export function CompensationToggles({
   const items = [
     {
       id: "ionosphere",
-      label: "1. Ionospheric Split-Spectrum Screen",
-      sub: "Corrige atraso de elétrons na Banda L (~24 cm)",
+      label: "Ionospheric Split-Spectrum",
+      sub: "Corrige atraso dispersivo na Banda L (~24 cm)",
       val: applyIonosphere,
       toggle: () => onToggleIonosphere(!applyIonosphere),
     },
     {
       id: "troposphere",
-      label: "2. Wet & Hydrostatic Troposphere",
-      sub: "Corrige atraso de nuvens, vapor e pressão",
+      label: "Wet & Hydrostatic Troposphere",
+      sub: "Corrige atraso de vapor d'água e pressão",
       val: applyTroposphere,
       toggle: () => onToggleTroposphere(!applyTroposphere),
     },
     {
       id: "solid_tides",
-      label: "3. Solid Earth Tides (Maré Terrestre)",
-      sub: "Subtrai oscilação gravitacional (Sol/Lua)",
+      label: "Solid Earth Tides",
+      sub: "Subtrai maré terrestre gravitacional (Sol/Lua)",
       val: applySolidTides,
       toggle: () => onToggleSolidTides(!applySolidTides),
     },
     {
       id: "nasa_power",
-      label: "4. NASA POWER Thermo-Hydro Model",
-      sub: "Subtrai dilatação térmica solar (TS/SW) e chuva",
+      label: "NASA POWER Thermo-Hydro",
+      sub: "Subtrai dilatação térmica (TS/SW) e precipitação",
       val: applyNasaPower,
       toggle: () => onToggleNasaPower(!applyNasaPower),
     },
   ];
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       {items.map((item) => (
         <button
           key={item.id}
@@ -64,28 +64,40 @@ export function CompensationToggles({
           aria-checked={item.val}
           data-testid={`toggle-${item.id}`}
           onClick={item.toggle}
-          className={`w-full text-left flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-all ${
+          className={`w-full text-left flex items-center justify-between gap-3 px-3 py-2.5 rounded-md border cursor-pointer transition-colors ${
             item.val
-              ? "bg-slate-950/90 border-sky-500/40 hover:border-sky-400"
-              : "bg-slate-950/40 border-slate-800 opacity-75 hover:opacity-100"
+              ? "bg-[#080b0f] border-[#2c3b4f] hover:border-[#3b9eeb]"
+              : "bg-[#0c0f14] border-[#222933] opacity-75 hover:opacity-100"
           }`}
         >
-          <div className="pr-2">
-            <div className="text-xs font-bold text-slate-100">{item.label}</div>
-            <div className="text-[10px] text-slate-400">{item.sub}</div>
+          <div className="min-w-0">
+            <div className="text-xs font-semibold text-[#eef2f6]">{item.label}</div>
+            <div className="text-[11px] text-[#8a96a8] mt-0.5">{item.sub}</div>
           </div>
-          <span
-            className={`px-2.5 py-0.5 text-xs font-mono font-bold rounded transition ${
-              item.val
-                ? "bg-emerald-600 text-white"
-                : "bg-rose-950 text-rose-300 border border-rose-800"
-            }`}
-          >
-            {item.val ? "ON" : "OFF"}
+
+          <span className="inline-flex items-center gap-2 shrink-0">
+            <span
+              className={`text-[11px] font-medium ${
+                item.val ? "text-[#86efac]" : "text-[#8a96a8]"
+              }`}
+            >
+              {item.val ? "Ativo" : "Inativo"}
+            </span>
+            <span
+              aria-hidden="true"
+              className={`relative inline-flex w-8 h-[18px] items-center rounded-full transition-colors p-0.5 ${
+                item.val ? "bg-[#22c55e]/30 border border-[#22c55e]" : "bg-[#1a222d] border border-[#313b49]"
+              }`}
+            >
+              <span
+                className={`block w-3 h-3 rounded-full transition-transform ${
+                  item.val ? "translate-x-3.5 bg-[#22c55e]" : "translate-x-0 bg-[#8a96a8]"
+                }`}
+              />
+            </span>
           </span>
         </button>
       ))}
     </div>
   );
 }
-

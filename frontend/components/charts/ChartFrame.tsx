@@ -18,18 +18,17 @@ export function ChartFrame({
   className = "",
 }: ChartFrameProps) {
   return (
-    <div className={`bg-slate-900/90 border border-slate-800 rounded-xl p-4 ${className}`}>
-      <div className="flex flex-wrap justify-between items-start mb-3 gap-2">
-        <div>
-          <h2 className="text-sm font-mono font-bold uppercase tracking-wider text-sky-400">
-            {title}
-          </h2>
-          <p className="text-xs text-slate-400">{subtitle}</p>
+    <section
+      className={`bg-[#131820] border border-[#222933] rounded-lg p-4 flex flex-col justify-between gap-3 ${className}`}
+    >
+      <div className="flex flex-wrap justify-between items-start gap-2.5">
+        <div className="min-w-0">
+          <h2 className="text-sm font-bold text-[#eef2f6]">{title}</h2>
+          <p className="text-xs text-[#8a96a8] mt-0.5">{subtitle}</p>
         </div>
         {rightSlot}
       </div>
       {children}
-    </div>
+    </section>
   );
 }
-

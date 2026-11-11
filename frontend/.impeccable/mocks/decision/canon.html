@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Padrão de Categoria — PHASE-ZERO</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1440px; height: 900px; overflow: hidden; background: #0F172A; color: #F8FAFC; font-family: system-ui, sans-serif; }
+  .page { padding: 20px 28px; display: flex; flex-direction: column; gap: 16px; height: 900px; }
+  header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 14px; }
+  .pills { display: flex; gap: 8px; }
+  .pill { padding: 8px 14px; border-radius: 8px; background: #1E293B; border: 1px solid #334155; font-size: 12px; font-weight: 600; }
+  .pill.active { background: #0284C7; border-color: #38BDF8; }
+  .row-main { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; flex: 1; }
+  .card { background: #1E293B; border: 1px solid #334155; border-radius: 12px; padding: 16px; }
+  .row-bottom { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; height: 240px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div>
+      <h1 style="font-size:24px;font-weight:700">PHASE-ZERO</h1>
+      <p style="font-size:12px;color:#94A3B8">Compensação Ambiental para Detecção de Anomalias via Radar SAR</p>
+    </div>
+    <div class="pills">
+      <div class="pill">Itaipu (PR)</div>
+      <div class="pill active">Gongo Soco (MG)</div>
+      <div class="pill">Maceió (AL)</div>
+      <div class="pill">Brumadinho</div>
+    </div>
+  </header>
+  <div class="card" style="height:200px">Mapa Interativo de Barragens (Leaflet)</div>
+  <div class="row-main">
+    <div class="card">Viewport Topográfico 3D Interativo (18×18)</div>
+    <div class="card">Diagnóstico, Métricas &amp; 4 Toggles Físicos</div>
+  </div>
+  <div class="row-bottom">
+    <div class="card">Deconvolução Temporal</div>
+    <div class="card">Loop Termo-Mecânico</div>
+  </div>
+</div>
+</body>
+</html>

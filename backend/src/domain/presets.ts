@@ -523,12 +523,12 @@ export function matchKnownDamSite(
     return bestSite;
   }
 
-  // 2. Busca por palavra-chave no nome (exceto o default "Usina de Itaipu" quando a coordenada mudou)
+  // 2. Busca por palavra-chave no nome apenas quando a coordenada também está próxima da estrutura,
+  // evitando que o nome anterior/default no campo Alvo mascare coordenadas livres do usuário.
   if (normName.length > 2) {
     for (const site of KNOWN_DAM_SITES) {
-      const isItaipuDefault =
-        site.keywords.includes("itaipu") && Math.hypot(lat - site.lat, lon - site.lon) > 0.2;
-      if (isItaipuDefault) continue;
+      const dist = Math.hypot(lat - site.lat, lon - site.lon);
+      if (dist > 0.2) continue;
       if (site.keywords.some((kw) => normName.includes(kw))) {
         return site;
       }

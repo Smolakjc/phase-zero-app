@@ -3,7 +3,7 @@ import { DamsResponseSchema } from "@phase-zero/shared";
 import { buildApp } from "../app.js";
 import { syntheticClimate } from "../services/nasaPower.js";
 import { runPhaseZeroPipeline } from "../services/pipeline.js";
-import { getTerrainGrid } from "../services/terrain.js";
+import { getTerrainGrid, processCustomElevations25 } from "../services/terrain.js";
 
 describe("Catálogo e rotas de barragens (/api/dams)", () => {
   it("GET /api/dams retorna barragens de pé, em descaracterização e rompidas/históricas", async () => {
@@ -74,5 +74,40 @@ describe("Catálogo e rotas de barragens (/api/dams)", () => {
       deps,
     );
     expect(fundao.status.code).toBe("RED");
+  });
+
+  it("coordenada livre distante com nome residual de Gongo Soco e relevo plano não trava no cenário de Gongo Soco", async () => {
+    const flat25 = Array.from({ length: 25 }, () => 760.0);
+    const deps = {
+      power: async (_lat: number, _lon: number, s: string, e: string, n?: number) => ({
+        climate: syntheticClimate(s, e, n),
+        isReal: true,
+      }),
+      terrain: async (_lat: number, _lon: number, size: number) =>
+        processCustomElevations25(flat25, size),
+      cmr: async () => [],
+    };
+
+    const result = await runPhaseZeroPipeline(
+      {
+        scenario_id: "custom",
+        custom_lat: -23.5505,
+        custom_lon: -46.6333,
+        custom_name: "Barragem Sul Superior / Mina Gongo Soco (Barão de Cocais, MG)",
+        start_date: "2024-01-10",
+        end_date: "2024-06-20",
+      },
+      deps,
+    );
+
+    expect(result.scenario_meta.lat).toBeCloseTo(-23.5505, 4);
+    expect(result.scenario_meta.lon).toBeCloseTo(-46.6333, 4);
+    expect(result.scenario_meta.regime_info).toContain("Estável DEM");
+    expect(result.scenario_meta.regime_info).not.toContain("Gongo Soco");
+    expect(result.scenario_meta.regime_info).not.toContain("Relevo Íngreme DEM");
+    expect(result.status.code).toBe("GREEN");
+    expect(Math.abs(result.status.residual_trend_mm_per_pass)).toBeLessThan(0.5);
+    expect(result.dates[0]).toBe("2024-01-10");
+    expect(result.dates.at(-1)?.startsWith("2024-06-")).toBe(true);
   });
 });

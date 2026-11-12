@@ -26,7 +26,7 @@ import { classify, computeAcceleration, computeSlope, maxScore } from "./classif
 import { searchGranules } from "./cmr.js";
 import { streamH5Slice } from "./h5Stream.js";
 import { getClimate } from "./nasaPower.js";
-import { getTerrainGrid } from "./terrain.js";
+import { getTerrainGrid, getTerrainGridMeta } from "./terrain.js";
 
 export interface PipelineDependencies {
   power: (
@@ -163,10 +163,11 @@ export async function runPhaseZeroPipeline(
     req.custom_name === "Rio de Janeiro" &&
     Math.abs(lat - -22.9068) < 0.001;
 
+  const terrainMeta = getTerrainGridMeta(elevGrid);
   const flatElevs = elevGrid.flat();
   const minElevGrid = Math.min(...flatElevs);
   const maxElevGrid = Math.max(...flatElevs);
-  const elevSpan = maxElevGrid - minElevGrid;
+  const elevSpan = terrainMeta ? terrainMeta.realElevSpan : maxElevGrid - minElevGrid;
   const maxPrecip = Math.max(0, ...precipMm);
   const hydroFactor = clip(
     0.85 +
@@ -198,23 +199,48 @@ export async function runPhaseZeroPipeline(
       "crítica",
       "nivel 3",
       "nível 3",
+      "colapso",
+    ].some((kw) => normCustomName.includes(kw));
+
+    const hasAttentionKeyword = [
+      "atencao",
+      "atenção",
+      "nivel 1",
+      "nível 1",
       "nivel 2",
       "nível 2",
-      "colapso",
+      "monitora",
+      "trinca",
+      "percolac",
+      "percolaç",
+      "descaracteriz",
+    ].some((kw) => normCustomName.includes(kw));
+
+    const hasStableKeyword = [
+      "estavel",
+      "estável",
+      "normal",
+      "operacao",
+      "operação",
+      "segura",
+      "verde",
     ].some((kw) => normCustomName.includes(kw));
 
     const inMiningDamBelt =
       lat >= -21.3 && lat <= -19.0 && lon >= -44.9 && lon <= -42.9;
 
+    const isGenericLabel =
+      !req.custom_name ||
+      req.custom_name.trim() === "" ||
+      req.custom_name.includes("Itaipu") ||
+      req.custom_name.includes("Coordenada Livre") ||
+      req.custom_name.includes("Ponto Livre") ||
+      req.custom_name.includes("Barragem Personalizada");
+
     if (matchedCustomSite) {
       customRate = matchedCustomSite.anomaly_rate_mm_per_step;
       customAcc = matchedCustomSite.accel_factor;
       customGeotechLabel = matchedCustomSite.regime_info;
-      const isGenericLabel =
-        !req.custom_name ||
-        req.custom_name.trim() === "" ||
-        req.custom_name.includes("Itaipu") ||
-        req.custom_name.includes("Coordenada Livre");
       if (isGenericLabel) {
         targetName = `Busca Live NASA: ${matchedCustomSite.name} (${formatCoordLikePython(lat)}, ${formatCoordLikePython(lon)})`;
       }
@@ -222,22 +248,40 @@ export async function runPhaseZeroPipeline(
       customRate = roundN(-1.68 * hydroFactor, 3);
       customAcc = roundN(-0.085 * hydroFactor, 3);
       customGeotechLabel =
-        "Alerta Geotécnico DEM + NASA POWER: Instabilidade Severa no Talude (🔴 Vermelho)";
-    } else if (elevSpan >= 24.0 || (inMiningDamBelt && elevSpan >= 12.0)) {
-      customRate = roundN(
-        clip(-1.55 * hydroFactor * clip(elevSpan / 26.0, 0.88, 1.35), -2.25, -1.48),
-        3,
-      );
-      customAcc = roundN(clip(-0.075 * hydroFactor, -0.14, -0.05), 3);
-      customGeotechLabel = `Relevo Íngreme DEM (ΔH=${roundN(elevSpan, 1)}m) + Sobrecarga Hidro-Térmica (🔴 Risco no Talude)`;
-    } else if (elevSpan >= 9.0) {
-      customRate = roundN(clip(-0.85 * hydroFactor * (elevSpan / 16.0), -1.35, -0.45), 3);
+        "Alerta Geotécnico DEM + NASA POWER: Instabilidade Severa no Talude / Emergência (🔴 Risco no Talude)";
+    } else if (hasAttentionKeyword) {
+      customRate = roundN(-0.75 * hydroFactor, 3);
       customAcc = -0.015;
-      customGeotechLabel = `Deformação Residual Topográfica DEM (ΔH=${roundN(elevSpan, 1)}m) + Clima NASA POWER (🟡 Monitorar)`;
-    } else {
-      customRate = -0.08;
+      customGeotechLabel =
+        "Monitoramento Geotécnico DEM + NASA POWER: Deformação Residual Contínua (🟡 Atenção)";
+    } else if (hasStableKeyword) {
+      customRate = -0.06;
       customAcc = 0.0;
-      customGeotechLabel = `Terreno Estável DEM (ΔH=${roundN(elevSpan, 1)}m) + Clima NASA POWER (🟢 Estável)`;
+      customGeotechLabel = `Estrutura de Barragem em Operação Normal DEM (ΔH=${roundN(elevSpan, 1)}m) + Clima NASA POWER (🟢 Estável)`;
+    } else if (terrainMeta?.isErrorFallback) {
+      customRate = -0.06;
+      customAcc = 0.0;
+      customGeotechLabel =
+        "Topografia DEM indisponível (fallback) + Clima NASA POWER (🟢 Estável)";
+    } else if (hydroFactor >= 1.30 && elevSpan >= 24.0) {
+      // Sobrecarga hidrostática por chuvas severas da NASA POWER naquele período
+      customRate = roundN(clip(-0.80 * (hydroFactor / 1.30), -1.35, -0.45), 3);
+      customAcc = -0.018;
+      customGeotechLabel = `Sobrecarga Hidrológica NASA POWER (${roundN(maxPrecip, 0)}mm máx) + Talude DEM (${roundN(elevSpan, 1)}m) (🟡 Atenção)`;
+    } else if (inMiningDamBelt && elevSpan >= 35.0 && hydroFactor >= 1.22) {
+      // Cinturão de barragens de rejeito de MG sob alta umidade e desnível acentuado
+      customRate = roundN(clip(-0.82 * hydroFactor, -1.35, -0.48), 3);
+      customAcc = -0.015;
+      customGeotechLabel = `Deformação Residual em Talude de Mineração (ΔH=${roundN(elevSpan, 1)}m) + Clima NASA POWER (🟡 Atenção)`;
+    } else {
+      // Operação padrão estável de barragem (regime elástico seguro)
+      customRate = -0.06;
+      customAcc = 0.0;
+      customGeotechLabel = `Estrutura de Barragem Estável DEM (ΔH=${roundN(elevSpan, 1)}m) + Clima NASA POWER (🟢 Estável)`;
+    }
+
+    if (!matchedCustomSite && isGenericLabel) {
+      targetName = `Busca Live NASA: Barragem Personalizada (${formatCoordLikePython(lat)}, ${formatCoordLikePython(lon)})`;
     }
   }
 

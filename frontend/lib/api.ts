@@ -145,15 +145,130 @@ export async function analyze(
   }
 
   if (isMockModeEnabled()) {
+    const isCustom = parsedReq.data.scenario_id === "custom";
     const baseMock =
       MOCK_FIXTURES[parsedReq.data.scenario_id] ?? MOCK_FIXTURES.gongo_soco_active;
     const minCoh = parsedReq.data.min_coherence;
+    const lat =
+      isCustom && parsedReq.data.custom_lat != null
+        ? parsedReq.data.custom_lat
+        : baseMock.scenario_meta.lat;
+    const lon =
+      isCustom && parsedReq.data.custom_lon != null
+        ? parsedReq.data.custom_lon
+        : baseMock.scenario_meta.lon;
+    const name =
+      isCustom && parsedReq.data.custom_name
+        ? `Busca Live NASA: ${parsedReq.data.custom_name} (${lat}, ${lon})`
+        : baseMock.scenario_meta.name;
+
+    const normName = (parsedReq.data.custom_name ?? "").toLowerCase();
+    const hasRiskKeyword = [
+      "risco",
+      "emergencia",
+      "emergência",
+      "romp",
+      "interditad",
+      "critica",
+      "crítica",
+      "nivel 3",
+      "nível 3",
+      "colapso",
+    ].some((kw) => normName.includes(kw));
+
+    const hasAttentionKeyword = [
+      "atencao",
+      "atenção",
+      "nivel 1",
+      "nível 1",
+      "nivel 2",
+      "nível 2",
+      "monitora",
+      "trinca",
+      "percolac",
+      "percolaç",
+      "descaracteriz",
+    ].some((kw) => normName.includes(kw));
+
+    let mockStatus = baseMock.status;
+    let mockRegime = baseMock.scenario_meta.regime_info;
+
+    if (isCustom) {
+      if (hasRiskKeyword) {
+        mockStatus = {
+          code: "RED",
+          label: "ESCALATING SURFACE ANOMALY",
+          description:
+            "Velocidade severa (>= 1.45 mm/ciclo), aceleração forte (|Acel| >= 4.5 mm) ou Score >= 20.0 em blocos de alta coerência.",
+          residual_trend_mm_per_pass: -1.85,
+          acceleration_index_mm: -11.2,
+          max_weighted_anomaly_score: 31.5,
+        };
+        mockRegime =
+          "Alerta Geotécnico DEM + NASA POWER: Instabilidade Severa no Talude / Emergência (🔴 Risco no Talude)";
+      } else if (hasAttentionKeyword) {
+        mockStatus = {
+          code: "YELLOW",
+          label: "PERSISTENT RESIDUAL ANOMALY",
+          description:
+            "Taxa residual constante (entre 0.35 e 1.45 mm/ciclo) sem aceleração brusca (Score entre 5.0 e 19.9). Requer monitoramento.",
+          residual_trend_mm_per_pass: -0.75,
+          acceleration_index_mm: -2.2,
+          max_weighted_anomaly_score: 11.0,
+        };
+        mockRegime =
+          "Monitoramento Geotécnico DEM + NASA POWER: Deformação Residual Contínua (🟡 Atenção)";
+      } else {
+        mockStatus = {
+          code: "GREEN",
+          label: "EXPECTED ENVIRONMENTAL MOTION",
+          description:
+            "Taxa residual estável (< 0.35 mm/ciclo) e sem aceleração significativa na estrutura monitorada.",
+          residual_trend_mm_per_pass: -0.06,
+          acceleration_index_mm: 0.0,
+          max_weighted_anomaly_score: 1.2,
+        };
+        mockRegime = "Estrutura de Barragem Estável DEM + Clima NASA POWER (🟢 Estável)";
+      }
+    }
+
     const adjusted: AnalysisResponse = {
       ...baseMock,
-      grid_pixels: baseMock.grid_pixels.map((px) => ({
-        ...px,
-        masked: px.coherence < minCoh,
-      })),
+      status: mockStatus,
+      scenario_meta: {
+        ...baseMock.scenario_meta,
+        lat,
+        lon,
+        name,
+        regime_info: mockRegime,
+      },
+      grid_pixels: baseMock.grid_pixels.map((px) => {
+        const altLabel = `${px.elevation_m}m`;
+        let zone: string;
+        if (px.row < 5) {
+          zone = `ÁGUA DA REPRESA / RESERVATÓRIO (Alt: ${altLabel})`;
+        } else if (px.row >= 5 && px.row <= 8 && px.col >= 2 && px.col <= 15) {
+          zone = `MURETA / CRISTA PRINCIPAL (Alt: ${altLabel})`;
+        } else if (px.row >= 9 && px.row <= 13 && px.col >= 3 && px.col <= 14) {
+          zone = `PAREDÃO / TALUDE CENTRAL (Alt: ${altLabel})`;
+        } else if (px.row >= 5 && px.row <= 13) {
+          zone = `OMBREIRA / ENCOSTA LATERAL (Alt: ${altLabel})`;
+        } else {
+          zone = `VALE A JUSANTE / ENTORNO (Alt: ${altLabel})`;
+        }
+
+        return {
+          ...px,
+          lat: Number((lat + (px.row - 8.5) * 0.00072).toFixed(6)),
+          lon: Number((lon + (px.col - 8.5) * 0.00072).toFixed(6)),
+          zone: isCustom ? zone : px.zone,
+          residual_mm:
+            mockStatus.code === "GREEN"
+              ? Number((px.residual_mm * 0.05).toFixed(2))
+              : px.residual_mm,
+          masked: px.coherence < minCoh,
+        };
+      }),
     };
     return AnalysisResponseSchema.parse(adjusted);
   }

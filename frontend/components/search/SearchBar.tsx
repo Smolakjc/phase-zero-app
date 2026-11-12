@@ -38,6 +38,7 @@ export function SearchBar({
   const [customLat, setCustomLat] = useState<string>(String(initialLat));
   const [customLon, setCustomLon] = useState<string>(String(initialLon));
   const [coordsEdited, setCoordsEdited] = useState<boolean>(false);
+  const [nameEdited, setNameEdited] = useState<boolean>(false);
 
   useEffect(() => {
     setSDate(startDate);
@@ -49,6 +50,7 @@ export function SearchBar({
     setCustomLon(String(initialLon));
     setCustomName(initialName);
     setCoordsEdited(false);
+    setNameEdited(false);
   }, [initialLat, initialLon, initialName]);
 
   const normLatStr = customLat.trim().replace(",", ".");
@@ -70,15 +72,46 @@ export function SearchBar({
 
   const handleLatChange = (raw: string) => {
     setCoordsEdited(true);
-    if (raw.includes(",") && raw.split(",").length === 2) {
-      const [p1, p2] = raw.split(",").map((s) => s.trim());
-      if (p1 && p2 && Number.isFinite(Number(p1)) && Number.isFinite(Number(p2))) {
+    if (!nameEdited && customName === initialName) {
+      setCustomName("Barragem Personalizada");
+    }
+    const parts = raw.split(",");
+    if (parts.length === 2) {
+      const p1 = parts[0].trim();
+      const p2 = parts[1].trim();
+      const n1 = Number(p1);
+      const n2 = Number(p2);
+      const looksLikePair =
+        /\s/.test(parts[1]) ||
+        p1.includes(".") ||
+        p2.includes(".") ||
+        p2.startsWith("-") ||
+        p2.startsWith("+");
+      if (
+        looksLikePair &&
+        p1 !== "" &&
+        p2 !== "" &&
+        Number.isFinite(n1) &&
+        Number.isFinite(n2) &&
+        n1 >= -90 &&
+        n1 <= 90 &&
+        n2 >= -180 &&
+        n2 <= 180
+      ) {
         setCustomLat(p1);
         setCustomLon(p2);
         return;
       }
     }
     setCustomLat(raw);
+  };
+
+  const handleLonChange = (raw: string) => {
+    setCoordsEdited(true);
+    if (!nameEdited && customName === initialName) {
+      setCustomName("Barragem Personalizada");
+    }
+    setCustomLon(raw);
   };
 
   const triggerCustomSearch = () => {
@@ -126,6 +159,7 @@ export function SearchBar({
                 value={customName}
                 onChange={(e) => {
                   setCoordsEdited(true);
+                  setNameEdited(true);
                   setCustomName(e.target.value);
                 }}
                 onKeyDown={handleKeyDown}
@@ -159,10 +193,7 @@ export function SearchBar({
                 aria-label="Longitude"
                 data-testid="custom-lon-input"
                 value={customLon}
-                onChange={(e) => {
-                  setCoordsEdited(true);
-                  setCustomLon(e.target.value);
-                }}
+                onChange={(e) => handleLonChange(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="-43.5997"
                 className={`bg-transparent font-mono tabular-nums w-[72px] focus:outline-none ${
@@ -178,7 +209,10 @@ export function SearchBar({
                 aria-label="Data de início"
                 data-testid="start-date-input"
                 value={sDate}
-                onChange={(e) => setSDate(e.target.value)}
+                onChange={(e) => {
+                  setSDate(e.target.value);
+                }}
+                onKeyDown={handleKeyDown}
                 className="bg-transparent font-mono tabular-nums text-[#eef2f6] focus:outline-none w-[112px]"
               />
             </label>
@@ -190,7 +224,10 @@ export function SearchBar({
                 aria-label="Data de fim"
                 data-testid="end-date-input"
                 value={eDate}
-                onChange={(e) => setEDate(e.target.value)}
+                onChange={(e) => {
+                  setEDate(e.target.value);
+                }}
+                onKeyDown={handleKeyDown}
                 className="bg-transparent font-mono tabular-nums text-[#eef2f6] focus:outline-none w-[112px]"
               />
             </label>

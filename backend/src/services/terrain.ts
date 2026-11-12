@@ -8,7 +8,18 @@ interface OpenMeteoElevationResponse {
   elevation?: number[];
 }
 
+export interface TerrainGridMeta {
+  isFlatFallback: boolean;
+  isErrorFallback: boolean;
+  realElevSpan: number;
+}
+
 const demCache = new LruCache<number[][]>({ ttlMs: CACHE_TTLS.DEM_MS, maxEntries: 64 });
+const terrainMetaMap = new WeakMap<number[][], TerrainGridMeta>();
+
+export function getTerrainGridMeta(grid: number[][]): TerrainGridMeta | undefined {
+  return terrainMetaMap.get(grid);
+}
 
 /**
  * Relevo sintético determinístico (crista gaussiana + rampa de talude + ondulação senoidal).
@@ -57,11 +68,23 @@ export function processCustomElevations25(
   const flat = zoomed.flat();
   const minVal = Math.min(...flat);
   const maxVal = Math.max(...flat);
+  const realElevSpan = maxVal - minVal;
 
-  if (maxVal - minVal < 6.0) {
+  if (realElevSpan < 6.0) {
     const meanVal = mean(flat);
-    return addScalarToGrid(syntheticRelief, meanVal, 0.65);
+    const out = addScalarToGrid(syntheticRelief, meanVal, 0.65);
+    terrainMetaMap.set(out, {
+      isFlatFallback: true,
+      isErrorFallback: false,
+      realElevSpan,
+    });
+    return out;
   }
+  terrainMetaMap.set(zoomed, {
+    isFlatFallback: false,
+    isErrorFallback: false,
+    realElevSpan,
+  });
   return zoomed;
 }
 
@@ -116,7 +139,13 @@ export async function getTerrainGrid(
       return processCustomElevations25(resp.elevation.slice(0, 25), size);
     });
   } catch {
-    return addScalarToGrid(syntheticRelief, 500.0, 1.0);
+    const fallback = addScalarToGrid(syntheticRelief, 500.0, 1.0);
+    terrainMetaMap.set(fallback, {
+      isFlatFallback: false,
+      isErrorFallback: true,
+      realElevSpan: 0,
+    });
+    return fallback;
   }
 }
 

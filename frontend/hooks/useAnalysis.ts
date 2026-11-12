@@ -236,7 +236,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
         scenario_id: "custom",
         custom_lat: lat,
         custom_lon: lon,
-        custom_name: "Ponto Livre no Mapa",
+        custom_name: `Barragem Personalizada (${lat.toFixed(4)}, ${lon.toFixed(4)})`,
       }));
     },
     [dams, selectDam],
@@ -256,15 +256,28 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
       const matched = findDamByCoords(dams, input.lat, input.lon);
       setSelectedDamId(matched ? matched.id : null);
       setIsFreePoint(!matched);
-      setParams((prev) => ({
-        ...prev,
-        scenario_id: "custom",
-        start_date: input.startDate,
-        end_date: input.endDate,
-        custom_lat: input.lat,
-        custom_lon: input.lon,
-        custom_name: input.name,
-      }));
+      setParams((prev) => {
+        let computedName = input.name?.trim() ?? "";
+        if (matched) {
+          computedName = matched.name;
+        } else if (
+          !computedName ||
+          computedName === prev.custom_name ||
+          computedName === "Coordenada Livre" ||
+          computedName.includes("Ponto Livre")
+        ) {
+          computedName = `Barragem Personalizada (${input.lat.toFixed(4)}, ${input.lon.toFixed(4)})`;
+        }
+        return {
+          ...prev,
+          scenario_id: "custom",
+          start_date: input.startDate,
+          end_date: input.endDate,
+          custom_lat: input.lat,
+          custom_lon: input.lon,
+          custom_name: computedName,
+        };
+      });
     },
     [dams],
   );

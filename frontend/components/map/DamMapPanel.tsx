@@ -284,13 +284,13 @@ export function DamMapPanel({
 
     if (isFreePoint && Number.isFinite(activeLat) && Number.isFinite(activeLon)) {
       freeMarkerRef.current = L.circleMarker([activeLat, activeLon], {
-        radius: 8,
-        color: "#eef2f6",
-        weight: 2,
+        radius: 9,
+        color: "#ffffff",
+        weight: 2.5,
         fillColor: "#3b9eeb",
-        fillOpacity: 0.9,
+        fillOpacity: 0.95,
       })
-        .bindTooltip(`Ponto livre: ${activeLat.toFixed(4)}, ${activeLon.toFixed(4)}`, {
+        .bindTooltip(`Barragem personalizada: ${activeLat.toFixed(4)}, ${activeLon.toFixed(4)}`, {
           direction: "top",
         })
         .addTo(map);
@@ -338,7 +338,7 @@ export function DamMapPanel({
             )}
             {isFreePoint && (
               <span className="px-2 py-0.5 text-[11px] font-mono tabular-nums rounded border bg-[#132538] text-[#93c5fd] border-[#254d73]">
-                Ponto Livre ({activeLat.toFixed(4)}, {activeLon.toFixed(4)})
+                Barragem Personalizada ({activeLat.toFixed(4)}, {activeLon.toFixed(4)})
               </span>
             )}
           </div>

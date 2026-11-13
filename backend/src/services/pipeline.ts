@@ -3,7 +3,9 @@ import {
   AnalysisRequestInput,
   AnalysisRequestSchema,
   AnalysisResponse,
+  classifyCustomGridCell,
   ClimateResult,
+  fuseRealDemWithStructure,
   Granule,
   GRID_SIZE,
   GridPixel,
@@ -164,7 +166,14 @@ export async function runPhaseZeroPipeline(
     Math.abs(lat - -22.9068) < 0.001;
 
   const terrainMeta = getTerrainGridMeta(elevGrid);
-  const flatElevs = elevGrid.flat();
+  const preserveRawElevGrid =
+    !isCustom ||
+    isLegacyGoldenCustom ||
+    !terrainMeta ||
+    terrainMeta.isFlatFallback ||
+    terrainMeta.isErrorFallback;
+  const activeElevGrid = fuseRealDemWithStructure(elevGrid, preserveRawElevGrid);
+  const flatElevs = activeElevGrid.flat();
   const minElevGrid = Math.min(...flatElevs);
   const maxElevGrid = Math.max(...flatElevs);
   const elevSpan = terrainMeta ? terrainMeta.realElevSpan : maxElevGrid - minElevGrid;
@@ -334,7 +343,7 @@ export async function runPhaseZeroPipeline(
     for (let col = 0; col < gridSize; col += 1) {
       const latPx = lat + (row - center) * PIXEL_STEP_DEG;
       const lonPx = lon + (col - center) * PIXEL_STEP_DEG;
-      const elevPx = Number(elevGrid[row]?.[col] ?? 0);
+      const elevPx = Number(activeElevGrid[row]?.[col] ?? 0);
 
       let coherence: number;
       let trueAnomSeries: number[];
@@ -350,29 +359,17 @@ export async function runPhaseZeroPipeline(
         trueAnomSeries = zeros(nSteps);
         zoneType = `TERRENO REAL (Alt: ${ roundN(elevPx, 0) }m)`;
       } else if (isCustom) {
-        let swW: number;
-        const altLabel = `${roundN(elevPx, 0)}m`;
-        if (row < 5) {
-          zoneType = `ÁGUA DA REPRESA / RESERVATÓRIO (Alt: ${altLabel})`;
-          coherence = 0.19;
-          swW = 0.0;
-        } else if (row >= 5 && row <= 8 && col >= 2 && col <= 15) {
-          zoneType = `MURETA / CRISTA PRINCIPAL (Alt: ${altLabel})`;
-          coherence = 0.94;
-          swW = 0.55 * Math.exp(-((col - center) ** 2) / 18.0);
-        } else if (row >= 9 && row <= 13 && col >= 3 && col <= 14) {
-          zoneType = `PAREDÃO / TALUDE CENTRAL (Alt: ${altLabel})`;
-          coherence = 0.9;
-          swW = Math.exp(-((row - 10.0) ** 2 + (col - center) ** 2) / 10.0);
-        } else if (row >= 5 && row <= 13) {
-          zoneType = `OMBREIRA / ENCOSTA LATERAL (Alt: ${altLabel})`;
-          coherence = 0.72;
-          swW = 0.16;
-        } else {
-          zoneType = `VALE A JUSANTE / ENTORNO (Alt: ${altLabel})`;
-          coherence = 0.48;
-          swW = 0.08;
-        }
+        const classified = classifyCustomGridCell(
+          activeElevGrid,
+          row,
+          col,
+          wl,
+          minElevGrid,
+          maxElevGrid,
+        );
+        zoneType = classified.zoneType;
+        coherence = classified.coherence;
+        const swW = classified.swW;
 
         trueAnomSeries = tIdx.map((t) => {
           if (t <= 3) return 0.0;

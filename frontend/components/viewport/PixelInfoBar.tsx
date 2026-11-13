@@ -2,6 +2,7 @@
 
 import React from "react";
 import { GridPixel, PIXEL_RESIDUAL_THRESHOLDS_MM } from "@phase-zero/shared";
+import { getZoneVisualStyle } from "../../lib/colors";
 
 export interface PixelInfoBarProps {
   pixel: GridPixel;
@@ -19,17 +20,26 @@ export function PixelInfoBar({ pixel }: PixelInfoBarProps) {
         ? "text-[#fda4af]"
         : "text-[#fde047]";
 
+  const zoneStyle = getZoneVisualStyle(pixel.zone);
+
   return (
     <div
       data-testid="pixel-info-bar"
       className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2.5 text-xs bg-[#080b0f] px-3.5 py-3 rounded-md border border-[#222933]"
     >
       <div className="col-span-2 sm:col-span-1 min-w-0">
-        <span className="text-[11px] text-[#8a96a8] block">Setor (80m × 80m)</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] text-[#8a96a8]">Setor (80m × 80m)</span>
+          <span
+            className={`px-1.5 py-0.2 text-[10px] font-medium rounded border ${zoneStyle.badgeClass}`}
+          >
+            {zoneStyle.shortLabel}
+          </span>
+        </div>
         <span
           data-testid="pixel-zone"
           className="text-[#eef2f6] font-semibold truncate block mt-0.5"
-          title={pixel.zone}
+          title={`${pixel.zone} — ${zoneStyle.radarNote}`}
         >
           {pixel.zone}
         </span>
@@ -41,6 +51,7 @@ export function PixelInfoBar({ pixel }: PixelInfoBarProps) {
           className={`font-mono tabular-nums font-semibold mt-0.5 block ${
             pixel.masked ? "text-[#fda4af]" : "text-[#86efac]"
           }`}
+          title={zoneStyle.radarNote}
         >
           {pixel.coherence.toFixed(2)}{" "}
           <span className="font-sans font-normal text-[11px]">

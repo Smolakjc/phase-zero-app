@@ -105,6 +105,11 @@ input[type="range"].pz-range::-moz-range-thumb {
   font-family: var(--font-sans), system-ui, sans-serif !important;
 }
 
+/* Filtro escuro nativo para tiles OpenStreetMap (dispensa API key e evita marca d'água de terceiros) */
+.leaflet-tile.pz-dark-map-tiles {
+  filter: invert(100%) hue-rotate(180deg) brightness(92%) contrast(92%) saturate(82%);
+}
+
 .leaflet-container .leaflet-popup-content-wrapper,
 .leaflet-container .leaflet-popup-tip {
   background: #131820 !important;

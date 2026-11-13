@@ -3,6 +3,8 @@ import {
   AnalysisRequestSchema,
   AnalysisResponse,
   AnalysisResponseSchema,
+  classifyCustomGridCell,
+  GRID_SIZE,
   LAMBDA_NISAR_L_MM,
   LAMBDA_SENTINEL_C_MM,
   ScenarioItem,
@@ -232,6 +234,15 @@ export async function analyze(
       }
     }
 
+    const mockElevGrid: number[][] = Array.from({ length: GRID_SIZE }, () =>
+      Array.from({ length: GRID_SIZE }, () => 500),
+    );
+    for (const px of baseMock.grid_pixels) {
+      if (mockElevGrid[px.row]) {
+        mockElevGrid[px.row][px.col] = px.elevation_m;
+      }
+    }
+
     const adjusted: AnalysisResponse = {
       ...baseMock,
       status: mockStatus,
@@ -243,30 +254,25 @@ export async function analyze(
         regime_info: mockRegime,
       },
       grid_pixels: baseMock.grid_pixels.map((px) => {
-        const altLabel = `${px.elevation_m}m`;
-        let zone: string;
-        if (px.row < 5) {
-          zone = `ÁGUA DA REPRESA / RESERVATÓRIO (Alt: ${altLabel})`;
-        } else if (px.row >= 5 && px.row <= 8 && px.col >= 2 && px.col <= 15) {
-          zone = `MURETA / CRISTA PRINCIPAL (Alt: ${altLabel})`;
-        } else if (px.row >= 9 && px.row <= 13 && px.col >= 3 && px.col <= 14) {
-          zone = `PAREDÃO / TALUDE CENTRAL (Alt: ${altLabel})`;
-        } else if (px.row >= 5 && px.row <= 13) {
-          zone = `OMBREIRA / ENCOSTA LATERAL (Alt: ${altLabel})`;
-        } else {
-          zone = `VALE A JUSANTE / ENTORNO (Alt: ${altLabel})`;
-        }
+        const classified = classifyCustomGridCell(
+          mockElevGrid,
+          px.row,
+          px.col,
+          LAMBDA_NISAR_L_MM,
+        );
+        const coh = isCustom ? classified.coherence : px.coherence;
 
         return {
           ...px,
           lat: Number((lat + (px.row - 8.5) * 0.00072).toFixed(6)),
           lon: Number((lon + (px.col - 8.5) * 0.00072).toFixed(6)),
-          zone: isCustom ? zone : px.zone,
+          zone: isCustom ? classified.zoneType : px.zone,
+          coherence: coh,
           residual_mm:
             mockStatus.code === "GREEN"
               ? Number((px.residual_mm * 0.05).toFixed(2))
               : px.residual_mm,
-          masked: px.coherence < minCoh,
+          masked: coh < minCoh,
         };
       }),
     };

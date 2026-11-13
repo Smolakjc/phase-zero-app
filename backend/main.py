@@ -819,25 +819,45 @@ def run_phase_zero_pipeline(req: AnalysisRequest):
                 zone_type = f"PIXEL REAL HDF5 ({row},{col})"
             elif is_custom:
                 alt_label = f"{round(elev_px)}m"
-                if row < 5:
-                    zone_type = f"ÁGUA DA REPRESA / RESERVATÓRIO (Alt: {alt_label})"
-                    coherence = 0.19
+                r_prev = max(0, row - 1)
+                r_next = min(grid_size - 1, row + 1)
+                c_prev = max(0, col - 1)
+                c_next = min(grid_size - 1, col + 1)
+                dz_dr = float(elev_grid[r_next, col] - elev_grid[r_prev, col]) / max(1, r_next - r_prev)
+                dz_dc = float(elev_grid[row, c_next] - elev_grid[row, c_prev]) / max(1, c_next - c_prev)
+                slope_deg = int(round(np.degrees(np.arctan(np.hypot(dz_dr, dz_dc) / 13.5))))
+                jitter = float((np.sin((row + 1) * 12.9898 + (col + 1) * 78.233) * 43758.5453) % 1.0 - 0.5)
+
+                is_outer_forest = col <= 1 or col >= grid_size - 2
+                is_downstream_forest = (row >= 13 and (col <= 3 or col >= grid_size - 4)) or (row >= 15 and (col == 4 or col == grid_size - 5))
+
+                if is_outer_forest or is_downstream_forest:
+                    zone_type = f"VEGETAÇÃO DENSA / MATA NATIVA (Alt: {alt_label} · Decliv: {max(slope_deg, 8)}°)"
+                    coherence = float(np.clip(0.28 + jitter * 0.07, 0.21, 0.35))
+                    sw_w = 0.04
+                elif row < 5:
+                    zone_type = f"ÁGUA DA REPRESA / RESERVATÓRIO (Alt: {alt_label} · Decliv: {min(slope_deg, 2)}°)"
+                    coherence = float(np.clip(0.18 + jitter * 0.05, 0.14, 0.22))
                     sw_w = 0.0
-                elif 5 <= row <= 8 and 2 <= col <= 15:
-                    zone_type = f"MURETA / CRISTA PRINCIPAL (Alt: {alt_label})"
-                    coherence = 0.94
+                elif 5 <= row <= 8 and 3 <= col <= 14:
+                    zone_type = f"MURETA / CRISTA PRINCIPAL (Alt: {alt_label} · Decliv: {slope_deg}°)"
+                    coherence = 0.94 if (row == 8 and col == 9) else float(np.clip(0.94 + jitter * 0.03, 0.91, 0.97))
                     sw_w = float(0.55 * np.exp(-((col - center) ** 2) / 18.0))
-                elif 9 <= row <= 13 and 3 <= col <= 14:
-                    zone_type = f"PAREDÃO / TALUDE CENTRAL (Alt: {alt_label})"
-                    coherence = 0.90
+                elif 9 <= row <= 12 and 4 <= col <= 13:
+                    zone_type = f"PAREDÃO / TALUDE CENTRAL (Alt: {alt_label} · Decliv: {max(slope_deg, 18)}°)"
+                    coherence = 0.90 if (row == 10 and col == 9) else float(np.clip(0.90 + jitter * 0.035, 0.86, 0.93))
                     sw_w = float(np.exp(-((row - 10.0) ** 2 + (col - center) ** 2) / 10.0))
-                elif 5 <= row <= 13:
-                    zone_type = f"OMBREIRA / ENCOSTA LATERAL (Alt: {alt_label})"
-                    coherence = 0.72
+                elif row == 13 and 4 <= col <= 13:
+                    zone_type = f"BERMA DE PÉ / TALUDE INFERIOR (Alt: {alt_label} · Decliv: {slope_deg}°)"
+                    coherence = float(np.clip(0.82 + jitter * 0.04, 0.78, 0.86))
+                    sw_w = float(np.exp(-((row - 10.0) ** 2 + (col - center) ** 2) / 10.0))
+                elif 5 <= row <= 12:
+                    zone_type = f"OMBREIRA / ENCOSTA ROCHOSA (Alt: {alt_label} · Decliv: {max(slope_deg, 14)}°)"
+                    coherence = float(np.clip(0.73 + jitter * 0.05, 0.67, 0.78))
                     sw_w = 0.16
                 else:
-                    zone_type = f"VALE A JUSANTE / ENTORNO (Alt: {alt_label})"
-                    coherence = 0.48
+                    zone_type = f"VALE A JUSANTE / DRENAGEM (Alt: {alt_label} · Decliv: {slope_deg}°)"
+                    coherence = float(np.clip(0.53 + jitter * 0.06, 0.46, 0.61))
                     sw_w = 0.08
 
                 base_anom = np.where(t_idx > 3, custom_rate * (t_idx - 3) + custom_acc * ((t_idx - 3) ** 2), 0.0)

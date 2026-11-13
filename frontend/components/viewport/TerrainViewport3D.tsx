@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
-import { GridPixel, ScenarioMeta } from "@phase-zero/shared";
-import { stripDecorativeEmojis } from "../../lib/colors";
+import React, { useMemo, useState } from "react";
+import { detectZoneCategory, GridPixel, ScenarioMeta, ZoneCategoryId } from "@phase-zero/shared";
+import { stripDecorativeEmojis, ZONE_VISUAL_META } from "../../lib/colors";
 import { RotateResetIcon } from "../icons/SurveyIcons";
 import { PixelInfoBar } from "./PixelInfoBar";
-import { TerrainCanvas } from "./TerrainCanvas";
+import { TerrainCanvas, TerrainColorMode } from "./TerrainCanvas";
 
 export interface TerrainViewport3DProps {
   meta: ScenarioMeta;
@@ -17,8 +17,19 @@ export interface TerrainViewport3DProps {
 const DEFAULT_AZIMUTH = 34;
 const DEFAULT_PITCH = 54;
 
+const LEGEND_ZONE_ORDER: readonly ZoneCategoryId[] = [
+  "WATER",
+  "CREST",
+  "SLOPE",
+  "BERM",
+  "ABUTMENT",
+  "VEGETATION",
+  "VALLEY",
+];
+
 /**
- * Painel do Viewport Topográfico 3D (`K-F1` + `K-F2`).
+ * Painel do Viewport Topográfico 3D (`K-F1` + `K-F2`) com alternância entre
+ * modo de Anomalia InSAR e modo de Classificação Geomorfométrica de Zonas.
  */
 export function TerrainViewport3D({
   meta,
@@ -28,9 +39,26 @@ export function TerrainViewport3D({
 }: TerrainViewport3DProps) {
   const [rotAzimuth, setRotAzimuth] = useState<number>(DEFAULT_AZIMUTH);
   const [rotPitch, setRotPitch] = useState<number>(DEFAULT_PITCH);
+  const [colorMode, setColorMode] = useState<TerrainColorMode>("anomaly");
 
   const cleanName = stripDecorativeEmojis(meta.name);
   const cleanRegime = stripDecorativeEmojis(meta.regime_info);
+
+  const zoneCounts = useMemo(() => {
+    const counts: Partial<Record<ZoneCategoryId, number>> = {};
+    for (const px of pixels) {
+      const cat = detectZoneCategory(px.zone);
+      counts[cat] = (counts[cat] ?? 0) + 1;
+    }
+    return counts;
+  }, [pixels]);
+
+  const handleSelectZoneRepresentative = (cat: ZoneCategoryId) => {
+    const found = pixels.find((p) => detectZoneCategory(p.zone) === cat);
+    if (found) {
+      onSelectPixel(found);
+    }
+  };
 
   return (
     <section
@@ -39,9 +67,41 @@ export function TerrainViewport3D({
     >
       <div className="flex flex-wrap justify-between items-start gap-2.5">
         <div className="min-w-0">
-          <h2 id="terrain-3d-heading" className="text-sm font-bold text-[#eef2f6]">
-            Malha Topográfica 3D (80m × 80m)
-          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 id="terrain-3d-heading" className="text-sm font-bold text-[#eef2f6]">
+              Malha Topográfica 3D (80m × 80m)
+            </h2>
+            <div
+              role="group"
+              aria-label="Modo de coloração da malha 3D"
+              className="inline-flex items-center rounded-md bg-[#080b0f] p-0.5 border border-[#222933]"
+            >
+              <button
+                type="button"
+                aria-pressed={colorMode === "anomaly"}
+                onClick={() => setColorMode("anomaly")}
+                className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+                  colorMode === "anomaly"
+                    ? "bg-[#132538] text-[#eef2f6] border border-[#3b9eeb]"
+                    : "text-[#a1adbf] hover:text-[#eef2f6] border border-transparent"
+                }`}
+              >
+                Anomalia InSAR
+              </button>
+              <button
+                type="button"
+                aria-pressed={colorMode === "zones"}
+                onClick={() => setColorMode("zones")}
+                className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+                  colorMode === "zones"
+                    ? "bg-[#132538] text-[#eef2f6] border border-[#3b9eeb]"
+                    : "text-[#a1adbf] hover:text-[#eef2f6] border border-transparent"
+                }`}
+              >
+                Zonas / Setores
+              </button>
+            </div>
+          </div>
           <p className="text-xs text-[#8a96a8] mt-0.5 truncate" title={`${cleanName} — ${cleanRegime}`}>
             <span className="text-[#cbd5e1]">{cleanName}</span> · {cleanRegime}
           </p>
@@ -93,12 +153,47 @@ export function TerrainViewport3D({
         losVector={meta.los_vector}
         azimuthDeg={rotAzimuth}
         pitchDeg={rotPitch}
+        colorMode={colorMode}
         onSelectPixel={onSelectPixel}
         onRotateChange={(az, pitch) => {
           setRotAzimuth(az);
           setRotPitch(pitch);
         }}
       />
+
+      <div
+        className="flex flex-wrap items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#080b0f] border border-[#222933] text-[11px]"
+        aria-label="Filtro rápido de zonas geomorfométricas"
+      >
+        <span className="text-[#8a96a8] mr-1 font-medium">Setores:</span>
+        {LEGEND_ZONE_ORDER.map((cat) => {
+          const count = zoneCounts[cat] ?? 0;
+          if (count === 0) return null;
+          const style = ZONE_VISUAL_META[cat];
+          const isCurrentCat = detectZoneCategory(selectedPixel.zone) === cat;
+          return (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => handleSelectZoneRepresentative(cat)}
+              title={`${style.shortLabel}: ${style.radarNote}`}
+              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded border text-[10px] font-medium transition-colors cursor-pointer ${
+                isCurrentCat
+                  ? style.badgeClass
+                  : "bg-[#131820] text-[#a1adbf] border-[#222933] hover:text-[#eef2f6]"
+              }`}
+            >
+              <span
+                className="w-2 h-2 rounded-full inline-block shrink-0"
+                style={{ backgroundColor: style.dotHex }}
+                aria-hidden="true"
+              />
+              <span>{style.shortLabel}</span>
+              <span className="font-mono opacity-75">({count})</span>
+            </button>
+          );
+        })}
+      </div>
 
       <PixelInfoBar pixel={selectedPixel} />
     </section>

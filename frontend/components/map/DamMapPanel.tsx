@@ -20,27 +20,50 @@ export interface DamMapPanelProps {
 type BaseLayerId = "dark" | "satellite" | "streets";
 type StatusFilter = "all" | DamPhysicalStatus;
 
+const TRANSPARENT_TILE_DATA_URI =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+
+/**
+ * Configuração de camadas 100% gratuitas e sem exigência de API key (sem marca d'água):
+ * - `dark`: OpenStreetMap oficial com filtro escuro CSS (`.pz-dark-map-tiles`), garantindo cobertura vetorial até z=19 (e overzoom até z=20) sem o aviso "API key required" do CARTO/Stadia e sem o "Map data not yet available" do Esri Dark Gray.
+ * - `satellite`: Esri World Imagery com `maxNativeZoom: 17` e `maxZoom: 20` + camada de fronteiras e lugares oficial da Esri (`World_Boundaries_and_Places`), ambos livres de chave de API.
+ * - `streets`: OpenStreetMap Standard com cobertura vetorial completa até z=19 e overzoom até z=20.
+ */
 const TILE_LAYERS: Record<
   BaseLayerId,
-  { label: string; url: string; attribution: string; maxZoom: number }
+  {
+    label: string;
+    url: string;
+    attribution: string;
+    maxNativeZoom: number;
+    maxZoom: number;
+    tileClassName?: string;
+    overlayLabelsUrl?: string;
+  }
 > = {
   dark: {
     label: "Escuro",
-    url: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
-    attribution: "Tiles &copy; Esri Dark Gray",
-    maxZoom: 16,
+    url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution: "&copy; OpenStreetMap contributors",
+    maxNativeZoom: 19,
+    maxZoom: 20,
+    tileClassName: "pz-dark-map-tiles",
   },
   satellite: {
     label: "Satélite",
     url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     attribution: "Tiles &copy; Esri World Imagery",
-    maxZoom: 18,
+    maxNativeZoom: 17,
+    maxZoom: 20,
+    overlayLabelsUrl:
+      "https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
   },
   streets: {
     label: "Topográfico",
-    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    url: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
     attribution: "&copy; OpenStreetMap contributors",
-    maxZoom: 19,
+    maxNativeZoom: 19,
+    maxZoom: 20,
   },
 };
 
@@ -50,10 +73,12 @@ const REGION_PRESETS: readonly {
   center: [number, number];
   zoom: number;
 }[] = [
-  { id: "br", label: "Brasil", center: [-15.8, -46.5], zoom: 4 },
+  { id: "br", label: "Brasil", center: [-15.2, -49.5], zoom: 4 },
   { id: "mg", label: "MG", center: [-20.08, -43.78], zoom: 9 },
-  { id: "sul", label: "Sul", center: [-27.2, -53.1], zoom: 6 },
-  { id: "ne", label: "N / NE", center: [-7.2, -42.5], zoom: 5 },
+  { id: "se_co", label: "SE / CO", center: [-19.5, -48.5], zoom: 6 },
+  { id: "sul", label: "Sul", center: [-27.2, -52.2], zoom: 6 },
+  { id: "ne", label: "Nordeste", center: [-8.2, -38.8], zoom: 6 },
+  { id: "norte", label: "Norte", center: [-4.8, -52.5], zoom: 5 },
 ];
 
 const RISK_HEX: Record<StatusCode, string> = {
@@ -74,6 +99,8 @@ const PHYSICAL_BADGE_CLASSES: Record<DamPhysicalStatus, string> = {
   collapsed: "bg-[#26122c] text-[#f0abfc] border-[#86198f]",
 };
 
+const INITIAL_LIST_LIMIT = 24;
+
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")
@@ -90,7 +117,7 @@ function buildMarkerIcon(
   const isCollapsed = dam.physical_status === "collapsed";
   const isDecomm = dam.physical_status === "decommissioning";
   const fill = isCollapsed ? "#d946ef" : RISK_HEX[dam.risk_tier];
-  const size = isSelected ? 20 : 14;
+  const size = isSelected ? 20 : 13;
   const borderStyle = isCollapsed || isDecomm ? "dashed" : "solid";
   const borderColor = isSelected ? "#eef2f6" : isCollapsed ? "#f5d0fe" : "#0c0f14";
   const radius = isCollapsed ? "3px" : "9999px";
@@ -99,7 +126,7 @@ function buildMarkerIcon(
     ? "box-shadow: 0 0 0 4px rgba(59, 158, 235, 0.45);"
     : "box-shadow: 0 1px 4px rgba(0, 0, 0, 0.65);";
 
-  const html = `<span style="display:block;width:${size}px;height:${size}px;border-radius:${radius};background:${fill};border:2px ${borderStyle} ${borderColor};${transform}${halo}transition:transform 0.15s ease;"></span>`;
+  const html = `<span style="display:block;width:${size}px;height:${size}px;border-radius:${radius};background:${fill};border:2px ${borderStyle} ${borderColor};${transform}${halo}"></span>`;
 
   return L.divIcon({
     className: "phase-zero-dam-marker",
@@ -108,6 +135,39 @@ function buildMarkerIcon(
     iconAnchor: [size / 2, size / 2],
     popupAnchor: [0, -size / 2],
   });
+}
+
+function createConfiguredTileLayers(
+  L: typeof LeafletNS,
+  layerId: BaseLayerId,
+): LeafletNS.LayerGroup {
+  const cfg = TILE_LAYERS[layerId];
+  const layers: LeafletNS.Layer[] = [];
+
+  const mainTileOpts: LeafletNS.TileLayerOptions = {
+    attribution: cfg.attribution,
+    maxNativeZoom: cfg.maxNativeZoom,
+    maxZoom: cfg.maxZoom,
+    errorTileUrl: TRANSPARENT_TILE_DATA_URI,
+    keepBuffer: 4,
+    className: cfg.tileClassName ?? "",
+  };
+
+  layers.push(L.tileLayer(cfg.url, mainTileOpts));
+
+  if (cfg.overlayLabelsUrl) {
+    layers.push(
+      L.tileLayer(cfg.overlayLabelsUrl, {
+        maxNativeZoom: 17,
+        maxZoom: cfg.maxZoom,
+        pane: "overlayPane",
+        opacity: 0.9,
+        errorTileUrl: TRANSPARENT_TILE_DATA_URI,
+      }),
+    );
+  }
+
+  return L.layerGroup(layers);
 }
 
 export function DamMapPanel({
@@ -124,7 +184,7 @@ export function DamMapPanel({
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const leafletRef = useRef<typeof LeafletNS | null>(null);
   const mapRef = useRef<LeafletNS.Map | null>(null);
-  const tileLayerRef = useRef<LeafletNS.TileLayer | null>(null);
+  const tileGroupRef = useRef<LeafletNS.LayerGroup | null>(null);
   const markersGroupRef = useRef<LeafletNS.LayerGroup | null>(null);
   const freeMarkerRef = useRef<LeafletNS.CircleMarker | null>(null);
 
@@ -137,6 +197,8 @@ export function DamMapPanel({
   const [baseLayer, setBaseLayer] = useState<BaseLayerId>("dark");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [showAllInList, setShowAllInList] = useState<boolean>(false);
+  const [currentZoom, setCurrentZoom] = useState<number>(4);
   const [mapReady, setMapReady] = useState<boolean>(false);
 
   const filteredDams = useMemo(() => {
@@ -154,6 +216,21 @@ export function DamMapPanel({
       );
     });
   }, [dams, statusFilter, searchQuery]);
+
+  const visibleListDams = useMemo(() => {
+    if (showAllInList || searchQuery.trim().length > 0 || statusFilter !== "all") {
+      return filteredDams;
+    }
+    // Garante que a barragem selecionada sempre apareça na lista visível inicial
+    const topSlice = filteredDams.slice(0, INITIAL_LIST_LIMIT);
+    if (selectedDamId && !topSlice.some((d) => d.id === selectedDamId)) {
+      const sel = filteredDams.find((d) => d.id === selectedDamId);
+      if (sel) {
+        return [sel, ...topSlice.slice(0, INITIAL_LIST_LIMIT - 1)];
+      }
+    }
+    return topSlice;
+  }, [filteredDams, showAllInList, searchQuery, statusFilter, selectedDamId]);
 
   const counts = useMemo(() => {
     let standing = 0;
@@ -183,18 +260,18 @@ export function DamMapPanel({
         center: [-15.8, -46.5],
         zoom: 4,
         minZoom: 3,
-        maxZoom: 18,
+        maxZoom: 20,
         zoomControl: true,
+        preferCanvas: true,
       });
       map.attributionControl?.setPrefix("Leaflet");
 
-      const cfg = TILE_LAYERS[baseLayer];
-      const tiles = L.tileLayer(cfg.url, {
-        attribution: cfg.attribution,
-        maxZoom: cfg.maxZoom,
-      }).addTo(map);
-
+      const tiles = createConfiguredTileLayers(L, baseLayer).addTo(map);
       const group = L.layerGroup().addTo(map);
+
+      map.on("zoomend", () => {
+        setCurrentZoom(map.getZoom());
+      });
 
       map.on("click", (ev: LeafletNS.LeafletMouseEvent) => {
         const lat = Number(ev.latlng.lat.toFixed(5));
@@ -203,8 +280,9 @@ export function DamMapPanel({
       });
 
       mapRef.current = map;
-      tileLayerRef.current = tiles;
+      tileGroupRef.current = tiles;
       markersGroupRef.current = group;
+      setCurrentZoom(map.getZoom());
       setMapReady(true);
     });
 
@@ -215,7 +293,7 @@ export function DamMapPanel({
         mapRef.current.remove();
         mapRef.current = null;
       }
-      tileLayerRef.current = null;
+      tileGroupRef.current = null;
       markersGroupRef.current = null;
       freeMarkerRef.current = null;
     };
@@ -226,16 +304,13 @@ export function DamMapPanel({
     const map = mapRef.current;
     if (!mapReady || !L || !map) return;
 
-    if (tileLayerRef.current) {
-      map.removeLayer(tileLayerRef.current);
+    if (tileGroupRef.current) {
+      map.removeLayer(tileGroupRef.current);
     }
-    const cfg = TILE_LAYERS[baseLayer];
-    tileLayerRef.current = L.tileLayer(cfg.url, {
-      attribution: cfg.attribution,
-      maxZoom: cfg.maxZoom,
-    }).addTo(map);
+    tileGroupRef.current = createConfiguredTileLayers(L, baseLayer).addTo(map);
   }, [baseLayer, mapReady]);
 
+  // Efeito dedicado exclusivamente aos marcadores do catálogo (não reconstrói ao clicar em ponto livre)
   useEffect(() => {
     const L = leafletRef.current;
     const map = mapRef.current;
@@ -271,11 +346,18 @@ export function DamMapPanel({
       marker.on("click", (ev: LeafletNS.LeafletMouseEvent) => {
         L.DomEvent.stopPropagation(ev);
         onSelectDamRef.current(dam);
-        map.flyTo([dam.lat, dam.lon], Math.max(map.getZoom(), 12), { duration: 0.6 });
+        map.flyTo([dam.lat, dam.lon], Math.max(map.getZoom(), 13), { duration: 0.6 });
       });
 
       marker.addTo(group);
     }
+  }, [filteredDams, selectedDamId, mapReady]);
+
+  // Efeito separado e leve apenas para o marcador de ponto livre
+  useEffect(() => {
+    const L = leafletRef.current;
+    const map = mapRef.current;
+    if (!mapReady || !L || !map) return;
 
     if (freeMarkerRef.current) {
       map.removeLayer(freeMarkerRef.current);
@@ -295,12 +377,12 @@ export function DamMapPanel({
         })
         .addTo(map);
     }
-  }, [filteredDams, selectedDamId, isFreePoint, activeLat, activeLon, mapReady]);
+  }, [isFreePoint, activeLat, activeLon, mapReady]);
 
   const handleFocusDamFromList = (dam: DamCatalogItem) => {
     onSelectDam(dam);
     if (mapRef.current) {
-      mapRef.current.flyTo([dam.lat, dam.lon], 13, { duration: 0.7 });
+      mapRef.current.flyTo([dam.lat, dam.lon], 14, { duration: 0.7 });
     }
   };
 
@@ -327,7 +409,7 @@ export function DamMapPanel({
               id="dam-map-heading"
               className="text-sm font-bold text-[#eef2f6]"
             >
-              Mapa Geográfico de Barragens
+              Mapa Geográfico de Barragens ({dams.length})
             </h2>
             {selectedDam && (
               <span
@@ -343,7 +425,7 @@ export function DamMapPanel({
             )}
           </div>
           <p className="text-xs text-[#8a96a8] mt-0.5">
-            Selecione uma estrutura monitorada ou clique no mapa para consulta livre.
+            Selecione uma estrutura monitorada ou clique no mapa para consulta livre (zoom até z20).
           </p>
         </div>
 
@@ -446,9 +528,13 @@ export function DamMapPanel({
                 Ponto Livre
               </span>
             </div>
-            <span className="font-mono tabular-nums text-[#8a96a8]">
-              {filteredDams.length}/{dams.length}
-            </span>
+            <div className="flex items-center gap-2 font-mono tabular-nums text-[#8a96a8]">
+              <span>z{currentZoom}</span>
+              <span>·</span>
+              <span>
+                {filteredDams.length}/{dams.length}
+              </span>
+            </div>
           </div>
 
           <div className="bg-[#080b0f] border border-[#222933] rounded-md p-2.5 space-y-2">
@@ -463,7 +549,7 @@ export function DamMapPanel({
                   type="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Filtrar barragem, município ou UF..."
+                  placeholder="Filtrar entre as barragens por nome, cidade ou UF..."
                   className="w-full pl-8 pr-2.5 py-1.5 rounded bg-[#131820] border border-[#222933] focus:border-[#3b9eeb] text-xs text-[#eef2f6] placeholder:text-[#687588] focus:outline-none"
                 />
               </div>
@@ -495,7 +581,7 @@ export function DamMapPanel({
             </div>
 
             <ul className="max-h-[126px] overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-1.5 pr-1">
-              {filteredDams.map((dam) => {
+              {visibleListDams.map((dam) => {
                 const isSelected = dam.id === selectedDamId;
                 return (
                   <li key={dam.id}>
@@ -535,6 +621,18 @@ export function DamMapPanel({
                 </li>
               )}
             </ul>
+
+            {filteredDams.length > visibleListDams.length && (
+              <div className="flex justify-center pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowAllInList(true)}
+                  className="px-3 py-1 rounded bg-[#131820] hover:bg-[#1a222d] border border-[#222933] text-[11px] font-medium text-[#93c5fd] transition-colors cursor-pointer"
+                >
+                  Mostrar todas na lista ({filteredDams.length} barragens)
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

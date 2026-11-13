@@ -12,7 +12,7 @@ describe("Catálogo e rotas de barragens (/api/dams)", () => {
     expect(res.statusCode).toBe(200);
 
     const parsed = DamsResponseSchema.parse(res.json());
-    expect(parsed.dams.length).toBeGreaterThanOrEqual(21);
+    expect(parsed.dams.length).toBeGreaterThanOrEqual(90);
 
     const statuses = new Set(parsed.dams.map((d) => d.physical_status));
     expect(statuses.has("standing")).toBe(true);
@@ -24,6 +24,59 @@ describe("Catálogo e rotas de barragens (/api/dams)", () => {
     expect(brumadinho?.default_end).toBe("2019-01-20");
 
     await app.close();
+  });
+
+  it("classifica com precisão as 7 zonas geomorfométricas (Água, Mureta, Paredão, Berma, Ombreira, Vegetação Densa e Vale)", async () => {
+    const deps = {
+      power: async (_lat: number, _lon: number, s: string, e: string, n?: number) => ({
+        climate: syntheticClimate(s, e, n),
+        isReal: true,
+      }),
+      terrain: async (lat: number, lon: number, size: number) => getTerrainGrid(lat, lon, size, false),
+      cmr: async () => [],
+    };
+
+    const res = await runPhaseZeroPipeline(
+      {
+        scenario_id: "custom",
+        custom_lat: -19.9419,
+        custom_lon: -43.5997,
+        custom_name: "Barragem Sul Superior / Mina Gongo Soco (Barão de Cocais, MG)",
+        min_coherence: 0.4,
+      },
+      deps,
+    );
+
+    const waterPx = res.grid_pixels.find((p) => p.row === 2 && p.col === 9);
+    const crestPx = res.grid_pixels.find((p) => p.row === 6 && p.col === 9);
+    const slopePx = res.grid_pixels.find((p) => p.row === 10 && p.col === 9);
+    const bermPx = res.grid_pixels.find((p) => p.row === 13 && p.col === 9);
+    const abutmentPx = res.grid_pixels.find((p) => p.row === 9 && p.col === 2);
+    const vegPx = res.grid_pixels.find((p) => p.row === 10 && p.col === 0);
+    const valleyPx = res.grid_pixels.find((p) => p.row === 16 && p.col === 9);
+
+    expect(waterPx?.zone).toContain("ÁGUA DA REPRESA / RESERVATÓRIO");
+    expect(waterPx?.masked).toBe(true);
+
+    expect(crestPx?.zone).toContain("MURETA / CRISTA PRINCIPAL");
+    expect(crestPx?.zone).toContain("Decliv:");
+    expect(crestPx?.masked).toBe(false);
+
+    expect(slopePx?.zone).toContain("PAREDÃO / TALUDE CENTRAL");
+    expect(slopePx?.masked).toBe(false);
+
+    expect(bermPx?.zone).toContain("BERMA DE PÉ / TALUDE INFERIOR");
+    expect(bermPx?.masked).toBe(false);
+
+    expect(abutmentPx?.zone).toContain("OMBREIRA / ENCOSTA ROCHOSA");
+    expect(abutmentPx?.masked).toBe(false);
+
+    expect(vegPx?.zone).toContain("VEGETAÇÃO DENSA / MATA NATIVA");
+    expect(vegPx?.coherence).toBeLessThan(0.36);
+    expect(vegPx?.masked).toBe(true);
+
+    expect(valleyPx?.zone).toContain("VALE A JUSANTE / DRENAGEM");
+    expect(valleyPx?.masked).toBe(false);
   });
 
   it("classifica corretamente barragens de pé (GREEN/YELLOW) e históricas rompidas (RED)", async () => {

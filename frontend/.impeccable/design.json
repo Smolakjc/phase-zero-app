@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 2,
+  "name": "PHASE-ZERO",
+  "subtitle": "Observatório de Vidro Mineral",
+  "direction": "model-pick",
+  "seed": "seed:da54b005731eaf20",
+  "tokens": {
+    "colors": {
+      "light": {
+        "ground": "#f3f6f9",
+        "surface": "#ffffff",
+        "well": "#eef3f7",
+        "glass": "rgba(255, 255, 255, 0.84)",
+        "glassStrong": "rgba(255, 255, 255, 0.94)",
+        "text": "#0f172a",
+        "secondary": "#334155",
+        "muted": "#526377",
+        "accent": "#0f766e",
+        "accentInk": "#ffffff",
+        "okInk": "#047857",
+        "warnInk": "#92400e",
+        "dangerInk": "#be123c",
+        "border": "rgba(15, 23, 42, 0.11)",
+        "borderStrong": "rgba(15, 23, 42, 0.2)"
+      },
+      "dark": {
+        "ground": "#0b111c",
+        "surface": "#111b2e",
+        "well": "#090f1a",
+        "glass": "rgba(15, 23, 42, 0.82)",
+        "glassStrong": "rgba(15, 23, 42, 0.92)",
+        "text": "#f8fafc",
+        "secondary": "#cbd5e1",
+        "muted": "#94a3b8",
+        "accent": "#2dd4bf",
+        "accentInk": "#042f2e",
+        "okInk": "#6ee7b7",
+        "warnInk": "#fcd34d",
+        "dangerInk": "#fda4af",
+        "border": "rgba(255, 255, 255, 0.13)",
+        "borderStrong": "rgba(255, 255, 255, 0.22)"
+      },
+      "tonalRamps": {
+        "mineralTealAccent": {
+          "light": "#0f766e",
+          "dark": "#2dd4bf"
+        },
+        "mineralSlateGround": {
+          "light": "#f3f6f9",
+          "lightWell": "#eef3f7",
+          "dark": "#0b111c",
+          "darkSurface": "#111b2e",
+          "darkWell": "#090f1a"
+        },
+        "statusSemanticInk": {
+          "okLight": "#047857",
+          "okDark": "#6ee7b7",
+          "warnLight": "#92400e",
+          "warnDark": "#fcd34d",
+          "dangerLight": "#be123c",
+          "dangerDark": "#fda4af"
+        }
+      }
+    },
+    "typography": {
+      "sans": {
+        "family": "Figtree",
+        "cssVar": "--font-sans",
+        "weights": [400, 500, 600, 700]
+      },
+      "mono": {
+        "family": "JetBrains Mono",
+        "cssVar": "--font-mono",
+        "weights": [400, 500, 600],
+        "features": ["tabular-nums"]
+      }
+    },
+    "spacing": {
+      "base": "4px",
+      "compact": "8px",
+      "panel": "16px",
+      "sheet": "20px",
+      "hudInset": "12px / 16px"
+    },
+    "radii": {
+      "pill": "9999px",
+      "sheet": "24px",
+      "card": "16px",
+      "well": "12px",
+      "sm": "8px"
+    },
+    "shadows": {
+      "light": "0 18px 48px rgba(15, 23, 42, 0.12)",
+      "dark": "0 22px 56px rgba(2, 6, 23, 0.55)"
+    },
+    "glass": {
+      "pzGlass": "backdrop-filter: blur(18px) saturate(1.25)",
+      "pzGlassStrong": "backdrop-filter: blur(22px) saturate(1.3)"
+    },
+    "motion": {
+      "sheetReveal": "340ms cubic-bezier(0.16, 1, 0.3, 1)",
+      "popoverReveal": "280ms cubic-bezier(0.16, 1, 0.3, 1)",
+      "reducedMotion": "prefers-reduced-motion: reduce collapses reveal transitions"
+    },
+    "breakpoints": {
+      "sm": "640px",
+      "md": "768px",
+      "lg": "1024px",
+      "xl": "1280px"
+    }
+  },
+  "components": [
+    {
+      "name": "FloatingHud",
+      "html": "<header class=\"ds-hud\"><div class=\"ds-brand\">PHASE-ZERO</div><div class=\"ds-pills\"><button class=\"ds-pill ds-pill-active\">Itaipu (PR)</button><button class=\"ds-pill\">Gongo Soco (MG)</button></div><button class=\"ds-pill ds-theme-btn\">Claro</button></header>",
+      "css": ".ds-hud{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:16px;background:rgba(255,255,255,.84);backdrop-filter:blur(18px) saturate(1.25);border:1px solid rgba(15,23,42,.11);box-shadow:0 18px 48px rgba(15,23,42,.12);font-family:Figtree,sans-serif}.ds-brand{font-weight:700;letter-spacing:.08em;font-size:12px;color:#0f172a}.ds-pills{display:flex;gap:6px}.ds-pill{border-radius:9999px;padding:6px 12px;font-size:12px;border:1px solid rgba(15,23,42,.11);background:#fff;color:#334155}.ds-pill-active{background:#0f766e;border-color:#0f766e;color:#fff;font-weight:600}"
+    },
+    {
+      "name": "ObservatorySheet",
+      "html": "<section class=\"ds-sheet\"><div class=\"ds-sheet-head\"><div><h2 class=\"ds-title\">Barragem de Itaipu</h2><p class=\"ds-coords\">-25.4081, -54.5889 · 2024-01-01 → 2025-12-31</p></div><span class=\"ds-status-ok\">Monitoramento Normal</span></div></section>",
+      "css": ".ds-sheet{border-radius:24px;padding:20px;background:rgba(255,255,255,.94);backdrop-filter:blur(22px) saturate(1.3);border:1px solid rgba(15,23,42,.11);box-shadow:0 18px 48px rgba(15,23,42,.12);font-family:Figtree,sans-serif}.ds-sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.ds-title{margin:0;font-size:18px;font-weight:700;color:#0f172a}.ds-coords{margin:4px 0 0;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-size:12px;color:#526377}.ds-status-ok{border-radius:9999px;padding:4px 10px;font-size:12px;font-weight:600;color:#047857;background:rgba(4,120,87,.1)}"
+    }
+  ],
+  "sections": {
+    "overview": "PHASE-ZERO (\"Observatório de Vidro Mineral\") is a map-first geospatial InSAR triage workstation for tailings dam monitoring. At initial load, 100% of the viewport stays open for the interactive MapLibre canvas paired with a single floating glass capsule (FloatingHud) at the top edge and a compact guidance prompt pill along the lower safe area. Diagnostic charts, Mann-Kendall trend indicators, and the interactive 18x18 (80m x 80m) 3D terrain mesh surface inside ObservatorySheet only after the operator selects a dam marker, calibrated scenario, catalog search result, or custom coordinate on the map.",
+    "colors": "All semantic tokens live in frontend/app/globals.css under --pz-* custom properties resolved dynamically via CSS light-dark() alongside explicit <meta name=\"color-scheme\"> and @media (prefers-color-scheme: dark) synchronization.",
+    "typography": "Display & UI uses Figtree (400, 500, 600, 700) via --font-sans. Technical telemetry uses JetBrains Mono (400, 500, 600) via --font-mono strictly paired with .tabular-nums on coordinates, ISO date spans, coherence thresholds, deformation velocity values (mm/yr), and SVG chart axis ticks.",
+    "layout": "Full-viewport WebGL canvas powered by maplibre-gl (^4.7.1) with OpenFreeMap (positron/dark/liberty), Esri World Imagery + Labels, and AWS Terrarium DEM tiles. FloatingHud fits on one horizontal row at 1440px and folds scenarios below lg (1024px). ObservatorySheet uses responsive mobile tabs under lg and a 12-column desktop grid once hasSelection is true.",
+    "elevationAndDepth": ".pz-glass applies blur(18px) saturate(1.25) and .pz-glass-strong applies blur(22px) saturate(1.3) over var(--pz-shadow). Entry reveals use CSS @starting-style transitions (340ms sheet, 280ms popover) collapsing under prefers-reduced-motion: reduce.",
+    "shapes": "Pill radius 9999px for chips and switches; 24px (rounded-3xl) for ObservatorySheet; 16px (rounded-2xl) for cards, HUD dock, and modals; 12px (rounded-xl) for chart and 3D canvas wells; 8px (rounded-lg) for inputs and micro toggles.",
+    "components": "FloatingHud, ObservatoryMap, ObservatorySheet, DiagnosticsPanel, TerrainViewport3D, TimeSeriesChart, ThermoLoopChart, DataSourceBadges, TokenModal.",
+    "dosAndDonts": "Keep initial state unobstructed until a target is chosen; pair JetBrains Mono with .tabular-nums on numeric telemetry; preserve accessible status ink contrast in both Light and Dark themes; avoid hardcoded dark fills in SVG/Canvas; keep mobile bottom pills clear of MapLibre zoom/attribution controls; preserve the official NISAR provisional data footer disclaimer."
+  }
+}

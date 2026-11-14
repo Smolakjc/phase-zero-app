@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Sinalização Cartográfica Progressiva — PHASE-ZERO</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1440px; height: 900px; overflow: hidden; background: #FAFAF8; color: #11161D; font-family: 'Hanken Grotesk', sans-serif; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+  .shell { display: grid; grid-template-rows: 64px 1fr; height: 900px; }
+  .waybar { background: #11161D; color: #FAFAF8; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; border-bottom: 3px solid #D97706; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .gate { background: #FBBF24; color: #11161D; font-weight: 800; padding: 6px 12px; border-radius: 6px; font-size: 13px; letter-spacing: 0.04em; }
+  .steps { display: flex; gap: 16px; font-size: 12px; color: #CBD5E1; }
+  .steps b { color: #FBBF24; }
+  .body { display: grid; grid-template-columns: 1fr 430px; height: 100%; }
+  .map-pane { position: relative; background: linear-gradient(135deg, #ECECE6 0%, #E3E5DC 100%); overflow: hidden; }
+  .grid-lines { position: absolute; inset: 0; background-image: linear-gradient(90deg, rgba(17,22,29,0.06) 1px, transparent 1px), linear-gradient(rgba(17,22,29,0.06) 1px, transparent 1px); background-size: 80px 80px; }
+  .search-float { position: absolute; top: 20px; left: 20px; right: 20px; display: flex; gap: 10px; }
+  .search-box { flex: 1; background: #FFFFFF; border: 2px solid #11161D; border-radius: 10px; padding: 11px 14px; font-size: 13px; font-weight: 600; }
+  .mode-btn { background: #FFFFFF; border: 2px solid #11161D; border-radius: 10px; padding: 11px 14px; font-size: 12px; font-weight: 700; }
+  .dot { position: absolute; width: 16px; height: 16px; border-radius: 99px; border: 2px solid #11161D; }
+  .panel { background: #FFFFFF; border-left: 2px solid #11161D; display: flex; flex-direction: column; }
+  .band-head { background: #FEF3C7; border-bottom: 1px solid #F59E0B; padding: 16px 20px; }
+  .band-head h2 { font-size: 20px; font-weight: 800; margin-top: 4px; }
+  .band { padding: 14px 20px; border-bottom: 1px solid #E5E7EB; }
+  .band-label { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; color: #B45309; margin-bottom: 8px; display: block; }
+  .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .m { background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 10px; }
+  .m span { font-size: 10px; color: #64748B; display: block; }
+  .m strong { font-size: 14px; display: block; margin-top: 3px; }
+  .mesh { height: 132px; background: #11161D; border-radius: 10px; padding: 12px; color: #FBBF24; display: flex; align-items: flex-end; justify-content: space-between; }
+  .tg { display: flex; justify-content: space-between; padding: 7px 0; font-size: 12px; font-weight: 600; border-bottom: 1px dashed #E2E8F0; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="waybar">
+    <div class="brand">
+      <span class="gate">PHASE-ZERO</span>
+      <span style="font-size:14px;font-weight:700;">Triagem InSAR</span>
+    </div>
+    <div class="steps">
+      <span><b>01</b> Escolher local no mapa</span>
+      <span>→</span>
+      <span><b>02</b> Ler diagnóstico</span>
+      <span>→</span>
+      <span><b>03</b> Filtrar interferências</span>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <span class="gate" style="background:#1E293B;color:#F8FAFC;">Claro / Escuro</span>
+    </div>
+  </header>
+
+  <div class="body">
+    <div class="map-pane">
+      <div class="grid-lines"></div>
+      <div class="search-float">
+        <div class="search-box">Pesquisar barragem, estado ou coordenada no mapa...</div>
+        <div class="mode-btn">Camadas MapLibre</div>
+      </div>
+      <div class="dot" style="left:280px;top:540px;background:#16A34A;"></div>
+      <div class="dot" style="left:490px;top:360px;width:22px;height:22px;background:#FBBF24;box-shadow:0 0 0 8px rgba(217,119,6,0.22);"></div>
+      <div class="dot" style="left:720px;top:220px;background:#DC2626;"></div>
+    </div>
+
+    <aside class="panel">
+      <div class="band-head">
+        <span class="mono" style="font-size:11px;font-weight:700;color:#92400E;">ALVO SELECIONADO · YELLOW</span>
+        <h2>Barragem Sul Superior</h2>
+        <span class="mono" style="font-size:11px;color:#475569;">-19.9419, -43.5997 · Barão de Cocais</span>
+      </div>
+      <div class="band">
+        <span class="band-label">PASSO 02 · MÉTRICAS DECISÓRIAS</span>
+        <div class="metrics">
+          <div class="m"><span>Tendência</span><strong class="mono">-2.4 mm</strong></div>
+          <div class="m"><span>Aceleração</span><strong class="mono">4.1 mm</strong></div>
+          <div class="m"><span>Score</span><strong class="mono">3.28 σ</strong></div>
+        </div>
+      </div>
+      <div class="band">
+        <span class="band-label">RELEVO TOPOGRÁFICO 3D</span>
+        <div class="mesh"><span class="mono" style="font-size:11px;">324 blocos · 80m × 80m</span><span class="mono" style="font-size:11px;">LOS -6.8 mm</span></div>
+      </div>
+      <div class="band">
+        <span class="band-label">PASSO 03 · COMPENSAÇÕES FÍSICAS</span>
+        <div class="tg"><span>Ionosfera &amp; Troposfera</span><span style="color:#16A34A;">ATIVAS</span></div>
+        <div class="tg"><span>Marés Terrestres &amp; NASA POWER</span><span style="color:#16A34A;">ATIVAS</span></div>
+      </div>
+      <div class="band" style="border:none;flex:1;">
+        <span class="band-label">DECONVOLUÇÃO TEMPORAL</span>
+        <svg viewBox="0 0 380 110" width="100%" height="110">
+          <path d="M 10 42 Q 120 20, 240 48 T 370 60" fill="none" stroke="#94A3B8" stroke-width="2" stroke-dasharray="4 4"/>
+          <path d="M 10 54 Q 140 58, 250 82 T 370 96" fill="none" stroke="#D97706" stroke-width="3"/>
+        </svg>
+      </div>
+    </aside>
+  </div>
+</div>
+</body>
+</html>

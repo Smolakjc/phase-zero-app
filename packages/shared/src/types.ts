@@ -13,10 +13,12 @@ import {
   ScenarioMetaSchema,
   ScenariosResponseSchema,
   StatusCodeSchema,
+  StatisticalSignificanceSchema,
   ThermoLoopPointSchema,
 } from "./schemas";
 
 export type StatusCode = z.infer<typeof StatusCodeSchema>;
+export type StatisticalSignificance = z.infer<typeof StatisticalSignificanceSchema>;
 export type AnalysisRequest = z.infer<typeof AnalysisRequestSchema>;
 export type AnalysisRequestInput = z.input<typeof AnalysisRequestSchema>;
 export type ThermoLoopPoint = z.infer<typeof ThermoLoopPointSchema>;

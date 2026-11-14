@@ -24,6 +24,7 @@ import {
   matchKnownDamSite,
 } from "../domain/presets.js";
 import { arange, clip, linspace, mean, round2, roundN, zeros } from "../lib/math.js";
+import { computeMannKendall } from "../lib/statisticalTrend.js";
 import { classify, computeAcceleration, computeSlope, maxScore } from "./classifier.js";
 import { searchGranules } from "./cmr.js";
 import { streamH5Slice } from "./h5Stream.js";
@@ -491,6 +492,17 @@ export async function runPhaseZeroPipeline(
   const maxAnomalyScore = maxScore(processedPixels.map((p) => p.anomaly_score));
   const classification = classify(slope, accel, maxAnomalyScore);
 
+  const mkResult = computeMannKendall(residualSeries);
+  const significance = {
+    p_value: mkResult.pValue,
+    is_significant: mkResult.isSignificant,
+    confidence_level: mkResult.confidenceLevel,
+    method: "Mann-Kendall Trend Test (Kriss/Medium & NASA SeaWiFS)",
+    mann_kendall_s: mkResult.s,
+    sens_slope_mm_per_pass: mkResult.sensSlope,
+    trend_direction: mkResult.trendDirection,
+  };
+
   return {
     scenario_meta: {
       name: targetName,
@@ -513,6 +525,7 @@ export async function runPhaseZeroPipeline(
       residual_trend_mm_per_pass: round2(slope),
       acceleration_index_mm: round2(accel),
       max_weighted_anomaly_score: round2(maxAnomalyScore),
+      significance,
     },
     dates,
     grid_pixels: processedPixels,

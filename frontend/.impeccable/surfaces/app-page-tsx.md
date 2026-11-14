@@ -5,29 +5,29 @@ primary_target: "app/page.tsx"
 related_targets: []
 ---
 
-# Surface Brief: PHASE-ZERO Operational Dashboard
+# Surface Brief: PHASE-ZERO Observatório de Vidro Mineral
 
-- **Scope:** `app/page.tsx` and modular frontend components (`components/*`, `hooks/useAnalysis.ts`, `app/layout.tsx`, `app/globals.css`)
+- **Scope:** `app/page.tsx`, `app/layout.tsx`, `app/globals.css`, `hooks/useAnalysis.ts`, and modular components (`components/*`, `lib/*`)
 - **Visitor Mode:** Operate
-- **Audience & Job:** Evaluators and geotechnical engineers switching among 4 calibrated InSAR scenarios, exploring 21 Brazilian dams or free coordinates, toggling 4 environmental compensations, inspecting 80m × 80m terrain mesh blocks, and reading temporal deconvolution and thermo-mechanical charts.
-- **Memorable Moment:** Continuous live synchronization across the dam map, 3D topographic mesh, diagnostic metrics, and temporal charts without modal interruption or decorative clutter.
+- **Audience & Job:** Evaluators (NASA Space Apps Challenge) and geotechnical risk analysts who want a clean, map-first InSAR screening experience where the full-bleed free vector/satellite map leads and local diagnostic details, 3D terrain mesh, and temporal/thermo charts appear smoothly after picking a dam or coordinate on the map.
+- **Memorable Moment:** Picking any dam or clicking anywhere on the 60fps MapLibre GL JS map triggers a smooth `flyTo` camera focus and smoothly reveals the frosted mineral-glass observatory sheet below with synchronized 3D mesh, physical filters, and temporal deconvolution curves, seamlessly adapting between Light and Dark themes.
 
 ## Direction contract
 
 THESIS:
-PHASE-ZERO treats satellite InSAR triage as a disciplined geodetic field plate in matte basalt, replacing glowing dark-SaaS cards, emojis, and numbered AI scaffolds with calm cartographic precision and unified data density.
+PHASE-ZERO places a full-viewport WebGL MapLibre vector/satellite/3D-terrain observatory at the center of the screen, keeping the map open and uncluttered until the user picks a dam, clicks a coordinate, or selects a scenario, when a translucent mineral-glass sheet smoothly expands to reveal the structural diagnosis, 3D mesh, physical compensations, and charts.
 
 OWN-WORLD:
-Matte basalt obsidian ground (`#0C0F14`), machined slate panels (`#131820`), recessed instrument wells (`#080B0F`), 1px structural hairlines (`#222933`), bone ink (`#EEF2F6`), slate-mist labels (`#8D99AE`), mineral cobalt (`#3B9EEB`) exclusively for active selection and LOS vectors, and restrained semantic state inks (`#22C55E`, `#EAB308`, `#F43F5E`) with geometric shape coding. Typography pairs `Archivo` for UI and headings with `Fira Code` tabular numerals strictly for coordinates, dates, and physical measurements.
+Dual adaptive light/dark mineral-glass palette driven by `color-scheme: light dark` and CSS `light-dark()`: airy alabaster ground (`#F6F8FA`) and frosted white glass (`rgba(255,255,255,0.82)`) in Light mode; deep oceanic slate (`#0B111C`) and obsidian glass (`rgba(15,23,42,0.82)`) in Dark mode, paired with mineral teal accent (`#0D9488` light / `#2DD4BF` dark), subtle hairline borders, and crisp semantic triage inks (`#16A34A`/`#22C55E`, `#D97706`/`#F59E0B`, `#E11D48`/`#F43F5E`) with geometric shape distinction. Typography pairs `Figtree` for crisp UI and headings with `JetBrains Mono` tabular numerals strictly for coordinates, dates, and physical measurements.
 
 STORY:
-The operator sees the active dam status, provenance badges, and scenario switchers immediately in the top deck, refines target coordinates or time windows in a single control strip, compares the interactive dam map beside the 3D terrain mesh while toggling physical compensations in the right diagnostic rail, and verifies residual displacement across the temporal and thermo-mechanical charts below.
+On load, the user sees Brazil's interactive dam catalog over a clean MapLibre canvas with only floating glass pills at the top (brand, unified search/coordinate bar, 4 scenario quick-picks, theme & layer controls, Earthdata token trigger) and a calm bottom prompt inviting them to choose a location on the map. Picking a dam or clicking any coordinate smoothly flies the camera (`flyTo`) to the target, highlights its pulse ring, and animates open the bottom mineral-glass observatory sheet (with expand, collapse, and close controls) displaying the structural status, 3 decision metrics, 3D 80m × 80m terrain mesh, 4 physical compensation toggles, coherence slider (`γ`), and temporal/thermo charts.
 
 FIRST VIEWPORT:
-Top bar (58px) holds PHASE-ZERO identity, NASA Space Apps context, live granule/token controls, and the 4 scenario buttons. Directly beneath sits a compact control strip (coordinates, target name, date window, provenance badges). Below, the primary workspace splits into a main spatial/chart stage (interactive dam map and 3D topographic mesh side-by-side above the temporal deconvolution and thermo-mechanical charts) and a fixed 370px right diagnostic column (status banner, 3 tabular metrics, threshold rules, 4 physical toggles, and coherence slider).
+Full-bleed MapLibre GL JS canvas (`100vw × 100dvh`) with a single floating top HUD row (`PHASE-ZERO` pill, unified search/Lat-Lon/period popover trigger, 4 scenario quick-pills, Claro/Escuro theme toggle, Vetorial/Satélite/3D layer switcher, and Earthdata Token button). Before selection, only a compact floating hint pill and dam status legend sit gently at the bottom edge. After selecting a site, the frosted mineral-glass sheet (`max-h-[46vh]` default, expandable to `82vh`) rises smoothly using `@starting-style` and compositor transforms, organizing status + KPIs, 3D terrain mesh, temporal/thermo charts, and physical compensations into a clean, non-overlapping grid.
 
 FORM:
-Atlas Geodésico de Campo, candidate 3 of 7 grounded directions (with raises from variable-font-specimen, digital-design-canon-monochrome-product-marketing, aww2-zoo-gardens-guide-map, and rw-manual-acetate-tab-board), seed:72a31b4c04ec94da.
+Observatório de Vidro Mineral (`model-pick`, user-selected top grounded direction from Impeccable visual decision round), seed:da54b005731eaf20.
 
 FINISH:
 unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance

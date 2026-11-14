@@ -1,7 +1,18 @@
 # PHASE-ZERO v5.0 // 100% TypeScript Monorepo
 
 > **NASA Space Apps Challenge — Dancing with the SARs**  
-> Compensação Ambiental para Detecção de Anomalias de Superfície via Radar InSAR (NISAR Banda L & Sentinel-1/OPERA Banda C) combinada com modelagem termo-hidrometeorológica **NASA POWER**, topografia **Open-Meteo DEM** e busca de granules **NASA CMR / Earthdata Cloud HDF5**.
+> Compensação Ambiental para Detecção de Anomalias de Superfície via Radar InSAR (NISAR Banda L & Sentinel-1/OPERA/RCM Banda C) combinada com modelagem termo-hidrometeorológica **NASA POWER**, cota de reservatórios **SWOT**, testes estatísticos de tendência **Mann-Kendall / Sen's Slope** (Kriss & Statsig), metodologia **CSA SAR Tutorial** e busca de granules **NASA CMR / Earthdata Cloud HDF5**.
+
+---
+
+## Recursos Oficiais NASA & CSA Integrados
+O projeto implementa diretamente os recursos oficiais do desafio:
+- **CSA Synthetic Aperture Radar Tutorial:** Base matemática para interferometria InSAR, conversão de fase ($d = -\frac{\lambda}{4\pi}\Delta\phi$) e coerência espacial.
+- **Testes de Tendência e Significância (Medium / Statsig / NASA SeaWiFS):** Teste não-paramétrico de Mann-Kendall, estimador de Sen e cálculo de p-valor bicaudal ($p < 0.05$) para separação de ruído e deformação real.
+- **SWOT Mission (NASA/CNES/CSA):** Monitoramento da elevação e cota da lâmina d'água dos reservatórios para modelagem da sobrecarga de empuxo hidrostático.
+- **CSA Radarsat Constellation Mission (RCM) & Geo.ca:** Compatibilidade total com radar SAR em Banda C ($\lambda = 55.5\text{ mm}$).
+- **NASA Giovanni & Hydrology Time Series:** Benchmark e acesso direto a séries temporais hidrológicas e climatológicas.
+- **NASA AppEEARS & Earthdata Cloud:** Arquitetura de amostragem temporal pontual em nuvem com tokens Earthdata Login.
 
 ---
 

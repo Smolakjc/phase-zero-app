@@ -2,88 +2,106 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<title>Caderno Técnico de Barragens Alpinas — PHASE-ZERO</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@500;600;700&family=Fira+Code:wght@400;600&display=swap">
+<title>Observatório de Vidro Mineral — PHASE-ZERO</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { width: 1440px; height: 900px; overflow: hidden; background: #111315; color: #F4F6F8; font-family: 'Public Sans', sans-serif; }
-  .mono { font-family: 'Fira Code', monospace; font-variant-numeric: tabular-nums; }
-  .wrap { max-width: 1440px; height: 900px; display: grid; grid-template-rows: 64px 1fr; }
-  header { display: flex; justify-content: space-between; align-items: center; padding: 0 28px; background: #16191D; border-bottom: 1px solid #2A2F36; }
-  .h-title { font-size: 19px; font-weight: 700; }
-  .tabs { display: flex; gap: 8px; }
-  .tab { padding: 7px 12px; border: 1px solid #2E343C; background: #191C20; color: #AEB6C2; font-size: 12px; font-weight: 600; border-radius: 4px; }
-  .tab.act { border-color: #4EA8DE; background: #1C2B36; color: #FFFFFF; }
-  .grid { display: grid; grid-template-columns: 320px 1fr 340px; height: 100%; }
-  .left { background: #15181C; border-right: 1px solid #2A2F36; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
-  .center { padding: 18px; display: grid; grid-template-rows: 1.25fr 1fr; gap: 14px; background: #111315; }
-  .right { background: #15181C; border-left: 1px solid #2A2F36; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
-  .card { background: #191C20; border: 1px solid #2A2F36; border-radius: 4px; padding: 12px; }
-  .label { font-size: 12px; font-weight: 700; color: #E2E8F0; margin-bottom: 8px; }
-  .row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid #242930; font-size: 12px; color: #CBD5E1; }
-  .well { background: #0E1012; border: 1px solid #242930; border-radius: 4px; height: calc(100% - 28px); }
+  html, body { width: 1440px; height: 900px; overflow: hidden; background: #0F172A; color: #F8FAFC; font-family: 'Figtree', sans-serif; }
+  .mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+  .map-bg { position: relative; width: 1440px; height: 900px; background: radial-gradient(circle at 46% 42%, #17253B 0%, #0F172A 62%, #090E1A 100%); }
+  .roads { position: absolute; inset: 0; background-image: linear-gradient(32deg, transparent 48%, rgba(45,212,191,0.08) 49%, transparent 50%), linear-gradient(-24deg, transparent 58%, rgba(148,163,184,0.08) 59%, transparent 60%), radial-gradient(circle at 46% 42%, rgba(45,212,191,0.14) 0%, transparent 40%); }
+  .hud-left { position: absolute; top: 22px; left: 22px; display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 999px; background: rgba(15,23,42,0.74); backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,0.14); box-shadow: 0 12px 32px rgba(0,0,0,0.35); }
+  .dot-brand { width: 10px; height: 10px; border-radius: 99px; background: #2DD4BF; box-shadow: 0 0 12px #2DD4BF; }
+  .hud-search { position: absolute; top: 22px; left: 230px; display: flex; align-items: center; gap: 10px; padding: 10px 16px; width: 420px; border-radius: 999px; background: rgba(15,23,42,0.74); backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,0.14); font-size: 13px; color: #CBD5E1; }
+  .hud-right { position: absolute; top: 22px; right: 22px; display: flex; gap: 8px; }
+  .glass-btn { padding: 10px 14px; border-radius: 999px; background: rgba(15,23,42,0.74); backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,0.14); font-size: 12px; font-weight: 600; color: #E2E8F0; }
+  .glass-btn.active { border-color: #2DD4BF; color: #2DD4BF; }
+  .pin { position: absolute; width: 14px; height: 14px; border-radius: 99px; border: 2px solid #0F172A; }
+  .pin-focus { left: 680px; top: 310px; width: 20px; height: 20px; background: #F59E0B; box-shadow: 0 0 0 10px rgba(45,212,191,0.22); }
+  .sheet { position: absolute; left: 24px; right: 24px; bottom: 22px; height: 330px; border-radius: 24px; background: rgba(15,23,42,0.82); backdrop-filter: blur(22px); border: 1px solid rgba(255,255,255,0.14); padding: 20px 24px; display: grid; grid-template-columns: 310px 300px 1fr 290px; gap: 18px; box-shadow: 0 24px 64px rgba(0,0,0,0.45); }
+  .col { display: flex; flex-direction: column; justify-content: space-between; }
+  .pill-status { display: inline-flex; width: fit-content; padding: 4px 10px; border-radius: 99px; background: rgba(245,158,11,0.18); border: 1px solid rgba(245,158,11,0.45); color: #FCD34D; font-size: 11px; font-weight: 700; }
+  .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .kpi { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 10px; }
+  .kpi span { font-size: 10px; color: #94A3B8; display: block; }
+  .kpi strong { font-size: 13px; color: #F8FAFC; margin-top: 4px; display: block; }
+  .panel-well { background: rgba(9,14,26,0.72); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; }
+  .mesh { height: 170px; border-radius: 10px; background: repeating-linear-gradient(90deg, rgba(45,212,191,0.20) 0 1px, transparent 1px 16px), repeating-linear-gradient(0deg, rgba(45,212,191,0.20) 0 1px, transparent 1px 16px); transform: perspective(320px) rotateX(48deg); border: 1px solid rgba(45,212,191,0.35); }
+  .toggle-list { display: flex; flex-direction: column; gap: 7px; }
+  .tg { display: flex; justify-content: space-between; padding: 8px 12px; border-radius: 11px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); font-size: 12px; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div>
-      <div class="h-title">PHASE-ZERO</div>
-      <div style="font-size:12px;color:#9CA3AF">Monitoramento Geotécnico InSAR · NISAR / Sentinel-1</div>
-    </div>
-    <div class="tabs">
-      <div class="tab">Itaipu (PR)</div>
-      <div class="tab act">Gongo Soco (MG)</div>
-      <div class="tab">Maceió (AL)</div>
-      <div class="tab">Brumadinho (2018-2019)</div>
-    </div>
-  </header>
-  <div class="grid">
-    <aside class="left">
-      <div class="label">Catálogo de Estruturas (21)</div>
-      <div class="card mono" style="font-size:11px;color:#9CA3AF">Buscar barragem ou município...</div>
-      <div class="card">
-        <div class="row"><span>Sul Superior (MG)</span><span class="mono" style="color:#FACC15">RED</span></div>
-        <div class="row"><span>B3/B4 Maravilhas</span><span class="mono" style="color:#F43F5E">RED</span></div>
-        <div class="row"><span>Brumadinho B1</span><span class="mono" style="color:#E879F9">HIST</span></div>
-        <div class="row"><span>Usina de Itaipu</span><span class="mono" style="color:#22C55E">GREEN</span></div>
-      </div>
-      <div class="card">
-        <div class="label">Coordenadas &amp; Janela</div>
-        <div class="mono" style="font-size:11px;color:#CBD5E1">-19.9419, -43.5997</div>
-        <div class="mono" style="font-size:11px;color:#9CA3AF;margin-top:4px">2026-03-01 — 2026-09-15</div>
-      </div>
-    </aside>
-    <main class="center">
-      <section class="card">
-        <div class="label">Viewport Topográfico 3D &amp; Mapa Sincronizado</div>
-        <div class="well"></div>
-      </section>
-      <section class="card">
-        <div class="label">Deconvolução Temporal &amp; Loop Termo-Mecânico</div>
-        <div class="well"></div>
-      </section>
-    </main>
-    <aside class="right">
-      <div class="label">Diagnóstico de Estabilidade</div>
-      <div class="card" style="border-color:#A16207">
-        <div class="mono" style="font-size:11px;color:#FACC15">ATENÇÃO GEOTÉCNICA</div>
-        <div style="font-size:16px;font-weight:700;margin-top:4px">Deformação Residual</div>
-      </div>
-      <div class="card">
-        <div class="row"><span>Velocidade</span><span class="mono">-0.72 mm/ciclo</span></div>
-        <div class="row"><span>Aceleração</span><span class="mono">-1.15 mm</span></div>
-        <div class="row"><span>Score (γ)</span><span class="mono" style="color:#4EA8DE">11.4</span></div>
-      </div>
-      <div class="card">
-        <div class="label">Camadas de Compensação</div>
-        <div class="row"><span>Ionosfera (Banda L)</span><span class="mono">ON</span></div>
-        <div class="row"><span>Troposfera Úmida/Seca</span><span class="mono">ON</span></div>
-        <div class="row"><span>Marés Terrestres</span><span class="mono">ON</span></div>
-        <div class="row"><span>NASA POWER TS/SW</span><span class="mono">ON</span></div>
-      </div>
-    </aside>
+<div class="map-bg">
+  <div class="roads"></div>
+
+  <div class="hud-left">
+    <span class="dot-brand"></span>
+    <strong style="font-size:14px;letter-spacing:0.03em;">PHASE-ZERO</strong>
   </div>
+  <div class="hud-search">Buscar local no mapa, barragem ou coordenada...</div>
+  <div class="hud-right">
+    <span class="glass-btn active">Escuro / Claro</span>
+    <span class="glass-btn">Satélite</span>
+    <span class="glass-btn">4 Cenários</span>
+    <span class="glass-btn">Token NASA</span>
+  </div>
+
+  <div class="pin" style="left:310px;top:240px;background:#22C55E;"></div>
+  <div class="pin pin-focus"></div>
+  <div class="pin" style="left:1040px;top:270px;background:#F43F5E;"></div>
+  <div class="pin" style="left:520px;top:410px;background:#F43F5E;"></div>
+
+  <section class="sheet">
+    <div class="col">
+      <div>
+        <span class="pill-status">SINAL DE ATENÇÃO · YELLOW</span>
+        <h2 style="font-size:20px;margin-top:8px;">Sul Superior / Gongo Soco</h2>
+        <p class="mono" style="font-size:11px;color:#94A3B8;margin-top:4px;">Barão de Cocais, MG · -19.9419, -43.5997</p>
+      </div>
+      <div class="kpi-row">
+        <div class="kpi"><span>Tendência</span><strong class="mono">-2.4 mm</strong></div>
+        <div class="kpi"><span>Aceleração</span><strong class="mono">4.1 mm</strong></div>
+        <div class="kpi"><span>Score</span><strong class="mono">3.28 σ</strong></div>
+      </div>
+      <div style="font-size:11px;color:#2DD4BF;">Local escolhido no mapa · Folha expansível ativa</div>
+    </div>
+
+    <div class="panel-well">
+      <div style="display:flex;justify-content:space-between;font-size:12px;">
+        <strong>Relevo 3D (324 blocos)</strong>
+        <span class="mono" style="color:#2DD4BF;">γ ≥ 0.40</span>
+      </div>
+      <div class="mesh"></div>
+      <span class="mono" style="font-size:11px;color:#94A3B8;">Inspeção por bloco 80m × 80m</span>
+    </div>
+
+    <div class="panel-well">
+      <div style="display:flex;justify-content:space-between;font-size:12px;">
+        <strong>Deconvolução Temporal &amp; Loop Termo-Mecânico</strong>
+        <span class="mono" style="color:#94A3B8;">2026-03 → 2026-09</span>
+      </div>
+      <svg viewBox="0 0 460 170" width="100%" height="175">
+        <path d="M 16 70 Q 120 30, 230 68 T 444 82" fill="none" stroke="#64748B" stroke-width="2" stroke-dasharray="4 4"/>
+        <path d="M 16 84 Q 150 86, 280 112 T 444 148" fill="none" stroke="#2DD4BF" stroke-width="3"/>
+      </svg>
+      <div style="display:flex;gap:14px;font-size:11px;color:#CBD5E1;">
+        <span>● Anomalia residual LOS</span>
+        <span>--- Esperado NASA POWER</span>
+      </div>
+    </div>
+
+    <div class="col">
+      <div style="font-size:12px;font-weight:700;color:#CBD5E1;">Compensação Física</div>
+      <div class="toggle-list">
+        <div class="tg"><span>Ionosfera (Banda L/C)</span><strong style="color:#2DD4BF;">ATIVO</strong></div>
+        <div class="tg"><span>Troposfera Úmida</span><strong style="color:#2DD4BF;">ATIVO</strong></div>
+        <div class="tg"><span>Marés Terrestres</span><strong style="color:#2DD4BF;">ATIVO</strong></div>
+        <div class="tg"><span>Dilatação NASA POWER</span><strong style="color:#2DD4BF;">ATIVO</strong></div>
+      </div>
+      <div class="tg"><span>Coerência mínima</span><strong class="mono" style="color:#2DD4BF;">0.40</strong></div>
+    </div>
+  </section>
 </div>
 </body>
 </html>

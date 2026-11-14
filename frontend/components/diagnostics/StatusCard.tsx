@@ -18,9 +18,9 @@ export interface StatusCardProps {
 }
 
 const STATUS_ICON: Record<StatusCode, React.ReactNode> = {
-  GREEN: <CheckCircleIcon className="w-4 h-4 text-[#22c55e] shrink-0" />,
-  YELLOW: <AlertTriangleIcon className="w-4 h-4 text-[#eab308] shrink-0" />,
-  RED: <AlertOctagonIcon className="w-4 h-4 text-[#f43f5e] shrink-0" />,
+  GREEN: <CheckCircleIcon className="w-4 h-4 text-[var(--pz-ok-ink)] shrink-0" />,
+  YELLOW: <AlertTriangleIcon className="w-4 h-4 text-[var(--pz-warn-ink)] shrink-0" />,
+  RED: <AlertOctagonIcon className="w-4 h-4 text-[var(--pz-danger-ink)] shrink-0" />,
 };
 
 export function StatusCard({ status }: StatusCardProps) {
@@ -31,14 +31,14 @@ export function StatusCard({ status }: StatusCardProps) {
     <div
       data-testid="status-card"
       data-status-code={status.code}
-      className={`p-3.5 rounded-md border transition-colors ${STATUS_CARD_CLASSES[status.code]}`}
+      className={`p-3.5 rounded-xl border transition-colors ${STATUS_CARD_CLASSES[status.code]}`}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold">
           {STATUS_ICON[status.code]}
           <span>Nível {STATUS_TIER_LABEL[status.code]}</span>
         </span>
-        <span className="text-[11px] font-mono tabular-nums font-semibold px-2 py-0.5 rounded bg-[#080b0f]/75 border border-white/10">
+        <span className="text-[11px] font-mono tabular-nums font-semibold px-2 py-0.5 rounded-md bg-[var(--pz-surface)] text-[var(--pz-text)] border border-[var(--pz-border)]">
           Score {status.max_weighted_anomaly_score}
         </span>
       </div>
@@ -46,7 +46,26 @@ export function StatusCard({ status }: StatusCardProps) {
       <div data-testid="status-label" className="text-base font-bold mt-1.5 tracking-tight">
         {cleanLabel}
       </div>
-      <p className="text-xs mt-1 leading-relaxed opacity-90">{cleanDesc}</p>
+      <p className="text-xs mt-1 leading-relaxed opacity-95">{cleanDesc}</p>
+
+      {status.significance && (
+        <div className="mt-2.5 pt-2 border-t border-[var(--pz-border)] flex flex-wrap items-center justify-between gap-1.5 text-[11px]">
+          <span className="opacity-90">
+            Mann-Kendall: <span className="font-mono font-semibold tabular-nums">p = {status.significance.p_value}</span>
+          </span>
+          <span
+            className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+              status.significance.is_significant
+                ? "pz-status-red"
+                : "bg-[var(--pz-surface)] text-[var(--pz-secondary)] border-[var(--pz-border)]"
+            }`}
+          >
+            {status.significance.is_significant
+              ? `Tendência Significativa (${status.significance.confidence_level})`
+              : "Estacionário / Ruído"}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

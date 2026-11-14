@@ -45,6 +45,7 @@ export interface AnalysisContextValue {
   scenarios: ScenarioItem[];
   dams: DamCatalogItem[];
   selectedDamId: string | null;
+  hasSelection: boolean;
   isFreePoint: boolean;
   data: AnalysisResponse | null;
   selectedPixel: GridPixel | null;
@@ -57,6 +58,7 @@ export interface AnalysisContextValue {
   selectScenario: (scenarioId: string, defaultStart: string, defaultEnd: string) => void;
   selectDam: (dam: DamCatalogItem) => void;
   selectFreePoint: (lat: number, lon: number) => void;
+  clearSelection: () => void;
   updatePeriod: (startDate: string, endDate: string) => void;
   runCustom: (input: CustomSearchInput) => void;
   selectPixel: (pixel: GridPixel) => void;
@@ -89,11 +91,12 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
   );
   const [scenarios, setScenarios] = useState<ScenarioItem[]>(FALLBACK_SCENARIOS);
   const [dams, setDams] = useState<DamCatalogItem[]>(FALLBACK_DAMS);
-  const [selectedDamId, setSelectedDamId] = useState<string | null>("sul_superior_gongo_soco");
+  const [selectedDamId, setSelectedDamId] = useState<string | null>(null);
+  const [hasSelection, setHasSelection] = useState<boolean>(false);
   const [isFreePoint, setIsFreePoint] = useState<boolean>(false);
   const [data, setData] = useState<AnalysisResponse | null>(null);
   const [selectedPixel, setSelectedPixel] = useState<GridPixel | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [revalidating, setRevalidating] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCounter, setRetryCounter] = useState<number>(0);
@@ -127,6 +130,10 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
   }, [minCoherenceDraft, params.min_coherence]);
 
   useEffect(() => {
+    if (!hasSelection) {
+      return;
+    }
+
     const ctrl = new AbortController();
     if (!hasLoadedOnceRef.current) {
       setLoading(true);
@@ -167,7 +174,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     return () => {
       ctrl.abort();
     };
-  }, [params, retryCounter]);
+  }, [hasSelection, params, retryCounter]);
 
   const setParam = useCallback(
     <K extends keyof AnalysisRequest>(key: K, value: AnalysisRequest[K]) => {
@@ -191,6 +198,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
         ? dams.find((d) => d.id === mappedDamId) ?? null
         : null;
 
+      setHasSelection(true);
       setSelectedDamId(matchedDam ? matchedDam.id : null);
       setIsFreePoint(false);
       setParams((prev) => ({
@@ -208,6 +216,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
 
   const selectDam = useCallback((dam: DamCatalogItem) => {
     selectedPixelIdRef.current = REFERENCE_PIXEL_ID;
+    setHasSelection(true);
     setSelectedDamId(dam.id);
     setIsFreePoint(false);
     setParams((prev) => ({
@@ -229,6 +238,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       selectedPixelIdRef.current = REFERENCE_PIXEL_ID;
+      setHasSelection(true);
       setSelectedDamId(null);
       setIsFreePoint(true);
       setParams((prev) => ({
@@ -236,11 +246,18 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
         scenario_id: "custom",
         custom_lat: lat,
         custom_lon: lon,
-        custom_name: `Barragem Personalizada (${lat.toFixed(4)}, ${lon.toFixed(4)})`,
+        custom_name: `Ponto Personalizado (${lat.toFixed(4)}, ${lon.toFixed(4)})`,
       }));
     },
     [dams, selectDam],
   );
+
+  const clearSelection = useCallback(() => {
+    setHasSelection(false);
+    setSelectedDamId(null);
+    setIsFreePoint(false);
+    setError(null);
+  }, []);
 
   const updatePeriod = useCallback((startDate: string, endDate: string) => {
     setParams((prev) => ({
@@ -254,6 +271,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     (input: CustomSearchInput) => {
       selectedPixelIdRef.current = REFERENCE_PIXEL_ID;
       const matched = findDamByCoords(dams, input.lat, input.lon);
+      setHasSelection(true);
       setSelectedDamId(matched ? matched.id : null);
       setIsFreePoint(!matched);
       setParams((prev) => {
@@ -266,7 +284,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
           computedName === "Coordenada Livre" ||
           computedName.includes("Ponto Livre")
         ) {
-          computedName = `Barragem Personalizada (${input.lat.toFixed(4)}, ${input.lon.toFixed(4)})`;
+          computedName = `Ponto Personalizado (${input.lat.toFixed(4)}, ${input.lon.toFixed(4)})`;
         }
         return {
           ...prev,
@@ -307,6 +325,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
       scenarios,
       dams,
       selectedDamId,
+      hasSelection,
       isFreePoint,
       data,
       selectedPixel,
@@ -319,6 +338,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
       selectScenario,
       selectDam,
       selectFreePoint,
+      clearSelection,
       updatePeriod,
       runCustom,
       selectPixel,
@@ -331,6 +351,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
       scenarios,
       dams,
       selectedDamId,
+      hasSelection,
       isFreePoint,
       data,
       selectedPixel,
@@ -343,6 +364,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
       selectScenario,
       selectDam,
       selectFreePoint,
+      clearSelection,
       updatePeriod,
       runCustom,
       selectPixel,

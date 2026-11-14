@@ -11,9 +11,9 @@ import {
  */
 
 export const STATUS_CARD_CLASSES: Record<StatusCode, string> = {
-  GREEN: "bg-[#0d2016] border-[#1f5e39] text-[#bbf7d0]",
-  YELLOW: "bg-[#20190a] border-[#854d0e] text-[#fef08a]",
-  RED: "bg-[#230f16] border-[#9f1239] text-[#fecdd3]",
+  GREEN: "pz-status-green",
+  YELLOW: "pz-status-yellow",
+  RED: "pz-status-red",
 };
 
 export const STATUS_DOT_CLASSES: Record<StatusCode, string> = {
@@ -57,7 +57,7 @@ export const ZONE_VISUAL_META: Record<ZoneCategoryId, ZoneVisualStyle> = {
     fillRgba: "rgba(2, 132, 199, 0.82)",
     strokeHex: "#38bdf8",
     dotHex: "#0284c7",
-    badgeClass: "bg-[#082f49] text-[#7dd3fc] border-[#0369a1]",
+    badgeClass: "pz-zone-water",
     radarNote: "Reflexão especular na lâmina d'água (baixa coerência γ < 0.25)",
   },
   CREST: {
@@ -66,7 +66,7 @@ export const ZONE_VISUAL_META: Record<ZoneCategoryId, ZoneVisualStyle> = {
     fillRgba: "rgba(56, 189, 248, 0.96)",
     strokeHex: "#e0f2fe",
     dotHex: "#38bdf8",
-    badgeClass: "bg-[#0c2d48] text-[#bae6fd] border-[#38bdf8]",
+    badgeClass: "pz-zone-crest",
     radarNote: "Coroamento rígido / crista principal (coerência máxima γ > 0.91)",
   },
   SLOPE: {
@@ -75,7 +75,7 @@ export const ZONE_VISUAL_META: Record<ZoneCategoryId, ZoneVisualStyle> = {
     fillRgba: "rgba(245, 158, 11, 0.95)",
     strokeHex: "#fde68a",
     dotHex: "#f59e0b",
-    badgeClass: "bg-[#2a1b08] text-[#fde68a] border-[#d97706]",
+    badgeClass: "pz-zone-slope",
     radarNote: "Face estrutural íngreme do maciço (alta coerência γ ~ 0.90)",
   },
   BERM: {
@@ -84,7 +84,7 @@ export const ZONE_VISUAL_META: Record<ZoneCategoryId, ZoneVisualStyle> = {
     fillRgba: "rgba(168, 85, 247, 0.92)",
     strokeHex: "#e9d5ff",
     dotHex: "#a855f7",
-    badgeClass: "bg-[#261238] text-[#e9d5ff] border-[#9333ea]",
+    badgeClass: "pz-zone-berm",
     radarNote: "Banqueta de contenção e drenagem na base do paredão (γ ~ 0.82)",
   },
   ABUTMENT: {
@@ -93,7 +93,7 @@ export const ZONE_VISUAL_META: Record<ZoneCategoryId, ZoneVisualStyle> = {
     fillRgba: "rgba(20, 184, 166, 0.90)",
     strokeHex: "#99f6e4",
     dotHex: "#14b8a6",
-    badgeClass: "bg-[#0b2926] text-[#99f6e4] border-[#0d9488]",
+    badgeClass: "pz-zone-abutment",
     radarNote: "Encaixe lateral do barramento na rocha/encosta natural (γ ~ 0.73)",
   },
   VEGETATION: {
@@ -102,7 +102,7 @@ export const ZONE_VISUAL_META: Record<ZoneCategoryId, ZoneVisualStyle> = {
     fillRgba: "rgba(22, 163, 74, 0.78)",
     strokeHex: "#86efac",
     dotHex: "#16a34a",
-    badgeClass: "bg-[#0b2618] text-[#86efac] border-[#15803d]",
+    badgeClass: "pz-zone-vegetation",
     radarNote: "Descorrelação volumétrica por dossel florestal (γ < 0.36, mascarado)",
   },
   VALLEY: {
@@ -111,7 +111,7 @@ export const ZONE_VISUAL_META: Record<ZoneCategoryId, ZoneVisualStyle> = {
     fillRgba: "rgba(132, 204, 22, 0.85)",
     strokeHex: "#d9f99d",
     dotHex: "#84cc16",
-    badgeClass: "bg-[#1c280c] text-[#d9f99d] border-[#65a30d]",
+    badgeClass: "pz-zone-valley",
     radarNote: "Calha aluvial de drenagem a jusante e vegetação rasteira (γ ~ 0.53)",
   },
   HDF5: {
@@ -120,7 +120,7 @@ export const ZONE_VISUAL_META: Record<ZoneCategoryId, ZoneVisualStyle> = {
     fillRgba: "rgba(59, 158, 235, 0.92)",
     strokeHex: "#bfdbfe",
     dotHex: "#3b9eeb",
-    badgeClass: "bg-[#132538] text-[#93c5fd] border-[#3b9eeb]",
+    badgeClass: "pz-zone-hdf5",
     radarNote: "Amostra interferométrica lida diretamente do granule HDF5 da NASA",
   },
 };

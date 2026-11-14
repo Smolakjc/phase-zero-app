@@ -64,34 +64,38 @@ export function CompensationToggles({
           aria-checked={item.val}
           data-testid={`toggle-${item.id}`}
           onClick={item.toggle}
-          className={`w-full text-left flex items-center justify-between gap-3 px-3 py-2.5 rounded-md border cursor-pointer transition-colors ${
+          className={`w-full text-left flex items-center justify-between gap-3 px-3 py-2 rounded-xl border cursor-pointer transition-colors ${
             item.val
-              ? "bg-[#080b0f] border-[#2c3b4f] hover:border-[#3b9eeb]"
-              : "bg-[#0c0f14] border-[#222933] opacity-75 hover:opacity-100"
+              ? "bg-[var(--pz-surface)] border-[var(--pz-border-strong)] hover:border-[var(--pz-accent)]"
+              : "bg-[var(--pz-well)] border-[var(--pz-border)] opacity-75 hover:opacity-100"
           }`}
         >
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-[#eef2f6]">{item.label}</div>
-            <div className="text-[11px] text-[#8a96a8] mt-0.5">{item.sub}</div>
+            <div className="text-xs font-semibold text-[var(--pz-text)]">{item.label}</div>
+            <div className="text-[11px] text-[var(--pz-muted)] mt-0.5">{item.sub}</div>
           </div>
 
           <span className="inline-flex items-center gap-2 shrink-0">
             <span
               className={`text-[11px] font-medium ${
-                item.val ? "text-[#86efac]" : "text-[#8a96a8]"
+                item.val ? "text-[var(--pz-ok-ink)]" : "text-[var(--pz-muted)]"
               }`}
             >
               {item.val ? "Ativo" : "Inativo"}
             </span>
             <span
               aria-hidden="true"
-              className={`relative inline-flex w-8 h-[18px] items-center rounded-full transition-colors p-0.5 ${
-                item.val ? "bg-[#22c55e]/30 border border-[#22c55e]" : "bg-[#1a222d] border border-[#313b49]"
+              className={`relative inline-flex w-8 h-[18px] items-center rounded-full transition-colors p-0.5 border ${
+                item.val
+                  ? "bg-[var(--pz-accent-soft)] border-[var(--pz-accent)]"
+                  : "bg-[var(--pz-well)] border-[var(--pz-border-strong)]"
               }`}
             >
               <span
                 className={`block w-3 h-3 rounded-full transition-transform ${
-                  item.val ? "translate-x-3.5 bg-[#22c55e]" : "translate-x-0 bg-[#8a96a8]"
+                  item.val
+                    ? "translate-x-3.5 bg-[var(--pz-accent)]"
+                    : "translate-x-0 bg-[var(--pz-muted)]"
                 }`}
               />
             </span>

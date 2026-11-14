@@ -3,27 +3,145 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
-  --pz-ground: #0c0f14;
-  --pz-panel: #131820;
-  --pz-panel-elevated: #181e28;
-  --pz-well: #080b0f;
-  --pz-border: #222933;
-  --pz-border-strong: #313b49;
-  --pz-text: #eef2f6;
-  --pz-secondary: #a1adbf;
-  --pz-muted: #8a96a8;
-  --pz-accent: #3b9eeb;
-  --pz-accent-soft: #132538;
-  scrollbar-color: #313b49 #0c0f14;
+  color-scheme: light dark;
+
+  --pz-ground-light: #f3f6f9;
+  --pz-ground-dark: #0b111c;
+  --pz-ground: var(--pz-ground-light);
+
+  --pz-glass-light: rgba(255, 255, 255, 0.84);
+  --pz-glass-dark: rgba(15, 23, 42, 0.82);
+  --pz-glass: var(--pz-glass-light);
+
+  --pz-glass-strong-light: rgba(255, 255, 255, 0.94);
+  --pz-glass-strong-dark: rgba(15, 23, 42, 0.92);
+  --pz-glass-strong: var(--pz-glass-strong-light);
+
+  --pz-surface-light: #ffffff;
+  --pz-surface-dark: #111b2e;
+  --pz-surface: var(--pz-surface-light);
+
+  --pz-well-light: #eef3f7;
+  --pz-well-dark: #090f1a;
+  --pz-well: var(--pz-well-light);
+
+  --pz-border-light: rgba(15, 23, 42, 0.11);
+  --pz-border-dark: rgba(255, 255, 255, 0.13);
+  --pz-border: var(--pz-border-light);
+
+  --pz-border-strong-light: rgba(15, 23, 42, 0.2);
+  --pz-border-strong-dark: rgba(255, 255, 255, 0.22);
+  --pz-border-strong: var(--pz-border-strong-light);
+
+  --pz-text-light: #0f172a;
+  --pz-text-dark: #f8fafc;
+  --pz-text: var(--pz-text-light);
+
+  --pz-secondary-light: #334155;
+  --pz-secondary-dark: #cbd5e1;
+  --pz-secondary: var(--pz-secondary-light);
+
+  --pz-muted-light: #526377;
+  --pz-muted-dark: #94a3b8;
+  --pz-muted: var(--pz-muted-light);
+
+  --pz-accent-light: #0f766e;
+  --pz-accent-dark: #2dd4bf;
+  --pz-accent: var(--pz-accent-light);
+
+  --pz-accent-ink-light: #ffffff;
+  --pz-accent-ink-dark: #042f2e;
+  --pz-accent-ink: var(--pz-accent-ink-light);
+
+  --pz-accent-soft-light: rgba(15, 118, 110, 0.11);
+  --pz-accent-soft-dark: rgba(45, 212, 191, 0.15);
+  --pz-accent-soft: var(--pz-accent-soft-light);
+
+  --pz-ok-ink-light: #047857;
+  --pz-ok-ink-dark: #6ee7b7;
+  --pz-ok-ink: var(--pz-ok-ink-light);
+
+  --pz-warn-ink-light: #92400e;
+  --pz-warn-ink-dark: #fcd34d;
+  --pz-warn-ink: var(--pz-warn-ink-light);
+
+  --pz-danger-ink-light: #be123c;
+  --pz-danger-ink-dark: #fda4af;
+  --pz-danger-ink: var(--pz-danger-ink-light);
+
+  --pz-shadow-light: 0 18px 48px rgba(15, 23, 42, 0.12);
+  --pz-shadow-dark: 0 22px 56px rgba(2, 6, 23, 0.55);
+  --pz-shadow: var(--pz-shadow-light);
+
+  --pz-scrollbar-track: #e6ecf2;
+  --pz-scrollbar-thumb: #94a3b8;
+  scrollbar-color: var(--pz-scrollbar-thumb) var(--pz-scrollbar-track);
   scrollbar-width: thin;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pz-ground: var(--pz-ground-dark);
+    --pz-glass: var(--pz-glass-dark);
+    --pz-glass-strong: var(--pz-glass-strong-dark);
+    --pz-surface: var(--pz-surface-dark);
+    --pz-well: var(--pz-well-dark);
+    --pz-border: var(--pz-border-dark);
+    --pz-border-strong: var(--pz-border-strong-dark);
+    --pz-text: var(--pz-text-dark);
+    --pz-secondary: var(--pz-secondary-dark);
+    --pz-muted: var(--pz-muted-dark);
+    --pz-accent: var(--pz-accent-dark);
+    --pz-accent-ink: var(--pz-accent-ink-dark);
+    --pz-accent-soft: var(--pz-accent-soft-dark);
+    --pz-ok-ink: var(--pz-ok-ink-dark);
+    --pz-warn-ink: var(--pz-warn-ink-dark);
+    --pz-danger-ink: var(--pz-danger-ink-dark);
+    --pz-shadow: var(--pz-shadow-dark);
+    --pz-scrollbar-track: #0b111c;
+    --pz-scrollbar-thumb: #334155;
+  }
+}
+
+:root:has(> head > meta[name="color-scheme"][content="dark"]) {
+  color-scheme: dark;
+}
+
+:root:has(> head > meta[name="color-scheme"][content="light"]) {
+  color-scheme: light;
+}
+
+@supports (color: light-dark(white, black)) {
+  :root {
+    --pz-ground: light-dark(var(--pz-ground-light), var(--pz-ground-dark));
+    --pz-glass: light-dark(var(--pz-glass-light), var(--pz-glass-dark));
+    --pz-glass-strong: light-dark(var(--pz-glass-strong-light), var(--pz-glass-strong-dark));
+    --pz-surface: light-dark(var(--pz-surface-light), var(--pz-surface-dark));
+    --pz-well: light-dark(var(--pz-well-light), var(--pz-well-dark));
+    --pz-border: light-dark(var(--pz-border-light), var(--pz-border-dark));
+    --pz-border-strong: light-dark(var(--pz-border-strong-light), var(--pz-border-strong-dark));
+    --pz-text: light-dark(var(--pz-text-light), var(--pz-text-dark));
+    --pz-secondary: light-dark(var(--pz-secondary-light), var(--pz-secondary-dark));
+    --pz-muted: light-dark(var(--pz-muted-light), var(--pz-muted-dark));
+    --pz-accent: light-dark(var(--pz-accent-light), var(--pz-accent-dark));
+    --pz-accent-ink: light-dark(var(--pz-accent-ink-light), var(--pz-accent-ink-dark));
+    --pz-accent-soft: light-dark(var(--pz-accent-soft-light), var(--pz-accent-soft-dark));
+    --pz-ok-ink: light-dark(var(--pz-ok-ink-light), var(--pz-ok-ink-dark));
+    --pz-warn-ink: light-dark(var(--pz-warn-ink-light), var(--pz-warn-ink-dark));
+    --pz-danger-ink: light-dark(var(--pz-danger-ink-light), var(--pz-danger-ink-dark));
+    --pz-shadow: light-dark(var(--pz-shadow-light), var(--pz-shadow-dark));
+    --pz-scrollbar-track: light-dark(#e6ecf2, #0b111c);
+    --pz-scrollbar-thumb: light-dark(#94a3b8, #334155);
+  }
 }
 
 html,
 body {
   background-color: var(--pz-ground);
   color: var(--pz-text);
+  accent-color: var(--pz-accent);
   overflow-x: hidden;
+  transition: background-color 220ms ease, color 220ms ease;
 }
 
 input,
@@ -33,8 +151,8 @@ select {
 }
 
 ::selection {
-  background-color: rgba(59, 158, 235, 0.32);
-  color: #eef2f6;
+  background-color: var(--pz-accent-soft);
+  color: var(--pz-text);
 }
 
 :where(a:any-link, button, input, select, textarea, [tabindex]):focus-visible {
@@ -46,145 +164,296 @@ select {
   font-variant-numeric: tabular-nums;
 }
 
-/* Scrollbar integrada ao tema de basalto */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+.pz-glass {
+  background: var(--pz-glass);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
+  border: 1px solid var(--pz-border);
+  box-shadow: var(--pz-shadow);
 }
 
-::-webkit-scrollbar-track {
-  background: var(--pz-ground);
+.pz-glass-strong {
+  background: var(--pz-glass-strong);
+  backdrop-filter: blur(22px) saturate(1.3);
+  -webkit-backdrop-filter: blur(22px) saturate(1.3);
+  border: 1px solid var(--pz-border);
+  box-shadow: var(--pz-shadow);
 }
 
-::-webkit-scrollbar-thumb {
-  background-color: #2c3543;
-  border-radius: 4px;
-  border: 2px solid var(--pz-ground);
+/* Entrada e saída suaves para a folha do observatório e popovers */
+.pz-sheet-reveal {
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity 280ms cubic-bezier(0.16, 1, 0.3, 1),
+    translate 340ms cubic-bezier(0.16, 1, 0.3, 1),
+    max-height 320ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background-color: #3d495c;
+@starting-style {
+  .pz-sheet-reveal {
+    opacity: 0;
+    translate: 0 28px;
+  }
 }
 
-/* Range input refinado */
+.pz-popover-reveal {
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity 200ms cubic-bezier(0.16, 1, 0.3, 1),
+    translate 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@starting-style {
+  .pz-popover-reveal {
+    opacity: 0;
+    translate: 0 -8px;
+  }
+}
+
+@keyframes pz-marker-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(45, 212, 191, 0);
+  }
+}
+
+.pz-marker-active {
+  animation: pz-marker-pulse 2.2s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pz-sheet-reveal,
+  .pz-popover-reveal {
+    translate: none;
+    transition-duration: 120ms;
+  }
+
+  @starting-style {
+    .pz-sheet-reveal,
+    .pz-popover-reveal {
+      translate: none;
+    }
+  }
+
+  .pz-marker-active {
+    animation: none;
+    box-shadow: 0 0 0 6px rgba(45, 212, 191, 0.35);
+  }
+}
+
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--pz-scrollbar-track);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--pz-scrollbar-thumb);
+    border-radius: 4px;
+  }
+}
+
+/* Range slider */
 input[type="range"].pz-range {
   -webkit-appearance: none;
   appearance: none;
-  height: 4px;
-  border-radius: 2px;
-  background: #252e3a;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--pz-border-strong);
   cursor: pointer;
 }
 
 input[type="range"].pz-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   background: var(--pz-accent);
-  border: 2px solid #0c0f14;
-  transition: transform 0.15s ease;
+  border: 2px solid var(--pz-surface);
+  transition: transform 150ms ease;
 }
 
 input[type="range"].pz-range::-webkit-slider-thumb:hover {
-  transform: scale(1.12);
+  transform: scale(1.14);
 }
 
 input[type="range"].pz-range::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   background: var(--pz-accent);
-  border: 2px solid #0c0f14;
+  border: 2px solid var(--pz-surface);
 }
 
-/* Tema cartográfico escuro integrado para Leaflet */
-.leaflet-container {
-  background: #080b0f !important;
-  font-family: var(--font-sans), system-ui, sans-serif !important;
+/* MapLibre GL JS controles integrados ao tema claro e escuro */
+.maplibregl-map {
+  font-family: var(--font-sans), system-ui, sans-serif;
 }
 
-/* Filtro escuro nativo para tiles OpenStreetMap (dispensa API key e evita marca d'água de terceiros) */
-.leaflet-tile.pz-dark-map-tiles {
-  filter: invert(100%) hue-rotate(180deg) brightness(92%) contrast(92%) saturate(82%);
+.maplibregl-ctrl-group {
+  background: var(--pz-glass-strong) !important;
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--pz-border) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--pz-shadow) !important;
+  overflow: hidden;
 }
 
-.leaflet-container .leaflet-popup-content-wrapper,
-.leaflet-container .leaflet-popup-tip {
-  background: #131820 !important;
-  color: #eef2f6 !important;
-  border: 1px solid #313b49 !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65) !important;
-  border-radius: 6px !important;
+.maplibregl-ctrl-group button {
+  background-color: transparent !important;
+  color: var(--pz-text) !important;
+  border-color: var(--pz-border) !important;
 }
 
-.leaflet-container .leaflet-popup-close-button {
-  color: #8a96a8 !important;
+.maplibregl-ctrl-group button:hover {
+  background-color: var(--pz-accent-soft) !important;
 }
 
-.leaflet-container .leaflet-popup-close-button:hover {
-  color: #eef2f6 !important;
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: none;
 }
 
-.leaflet-container .leaflet-tooltip {
-  background: #0c0f14 !important;
-  color: #eef2f6 !important;
-  border: 1px solid #313b49 !important;
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45) !important;
+:root:has(> head > meta[name="color-scheme"][content="dark"])
+  .maplibregl-ctrl-group
+  button
+  .maplibregl-ctrl-icon {
+  filter: invert(1) hue-rotate(180deg);
 }
 
-.leaflet-container .leaflet-tooltip-top::before {
-  border-top-color: #313b49 !important;
+@media (prefers-color-scheme: dark) {
+  :root:not(:has(> head > meta[name="color-scheme"][content="light"]))
+    .maplibregl-ctrl-group
+    button
+    .maplibregl-ctrl-icon {
+    filter: invert(1) hue-rotate(180deg);
+  }
 }
 
-.leaflet-container .leaflet-bar {
-  border: 1px solid #313b49 !important;
-  box-shadow: none !important;
-}
-
-.leaflet-container .leaflet-bar a {
-  background-color: #131820 !important;
-  color: #eef2f6 !important;
-  border-bottom-color: #222933 !important;
-}
-
-.leaflet-container .leaflet-bar a:hover {
-  background-color: #1d2532 !important;
-  color: #3b9eeb !important;
-}
-
-.leaflet-container .leaflet-control-attribution {
-  background: rgba(8, 11, 15, 0.85) !important;
-  color: #8a96a8 !important;
+.maplibregl-ctrl-attrib {
+  background: var(--pz-glass) !important;
+  color: var(--pz-muted) !important;
+  backdrop-filter: blur(10px);
+  border-radius: 8px !important;
   font-size: 10px !important;
 }
 
-.leaflet-container .leaflet-control-attribution a {
-  color: #6ab6f0 !important;
+.maplibregl-ctrl-attrib a {
+  color: var(--pz-accent) !important;
 }
 
-/* Modal nativo com contenção de scroll */
+.maplibregl-popup-content {
+  background: var(--pz-glass-strong) !important;
+  color: var(--pz-text) !important;
+  border: 1px solid var(--pz-border) !important;
+  border-radius: 14px !important;
+  padding: 12px 14px !important;
+  box-shadow: var(--pz-shadow) !important;
+  backdrop-filter: blur(16px);
+}
+
+.maplibregl-popup-tip {
+  border-top-color: var(--pz-glass-strong) !important;
+  border-bottom-color: var(--pz-glass-strong) !important;
+}
+
+.maplibregl-popup-close-button {
+  color: var(--pz-muted) !important;
+  padding: 4px 8px !important;
+}
+
+/* Modal nativo */
 dialog:modal {
   overscroll-behavior: contain;
 }
 
 dialog::backdrop {
-  background-color: rgba(6, 9, 14, 0.78);
-  backdrop-filter: blur(4px);
+  background-color: rgba(6, 10, 20, 0.56);
+  backdrop-filter: blur(6px);
   overflow: hidden;
   overscroll-behavior: contain;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+/* Badges e status adaptativos aos dois temas (contraste >= 4.5:1 em Claro e Escuro) */
+.pz-status-green {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.42);
+  color: #065f46;
+}
+.pz-status-yellow {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(217, 119, 6, 0.45);
+  color: #78350f;
+}
+.pz-status-red {
+  background: rgba(244, 63, 94, 0.13);
+  border-color: rgba(225, 29, 72, 0.45);
+  color: #881337;
+}
+
+@supports (color: light-dark(white, black)) {
+  .pz-status-green {
+    background: light-dark(rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.14));
+    border-color: light-dark(rgba(5, 150, 105, 0.36), rgba(52, 211, 153, 0.38));
+    color: light-dark(#065f46, #a7f3d0);
+  }
+  .pz-status-yellow {
+    background: light-dark(rgba(245, 158, 11, 0.14), rgba(245, 158, 11, 0.14));
+    border-color: light-dark(rgba(217, 119, 6, 0.4), rgba(251, 191, 36, 0.38));
+    color: light-dark(#78350f, #fde68a);
+  }
+  .pz-status-red {
+    background: light-dark(rgba(244, 63, 94, 0.12), rgba(244, 63, 94, 0.15));
+    border-color: light-dark(rgba(225, 29, 72, 0.38), rgba(251, 113, 133, 0.4));
+    color: light-dark(#881337, #fecdd3);
+  }
+  .pz-zone-water {
+    background: light-dark(rgba(2, 132, 199, 0.12), rgba(2, 132, 199, 0.22));
+    border-color: light-dark(rgba(3, 105, 161, 0.36), rgba(56, 189, 248, 0.45));
+    color: light-dark(#075985, #7dd3fc);
+  }
+  .pz-zone-crest {
+    background: light-dark(rgba(14, 165, 233, 0.12), rgba(14, 165, 233, 0.22));
+    border-color: light-dark(rgba(2, 132, 199, 0.38), rgba(56, 189, 248, 0.5));
+    color: light-dark(#0c4a6e, #bae6fd);
+  }
+  .pz-zone-slope {
+    background: light-dark(rgba(217, 119, 6, 0.12), rgba(245, 158, 11, 0.2));
+    border-color: light-dark(rgba(180, 83, 9, 0.38), rgba(245, 158, 11, 0.45));
+    color: light-dark(#78350f, #fde68a);
+  }
+  .pz-zone-berm {
+    background: light-dark(rgba(147, 51, 234, 0.12), rgba(168, 85, 247, 0.2));
+    border-color: light-dark(rgba(126, 34, 206, 0.36), rgba(192, 132, 252, 0.45));
+    color: light-dark(#581c87, #e9d5ff);
+  }
+  .pz-zone-abutment {
+    background: light-dark(rgba(13, 148, 136, 0.12), rgba(20, 184, 166, 0.2));
+    border-color: light-dark(rgba(15, 118, 110, 0.36), rgba(45, 212, 191, 0.45));
+    color: light-dark(#115e59, #99f6e4);
+  }
+  .pz-zone-vegetation {
+    background: light-dark(rgba(22, 163, 74, 0.12), rgba(22, 163, 74, 0.2));
+    border-color: light-dark(rgba(21, 128, 61, 0.36), rgba(74, 222, 128, 0.42));
+    color: light-dark(#14532d, #86efac);
+  }
+  .pz-zone-valley {
+    background: light-dark(rgba(101, 163, 13, 0.12), rgba(132, 204, 22, 0.2));
+    border-color: light-dark(rgba(77, 124, 15, 0.36), rgba(163, 230, 53, 0.42));
+    color: light-dark(#365314, #d9f99d);
+  }
+  .pz-zone-hdf5 {
+    background: light-dark(rgba(37, 99, 235, 0.12), rgba(59, 158, 235, 0.2));
+    border-color: light-dark(rgba(29, 78, 216, 0.36), rgba(96, 165, 250, 0.45));
+    color: light-dark(#1e3a8a, #bfdbfe);
   }
 }

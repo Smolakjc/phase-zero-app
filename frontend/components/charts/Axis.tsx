@@ -28,10 +28,10 @@ export function HorizontalGridLines({
               y1={y}
               x2={xEnd}
               y2={y}
-              stroke={val === 0 ? "#313b49" : "#18202c"}
+              stroke={val === 0 ? "var(--pz-border-strong)" : "var(--pz-border)"}
               strokeWidth={val === 0 ? "1.3" : "1"}
             />
-            <text x={8} y={y + 4} fill="#8a96a8" fontSize="10" fontFamily="monospace">
+            <text x={8} y={y + 4} fill="var(--pz-muted)" fontSize="10" fontFamily="monospace">
               {val > 0 ? `+${val}` : val}
               {unit}
             </text>

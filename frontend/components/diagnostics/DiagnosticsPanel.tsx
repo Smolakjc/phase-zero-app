@@ -26,19 +26,19 @@ export function DiagnosticsPanel({
   return (
     <aside
       aria-labelledby="diagnostics-heading"
-      className="bg-[#10141b] border border-[#222933] rounded-lg p-4 flex flex-col gap-3.5 h-full"
+      className="flex flex-col gap-3 h-full"
     >
-      <div className="flex items-center justify-between border-b border-[#222933] pb-2.5">
-        <h2 id="diagnostics-heading" className="text-sm font-bold text-[#eef2f6]">
+      <div className="flex items-center justify-between border-b border-[var(--pz-border)] pb-2">
+        <h2 id="diagnostics-heading" className="text-sm font-bold text-[var(--pz-text)]">
           Diagnóstico Estrutural
         </h2>
-        <span className="text-[11px] text-[#8a96a8]">Pixel de referência</span>
+        <span className="text-[11px] text-[var(--pz-muted)]">Pixel de referência</span>
       </div>
 
       <StatusCard status={status} />
 
-      <div className="p-3 rounded-md bg-[#131820] border border-[#222933] space-y-2.5">
-        <div className="text-xs font-semibold text-[#cbd5e1]">
+      <div className="p-3 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] space-y-2.5">
+        <div className="text-xs font-semibold text-[var(--pz-secondary)]">
           Métricas Decisórias e Limiares
         </div>
         <MetricsGrid status={status} />
@@ -46,7 +46,7 @@ export function DiagnosticsPanel({
       </div>
 
       <div className="space-y-2">
-        <div className="text-xs font-semibold text-[#cbd5e1]">
+        <div className="text-xs font-semibold text-[var(--pz-secondary)]">
           Estágios de Compensação Física
         </div>
         <CompensationToggles

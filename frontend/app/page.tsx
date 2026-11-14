@@ -1,47 +1,21 @@
 "use client";
 
 import React, { useState } from "react";
-import { ThermoLoopChart } from "../components/charts/ThermoLoopChart";
-import { TimeSeriesChart } from "../components/charts/TimeSeriesChart";
-import { DiagnosticsPanel } from "../components/diagnostics/DiagnosticsPanel";
-import { Header } from "../components/header/Header";
-import { AlertTriangleIcon, RefreshIcon } from "../components/icons/SurveyIcons";
-import { DamMapPanel } from "../components/map/DamMapPanel";
-import { SearchBar } from "../components/search/SearchBar";
+import { FloatingHud } from "../components/hud/FloatingHud";
+import { AlertTriangleIcon, CrosshairIcon } from "../components/icons/SurveyIcons";
+import { MapStyleMode, ObservatoryMap } from "../components/map/ObservatoryMap";
+import { ObservatorySheet } from "../components/sheet/ObservatorySheet";
 import { TokenModal } from "../components/token/TokenModal";
-import { TerrainViewport3D } from "../components/viewport/TerrainViewport3D";
 import { AnalysisProvider, useAnalysis } from "../hooks/useAnalysis";
+import { useTheme } from "../hooks/useTheme";
 
-function DashboardLoadingSkeleton() {
-  return (
-    <div className="min-h-screen bg-[#0c0f14] text-[#eef2f6]">
-      <div className="h-[61px] bg-[#0e1218] border-b border-[#222933]" />
-      <div className="h-[53px] bg-[#0a0d12] border-b border-[#222933]" />
-      <main className="max-w-[1640px] mx-auto px-4 lg:px-6 py-4">
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
-          <div className="xl:col-span-8 2xl:col-span-9 space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="h-[460px] rounded-lg bg-[#131820] border border-[#222933] animate-pulse" />
-              <div className="h-[460px] rounded-lg bg-[#131820] border border-[#222933] animate-pulse" />
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-              <div className="lg:col-span-7 h-[280px] rounded-lg bg-[#131820] border border-[#222933] animate-pulse" />
-              <div className="lg:col-span-5 h-[280px] rounded-lg bg-[#131820] border border-[#222933] animate-pulse" />
-            </div>
-          </div>
-          <div className="xl:col-span-4 2xl:col-span-3 h-[756px] rounded-lg bg-[#10141b] border border-[#222933] animate-pulse" />
-        </div>
-      </main>
-    </div>
-  );
-}
-
-function PhaseZeroWorkspace() {
+function ObservatoryWorkspace() {
   const {
     params,
     scenarios,
     dams,
     selectedDamId,
+    hasSelection,
     isFreePoint,
     data,
     selectedPixel,
@@ -54,6 +28,7 @@ function PhaseZeroWorkspace() {
     selectScenario,
     selectDam,
     selectFreePoint,
+    clearSelection,
     updatePeriod,
     runCustom,
     selectPixel,
@@ -62,162 +37,213 @@ function PhaseZeroWorkspace() {
     retry,
   } = useAnalysis();
 
-  const [showTokenModal, setShowTokenModal] = useState(false);
+  const {
+    preference: themePreference,
+    resolvedTheme,
+    toggleTheme,
+    setPreference: setThemePreference,
+  } = useTheme();
 
-  if (loading && !data) {
-    return <DashboardLoadingSkeleton />;
-  }
+  const [tokenModalOpen, setTokenModalOpen] = useState<boolean>(false);
+  const [styleMode, setStyleMode] = useState<MapStyleMode>("vector");
+  const [terrain3D, setTerrain3D] = useState<boolean>(false);
+  const [regionFlyTarget, setRegionFlyTarget] = useState<{
+    center: [number, number];
+    zoom: number;
+    nonce: number;
+  } | null>(null);
 
-  if (error && !data) {
-    return (
-      <div className="min-h-screen bg-[#0c0f14] flex items-center justify-center p-6">
-        <div
-          role="alert"
-          className="max-w-md w-full bg-[#131820] border border-[#9f1239] rounded-lg p-6 space-y-4"
-        >
-          <div className="flex items-start gap-3">
-            <AlertTriangleIcon className="w-5 h-5 text-[#f43f5e] shrink-0 mt-0.5" />
-            <div>
-              <h1 className="text-base font-bold text-[#eef2f6]">
-                Não foi possível carregar a análise InSAR
-              </h1>
-              <p className="text-xs text-[#a1adbf] mt-1 leading-relaxed">{error}</p>
+  const handleFlyRegion = (center: [number, number], zoom: number) => {
+    setRegionFlyTarget({ center, zoom, nonce: Date.now() });
+  };
+
+  return (
+    <main className="relative w-full h-dvh overflow-hidden bg-[var(--pz-ground)] text-[var(--pz-text)]">
+      {/* Mapa em tela cheia */}
+      <div className="absolute inset-0 z-0">
+        <ObservatoryMap
+          dams={dams}
+          selectedDamId={selectedDamId}
+          hasSelection={hasSelection}
+          activeLat={data?.scenario_meta.lat ?? params.custom_lat ?? -19.9419}
+          activeLon={data?.scenario_meta.lon ?? params.custom_lon ?? -43.5997}
+          isFreePoint={isFreePoint}
+          resolvedTheme={resolvedTheme}
+          styleMode={styleMode}
+          terrain3D={terrain3D}
+          regionFlyTarget={regionFlyTarget}
+          onSelectDam={selectDam}
+          onSelectFreePoint={selectFreePoint}
+        />
+      </div>
+
+      {/* HUD flutuante superior */}
+      <FloatingHud
+        scenarios={scenarios}
+        activeScenarioId={params.scenario_id}
+        hasSelection={hasSelection}
+        dams={dams}
+        selectedDamId={selectedDamId}
+        startDate={params.start_date}
+        endDate={params.end_date}
+        initialLat={params.custom_lat ?? -19.9419}
+        initialLon={params.custom_lon ?? -43.5997}
+        initialName={params.custom_name ?? ""}
+        earthdataToken={params.earthdata_token ?? ""}
+        loading={loading}
+        revalidating={revalidating}
+        themePreference={themePreference}
+        resolvedTheme={resolvedTheme}
+        styleMode={styleMode}
+        terrain3D={terrain3D}
+        onSelectScenario={selectScenario}
+        onSelectDam={selectDam}
+        onSearchCustom={runCustom}
+        onFlyRegion={handleFlyRegion}
+        onToggleTheme={toggleTheme}
+        onSetThemePreference={setThemePreference}
+        onChangeStyleMode={setStyleMode}
+        onToggleTerrain3D={() => setTerrain3D((v) => !v)}
+        onOpenTokenModal={() => setTokenModalOpen(true)}
+      />
+
+      {/* Estado inicial limpo: convite sutil + legenda mínima no rodapé */}
+      {!hasSelection && (
+        <div className="pointer-events-none fixed bottom-[76px] sm:bottom-5 left-3 right-16 sm:left-4 sm:right-4 z-10 flex justify-center">
+          <div
+            data-testid="map-prompt-pill"
+            className="pointer-events-auto pz-glass pz-sheet-reveal px-4 py-2.5 rounded-full flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-xs text-[var(--pz-secondary)] max-w-[94vw]"
+          >
+            <span className="inline-flex items-center gap-2 font-medium text-[var(--pz-text)]">
+              <CrosshairIcon className="w-3.5 h-3.5 text-[var(--pz-accent)] shrink-0" />
+              <span>
+                Clique em qualquer ponto ou marcador do mapa para inspecionar a série InSAR
+              </span>
+            </span>
+            <span
+              className="hidden sm:inline-flex items-center gap-3 pl-3 border-l border-[var(--pz-border)] text-[11px] text-[var(--pz-muted)]"
+              aria-hidden="true"
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#10b981]" />
+                Estável
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#f59e0b]" />
+                Atenção
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#f43f5e]" />
+                Crítico
+              </span>
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Carregando primeiro alvo selecionado */}
+      {hasSelection && loading && !data && (
+        <div className="pointer-events-none fixed bottom-6 left-4 right-4 z-20 flex justify-center">
+          <div
+            role="status"
+            aria-live="polite"
+            className="pointer-events-auto pz-glass-strong pz-sheet-reveal px-5 py-3 rounded-full flex items-center gap-3 text-xs font-medium text-[var(--pz-text)]"
+          >
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--pz-accent)] animate-pulse" />
+            <span>Processando interferometria NISAR e correções físicas...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Erro sem dados prévios */}
+      {hasSelection && error && !data && !loading && (
+        <div className="pointer-events-none fixed bottom-6 left-4 right-4 z-20 flex justify-center">
+          <div
+            data-testid="error-alert"
+            role="alert"
+            className="pointer-events-auto pz-glass-strong pz-sheet-reveal px-5 py-4 rounded-2xl max-w-lg w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+          >
+            <div className="flex items-start gap-2.5 text-xs">
+              <AlertTriangleIcon className="w-4 h-4 text-[var(--pz-danger-ink)] shrink-0 mt-0.5" />
+              <div>
+                <div className="font-bold text-[var(--pz-text)]">
+                  Falha ao consultar o motor InSAR
+                </div>
+                <div className="text-[var(--pz-muted)] mt-0.5">{error}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={retry}
+                className="px-3 py-1.5 rounded-full bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] text-xs font-semibold cursor-pointer"
+              >
+                Tentar novamente
+              </button>
+              <button
+                type="button"
+                onClick={clearSelection}
+                className="px-3 py-1.5 rounded-full bg-[var(--pz-well)] border border-[var(--pz-border)] text-[var(--pz-secondary)] text-xs font-medium cursor-pointer"
+              >
+                Fechar
+              </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Erro durante revalidação com dados existentes */}
+      {hasSelection && error && data && (
+        <div
+          data-testid="error-alert"
+          role="alert"
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-30 pz-glass-strong px-4 py-2 rounded-full flex items-center gap-3 text-xs max-w-[92vw]"
+        >
+          <AlertTriangleIcon className="w-3.5 h-3.5 text-[var(--pz-danger-ink)] shrink-0" />
+          <span className="truncate text-[var(--pz-text)]">{error}</span>
           <button
             type="button"
             onClick={retry}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[#3b9eeb] hover:bg-[#57aff0] text-[#08111b] text-xs font-bold transition-colors cursor-pointer"
+            className="px-2.5 py-0.5 rounded-full bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] font-semibold shrink-0 cursor-pointer"
           >
-            <RefreshIcon className="w-3.5 h-3.5" />
-            <span>Tentar novamente</span>
+            Repetir
           </button>
         </div>
-      </div>
-    );
-  }
+      )}
 
-  if (!data || !selectedPixel) {
-    return <DashboardLoadingSkeleton />;
-  }
-
-  return (
-    <div className="min-h-screen bg-[#0c0f14] text-[#eef2f6] flex flex-col">
-      <Header
-        scenarios={scenarios}
-        activeScenarioId={params.scenario_id}
-        latestGranuleLabel={data.scenario_meta.asf_status?.latest_granule}
-        earthdataToken={params.earthdata_token ?? ""}
-        revalidating={revalidating}
-        onSelectScenario={selectScenario}
-        onOpenTokenModal={() => setShowTokenModal(true)}
-      />
-
-      <SearchBar
-        startDate={params.start_date}
-        endDate={params.end_date}
-        initialLat={params.custom_lat ?? data.scenario_meta.lat}
-        initialLon={params.custom_lon ?? data.scenario_meta.lon}
-        initialName={params.custom_name ?? data.scenario_meta.name}
-        loading={loading || revalidating}
-        meta={data.scenario_meta}
-        onUpdatePeriod={updatePeriod}
-        onSearchCustom={runCustom}
-      />
-
-      <main className="flex-1 w-full max-w-[1640px] mx-auto px-4 lg:px-6 py-4 space-y-4">
-        {error && (
-          <div
-            role="alert"
-            className="flex flex-wrap items-center justify-between gap-3 px-3.5 py-2.5 rounded-md bg-[#230f16] border border-[#9f1239] text-xs text-[#fecdd3]"
-          >
-            <div className="flex items-center gap-2">
-              <AlertTriangleIcon className="w-4 h-4 text-[#f43f5e] shrink-0" />
-              <span>Falha ao atualizar a análise: {error}</span>
-            </div>
-            <button
-              type="button"
-              onClick={retry}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#131820] hover:bg-[#1a222d] border border-[#9f1239] text-[#eef2f6] font-semibold cursor-pointer"
-            >
-              <RefreshIcon className="w-3 h-3" />
-              <span>Tentar novamente</span>
-            </button>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
-          <div className="xl:col-span-8 2xl:col-span-9 space-y-4 min-w-0">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
-              <DamMapPanel
-                dams={dams}
-                selectedDamId={selectedDamId}
-                activeLat={params.custom_lat ?? data.scenario_meta.lat}
-                activeLon={params.custom_lon ?? data.scenario_meta.lon}
-                isFreePoint={isFreePoint}
-                loading={loading || revalidating}
-                onSelectDam={selectDam}
-                onSelectFreePoint={selectFreePoint}
-              />
-
-              <TerrainViewport3D
-                meta={data.scenario_meta}
-                pixels={data.grid_pixels}
-                selectedPixel={selectedPixel}
-                onSelectPixel={selectPixel}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-              <TimeSeriesChart
-                dates={data.dates}
-                pixel={selectedPixel}
-                statusCode={data.status.code}
-              />
-
-              <ThermoLoopChart
-                pixel={selectedPixel}
-                residualTrendMmPerPass={data.status.residual_trend_mm_per_pass}
-              />
-            </div>
-          </div>
-
-          <div className="xl:col-span-4 2xl:col-span-3 order-first xl:order-last xl:sticky xl:top-4">
-            <DiagnosticsPanel
-              status={data.status}
-              params={params}
-              minCoherenceDraft={minCoherenceDraft}
-              onSetParam={setParam}
-              onSetMinCoherenceDraft={setMinCoherenceDraft}
-            />
-          </div>
-        </div>
-      </main>
-
-      <footer className="max-w-[1640px] w-full mx-auto px-4 lg:px-6 pb-5 pt-2">
-        <div className="border-t border-[#222933] pt-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-[#8a96a8]">
-          <p>{data.disclaimer}</p>
-          <span className="font-mono text-[#cbd5e1] shrink-0">
-            PHASE-ZERO v5.0 · NASA Space Apps Challenge
-          </span>
-        </div>
-      </footer>
+      {/* Folha inferior do observatório (exibida apenas após selecionar um local) */}
+      {hasSelection && data && selectedPixel && (
+        <ObservatorySheet
+          data={data}
+          params={params}
+          selectedPixel={selectedPixel}
+          isFreePoint={isFreePoint}
+          loading={loading}
+          minCoherenceDraft={minCoherenceDraft}
+          resolvedTheme={resolvedTheme}
+          onSetParam={setParam}
+          onSetMinCoherenceDraft={setMinCoherenceDraft}
+          onUpdatePeriod={updatePeriod}
+          onSelectPixel={selectPixel}
+          onClose={clearSelection}
+        />
+      )}
 
       <TokenModal
-        open={showTokenModal}
+        open={tokenModalOpen}
         initialToken={params.earthdata_token ?? ""}
         onSave={saveToken}
         onRemove={removeToken}
-        onClose={() => setShowTokenModal(false)}
+        onClose={() => setTokenModalOpen(false)}
       />
-    </div>
+    </main>
   );
 }
 
-export default function PhaseZeroDashboard() {
+export default function HomePage() {
   return (
     <AnalysisProvider>
-      <PhaseZeroWorkspace />
+      <ObservatoryWorkspace />
     </AnalysisProvider>
   );
 }

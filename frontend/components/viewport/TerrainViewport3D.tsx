@@ -3,6 +3,7 @@
 import React, { useMemo, useState } from "react";
 import { detectZoneCategory, GridPixel, ScenarioMeta, ZoneCategoryId } from "@phase-zero/shared";
 import { stripDecorativeEmojis, ZONE_VISUAL_META } from "../../lib/colors";
+import type { ResolvedTheme } from "../../hooks/useTheme";
 import { RotateResetIcon } from "../icons/SurveyIcons";
 import { PixelInfoBar } from "./PixelInfoBar";
 import { TerrainCanvas, TerrainColorMode } from "./TerrainCanvas";
@@ -11,6 +12,7 @@ export interface TerrainViewport3DProps {
   meta: ScenarioMeta;
   pixels: readonly GridPixel[];
   selectedPixel: GridPixel;
+  resolvedTheme?: ResolvedTheme;
   onSelectPixel: (px: GridPixel) => void;
 }
 
@@ -35,6 +37,7 @@ export function TerrainViewport3D({
   meta,
   pixels,
   selectedPixel,
+  resolvedTheme = "light",
   onSelectPixel,
 }: TerrainViewport3DProps) {
   const [rotAzimuth, setRotAzimuth] = useState<number>(DEFAULT_AZIMUTH);
@@ -63,27 +66,27 @@ export function TerrainViewport3D({
   return (
     <section
       aria-labelledby="terrain-3d-heading"
-      className="bg-[#131820] border border-[#222933] rounded-lg p-4 flex flex-col justify-between gap-3"
+      className="bg-[var(--pz-surface)] border border-[var(--pz-border)] rounded-2xl p-4 flex flex-col justify-between gap-3"
     >
       <div className="flex flex-wrap justify-between items-start gap-2.5">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 id="terrain-3d-heading" className="text-sm font-bold text-[#eef2f6]">
+            <h2 id="terrain-3d-heading" className="text-sm font-bold text-[var(--pz-text)]">
               Malha Topográfica 3D (80m × 80m)
             </h2>
             <div
               role="group"
               aria-label="Modo de coloração da malha 3D"
-              className="inline-flex items-center rounded-md bg-[#080b0f] p-0.5 border border-[#222933]"
+              className="inline-flex items-center rounded-lg bg-[var(--pz-well)] p-0.5 border border-[var(--pz-border)]"
             >
               <button
                 type="button"
                 aria-pressed={colorMode === "anomaly"}
                 onClick={() => setColorMode("anomaly")}
-                className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+                className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors cursor-pointer ${
                   colorMode === "anomaly"
-                    ? "bg-[#132538] text-[#eef2f6] border border-[#3b9eeb]"
-                    : "text-[#a1adbf] hover:text-[#eef2f6] border border-transparent"
+                    ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] font-semibold"
+                    : "text-[var(--pz-muted)] hover:text-[var(--pz-text)]"
                 }`}
               >
                 Anomalia InSAR
@@ -92,23 +95,23 @@ export function TerrainViewport3D({
                 type="button"
                 aria-pressed={colorMode === "zones"}
                 onClick={() => setColorMode("zones")}
-                className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+                className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors cursor-pointer ${
                   colorMode === "zones"
-                    ? "bg-[#132538] text-[#eef2f6] border border-[#3b9eeb]"
-                    : "text-[#a1adbf] hover:text-[#eef2f6] border border-transparent"
+                    ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] font-semibold"
+                    : "text-[var(--pz-muted)] hover:text-[var(--pz-text)]"
                 }`}
               >
                 Zonas / Setores
               </button>
             </div>
           </div>
-          <p className="text-xs text-[#8a96a8] mt-0.5 truncate" title={`${cleanName} — ${cleanRegime}`}>
-            <span className="text-[#cbd5e1]">{cleanName}</span> · {cleanRegime}
+          <p className="text-xs text-[var(--pz-muted)] mt-0.5 truncate" title={`${cleanName} — ${cleanRegime}`}>
+            <span className="text-[var(--pz-secondary)] font-medium">{cleanName}</span> · {cleanRegime}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 text-xs bg-[#080b0f] px-2.5 py-1.5 rounded-md border border-[#222933]">
-          <label className="flex items-center gap-1.5 text-[#a1adbf]">
+        <div className="flex flex-wrap items-center gap-3 text-xs bg-[var(--pz-well)] px-2.5 py-1.5 rounded-xl border border-[var(--pz-border)]">
+          <label className="flex items-center gap-1.5 text-[var(--pz-secondary)]">
             <span>Azimute</span>
             <input
               type="range"
@@ -120,7 +123,7 @@ export function TerrainViewport3D({
               className="pz-range w-16"
             />
           </label>
-          <label className="flex items-center gap-1.5 text-[#a1adbf]">
+          <label className="flex items-center gap-1.5 text-[var(--pz-secondary)]">
             <span>Inclinação</span>
             <input
               type="range"
@@ -139,9 +142,9 @@ export function TerrainViewport3D({
               setRotAzimuth(DEFAULT_AZIMUTH);
               setRotPitch(DEFAULT_PITCH);
             }}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#181e28] hover:bg-[#222b39] text-[#eef2f6] border border-[#313b49] text-[11px] font-medium transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[var(--pz-surface)] hover:bg-[var(--pz-accent-soft)] text-[var(--pz-text)] border border-[var(--pz-border)] text-[11px] font-medium transition-colors cursor-pointer"
           >
-            <RotateResetIcon className="w-3 h-3 text-[#3b9eeb]" />
+            <RotateResetIcon className="w-3 h-3 text-[var(--pz-accent)]" />
             <span>Reset</span>
           </button>
         </div>
@@ -154,6 +157,7 @@ export function TerrainViewport3D({
         azimuthDeg={rotAzimuth}
         pitchDeg={rotPitch}
         colorMode={colorMode}
+        resolvedTheme={resolvedTheme}
         onSelectPixel={onSelectPixel}
         onRotateChange={(az, pitch) => {
           setRotAzimuth(az);
@@ -162,10 +166,10 @@ export function TerrainViewport3D({
       />
 
       <div
-        className="flex flex-wrap items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-[#080b0f] border border-[#222933] text-[11px]"
+        className="flex flex-wrap items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] text-[11px]"
         aria-label="Filtro rápido de zonas geomorfométricas"
       >
-        <span className="text-[#8a96a8] mr-1 font-medium">Setores:</span>
+        <span className="text-[var(--pz-muted)] mr-1 font-medium">Setores:</span>
         {LEGEND_ZONE_ORDER.map((cat) => {
           const count = zoneCounts[cat] ?? 0;
           if (count === 0) return null;
@@ -177,10 +181,10 @@ export function TerrainViewport3D({
               type="button"
               onClick={() => handleSelectZoneRepresentative(cat)}
               title={`${style.shortLabel}: ${style.radarNote}`}
-              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded border text-[10px] font-medium transition-colors cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[10px] font-medium transition-colors cursor-pointer ${
                 isCurrentCat
                   ? style.badgeClass
-                  : "bg-[#131820] text-[#a1adbf] border-[#222933] hover:text-[#eef2f6]"
+                  : "bg-[var(--pz-surface)] text-[var(--pz-secondary)] border-[var(--pz-border)] hover:text-[var(--pz-text)]"
               }`}
             >
               <span

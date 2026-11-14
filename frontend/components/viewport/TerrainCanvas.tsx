@@ -16,6 +16,8 @@ import {
   sortByDepth,
 } from "../../lib/projection3d";
 
+import type { ResolvedTheme } from "../../hooks/useTheme";
+
 export type TerrainColorMode = "anomaly" | "zones";
 
 export interface TerrainCanvasProps {
@@ -25,6 +27,7 @@ export interface TerrainCanvasProps {
   azimuthDeg: number;
   pitchDeg: number;
   colorMode?: TerrainColorMode;
+  resolvedTheme?: ResolvedTheme;
   onSelectPixel: (px: GridPixel) => void;
   onRotateChange?: (azimuthDeg: number, pitchDeg: number) => void;
 }
@@ -40,6 +43,7 @@ export function TerrainCanvas({
   azimuthDeg,
   pitchDeg,
   colorMode = "anomaly",
+  resolvedTheme = "light",
   onSelectPixel,
   onRotateChange,
 }: TerrainCanvasProps) {
@@ -90,8 +94,10 @@ export function TerrainCanvas({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
 
+    const isDark = resolvedTheme === "dark";
+
     // Grade cartográfica de referência sutil no fundo
-    ctx.strokeStyle = "rgba(148, 163, 184, 0.05)";
+    ctx.strokeStyle = isDark ? "rgba(148, 163, 184, 0.07)" : "rgba(15, 23, 42, 0.06)";
     ctx.lineWidth = 1;
     const gridStep = 40;
     for (let x = gridStep; x < width; x += gridStep) {
@@ -122,8 +128,14 @@ export function TerrainCanvas({
       const seg = segments[i];
       ctx.strokeStyle =
         colorMode === "zones"
-          ? "rgba(100, 116, 139, 0.28)"
-          : getMeshEdgeColor(seg.masked);
+          ? isDark
+            ? "rgba(148, 163, 184, 0.28)"
+            : "rgba(51, 65, 85, 0.26)"
+          : isDark
+            ? getMeshEdgeColor(seg.masked)
+            : seg.masked
+              ? "rgba(100, 116, 139, 0.22)"
+              : "rgba(15, 118, 110, 0.34)";
       ctx.beginPath();
       ctx.moveTo(seg.x1, seg.y1);
       ctx.lineTo(seg.x2, seg.y2);
@@ -151,8 +163,12 @@ export function TerrainCanvas({
 
       if (isSelected || isHovered) {
         ctx.strokeStyle = isSelected
-          ? "rgba(59, 158, 235, 0.65)"
-          : "rgba(226, 232, 240, 0.45)";
+          ? isDark
+            ? "rgba(45, 212, 191, 0.78)"
+            : "rgba(15, 118, 110, 0.78)"
+          : isDark
+            ? "rgba(226, 232, 240, 0.5)"
+            : "rgba(15, 23, 42, 0.45)";
         ctx.lineWidth = isSelected ? 2.2 : 1.5;
         ctx.beginPath();
         ctx.arc(x, y, radius + 3.8, 0, Math.PI * 2);
@@ -164,10 +180,14 @@ export function TerrainCanvas({
           ? getPixelZoneColor(px.zone)
           : getPixelNodeColor(px);
       ctx.strokeStyle = isSelected
-        ? "#eef2f6"
+        ? isDark
+          ? "#f8fafc"
+          : "#0f172a"
         : colorMode === "zones"
           ? zoneStyle.strokeHex
-          : "rgba(12, 15, 20, 0.9)";
+          : isDark
+            ? "rgba(12, 15, 20, 0.9)"
+            : "rgba(255, 255, 255, 0.85)";
       ctx.lineWidth = isSelected ? 2.5 : colorMode === "zones" ? 1.15 : 1.0;
 
       ctx.beginPath();
@@ -185,7 +205,8 @@ export function TerrainCanvas({
     const endX = cx;
     const endY = cy - 22;
 
-    ctx.strokeStyle = "#3b9eeb";
+    const losColor = isDark ? "#2dd4bf" : "#0f766e";
+    ctx.strokeStyle = losColor;
     ctx.lineWidth = 2;
     ctx.setLineDash([5, 4]);
     ctx.beginPath();
@@ -196,7 +217,7 @@ export function TerrainCanvas({
 
     const angle = Math.atan2(endY - startY, endX - startX);
     const headLen = 8;
-    ctx.fillStyle = "#3b9eeb";
+    ctx.fillStyle = losColor;
     ctx.beginPath();
     ctx.moveTo(endX, endY);
     ctx.lineTo(
@@ -211,26 +232,26 @@ export function TerrainCanvas({
     ctx.fill();
 
     // Leituras geodésicas limpas sem emojis
-    ctx.fillStyle = "#6ab6f0";
+    ctx.fillStyle = isDark ? "#5eead4" : "#0f766e";
     ctx.font = "600 11px monospace";
     ctx.fillText(
       `LOS [X:${losVector.losUnitVectorX} Y:${losVector.losUnitVectorY} | Inc:${losVector.incidenceAngle}°]`,
       14,
       22,
     );
-    ctx.fillStyle = "#86efac";
+    ctx.fillStyle = isDark ? "#cbd5e1" : "#334155";
     ctx.fillText(
       `DEM ${dims.rows}x${dims.cols} · Min ${dims.minElev.toFixed(1)}m · Max ${dims.maxElev.toFixed(1)}m`,
       14,
       40,
     );
-    ctx.fillStyle = "#8a96a8";
+    ctx.fillStyle = isDark ? "#94a3b8" : "#526377";
     const hint =
       width < 460
         ? "Arraste para orbitar · Clique num nó para inspecionar"
         : "Arraste para orbitar a malha · Passe o mouse ou clique num nó para identificar a zona";
     ctx.fillText(hint, 14, height - 14);
-  }, [pixels, selectedPixelId, hoveredPixel, losVector, azimuthDeg, pitchDeg, colorMode, size]);
+  }, [pixels, selectedPixelId, hoveredPixel, losVector, azimuthDeg, pitchDeg, colorMode, resolvedTheme, size]);
 
   useEffect(() => {
     drawScene();
@@ -304,29 +325,29 @@ export function TerrainCanvas({
         onPointerMove={handlePointerMove}
         onPointerLeave={handlePointerLeave}
         onPointerUp={handlePointerUp}
-        className="block w-full bg-[#080b0f] rounded-md border border-[#222933] cursor-grab active:cursor-grabbing"
+        className="block w-full bg-[var(--pz-well)] rounded-xl border border-[var(--pz-border)] cursor-grab active:cursor-grabbing"
       />
       {activeInspect && activeStyle && (
         <div
-          className="pointer-events-none absolute top-2.5 right-2.5 max-w-[280px] rounded-md bg-[#0c0f14]/95 border border-[#313b49] px-2.5 py-1.5 text-[11px] shadow-lg"
+          className="pointer-events-none absolute top-2.5 right-2.5 max-w-[280px] rounded-xl pz-glass-strong px-2.5 py-1.5 text-[11px]"
           aria-live="polite"
         >
           <div className="flex items-center justify-between gap-2">
-            <span className="font-semibold text-[#eef2f6] truncate">
+            <span className="font-semibold text-[var(--pz-text)] truncate">
               {activeStyle.shortLabel}
             </span>
-            <span className="font-mono text-[10px] text-[#93c5fd]">
+            <span className="font-mono text-[10px] text-[var(--pz-accent)]">
               {activeInspect.id} · {activeInspect.elevation_m}m
             </span>
           </div>
-          <div className="text-[10px] text-[#a1adbf] truncate mt-0.5">
+          <div className="text-[10px] text-[var(--pz-muted)] truncate mt-0.5">
             {activeInspect.zone}
           </div>
           <div className="mt-1 flex items-center justify-between gap-2 font-mono text-[10px]">
-            <span className={activeInspect.masked ? "text-[#fda4af]" : "text-[#86efac]"}>
+            <span className={activeInspect.masked ? "text-[var(--pz-danger-ink)]" : "text-[var(--pz-ok-ink)]"}>
               γ={activeInspect.coherence.toFixed(2)} {activeInspect.masked ? "(Mascarado)" : "(Válido)"}
             </span>
-            <span className="text-[#eef2f6]">Res: {activeInspect.residual_mm} mm</span>
+            <span className="text-[var(--pz-text)]">Res: {activeInspect.residual_mm} mm</span>
           </div>
         </div>
       )}

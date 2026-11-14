@@ -1,45 +1,45 @@
 {
-  "title": "Escolha a direção visual do PHASE-ZERO",
-  "question": "A direção sorteada para o painel operacional foi Atlas Geodésico de Campo. Escolha uma direção para construir, peça outro sorteio (mais seguro ou mais ousado) ou adote o padrão da categoria.",
+  "title": "Escolha o novo visual do PHASE-ZERO",
+  "question": "A direção sorteada para o novo front-end limpo e focado no mapa é Prancha Cartográfica Lumínica. Compare as propostas (com tema claro e escuro, mapa gratuito MapLibre + OpenFreeMap e painel sob demanda ao clicar no local), escolha a melhor ou peça outro sorteio.",
   "options": [
     {
       "id": "assigned",
       "kind": "assigned",
       "kicker": "THE ROLL",
-      "label": "Atlas Geodésico de Campo",
-      "lineage": "Cartas geológicas CPRM/IBGE e boletins noturnos de observatório sísmico",
-      "thesis": "Painel de triagem InSAR tratado como prancha cartográfica de precisão em basalto fosco, com uma única cor cobalto reservada ao vetor radar e ao alvo ativo.",
+      "label": "Prancha Cartográfica Lumínica",
+      "lineage": "Atlas topográficos editoriais suíços e cartas digitais contemporâneas em papel mineral e ardósia noturna",
+      "thesis": "Mapa MapLibre em tela cheia como palco principal em tema claro (papel mineral) e escuro (ardósia oceânica), revelando o painel de análise apenas após clicar no local.",
       "palette": [
-        "#0C0F14",
-        "#131820",
-        "#EEF2F6",
-        "#3B9EEB",
-        "#22C55E",
-        "#F43F5E"
+        "#F6F7F4",
+        "#0D131A",
+        "#0E7490",
+        "#38BDF8",
+        "#16A34A",
+        "#E11D48"
       ],
       "materials": [
-        "basalto fosco",
-        "linhas capilares 1px",
-        "tipografia tabular"
+        "papel mineral e ardósia",
+        "vidro fosco sutil",
+        "tipografia Sora + Manrope"
       ],
-      "viewport": "Barra operacional superior com os 4 cenários e procedência NASA; abaixo, mapa de barragens e malha topográfica 3D lado a lado com o painel de diagnóstico físico fixo à direita e séries temporais sincronizadas logo abaixo.",
-      "risk": "Pode parecer austero demais se a hierarquia entre o status da barragem e os controles de filtro perder contraste.",
+      "viewport": "Mapa vetorial MapLibre ocupando 100% da tela com barra flutuante minimalista no topo (busca, 4 cenários, camadas do mapa e alternador Claro/Escuro). Ao selecionar uma barragem ou clicar num ponto, uma gaveta lateral animada desliza suavemente com o relevo 3D, métricas e gráficos.",
+      "risk": "Se a gaveta pós-seleção ficar larga demais em notebooks menores, pode cobrir o marcador selecionado caso o mapa não recentralize com padding.",
       "raised": [
         {
           "from": "variable-font-specimen",
-          "raise": "Leitura paramétrica contínua: alterar o slider de coerência ou clicar na malha 3D atualiza coordenadas, elevação e métricas tabulares em sincronia visual."
+          "raise": "Leitura paramétrica em tempo real: arrastar a coerência mínima (γ) ou clicar nos blocos da malha 3D atualiza números tabulares e curvas sem recarregar a tela."
         },
         {
-          "from": "digital-design-canon-monochrome-product-marketing",
-          "raise": "Contenção cromática rígida: cobalto exclusivo para seleção ativa e vetor LOS; verde, âmbar e carmim restritos ao diagnóstico estrutural real."
+          "from": "brand-identity-canon-saville-catalog-sleeve",
+          "raise": "Pureza visual nas curvas de sinal: os gráficos de deconvolução descartam caixas pesadas e deixam o contraste entre sinal bruto, modelo NASA POWER e resíduo falar sozinho."
         },
         {
-          "from": "aww2-zoo-gardens-guide-map",
-          "raise": "Diferenciação geométrica no mapa: marcadores sólidos, tracejados e vazados distinguem barragens de pé, em descaracterização e rompidas sem depender só de cor."
+          "from": "japanese-high-density-web",
+          "raise": "Grade compacta com filetes finos dentro da gaveta: as 3 métricas decisórias e os 4 filtros físicos se organizam sem desperdício de espaço após a escolha do local."
         },
         {
-          "from": "rw-manual-acetate-tab-board",
-          "raise": "Separação explícita de camadas nos gráficos: sinal bruto, modelo térmico NASA POWER e anomalia residual isolados com legenda interativa clara."
+          "from": "pop-culture-shelf-doujin-event-catalog",
+          "raise": "Sincronia bidirecional animada: buscar uma barragem na lista faz o mapa voar (flyTo) até o local, pulsa o anel do marcador e abre sua ficha técnica."
         }
       ],
       "html": ".impeccable/mocks/decision/assigned.html",
@@ -48,79 +48,85 @@
     {
       "id": "model-pick",
       "kind": "pick",
-      "kicker": "IMPECCABLE’S PICK",
-      "label": "Caderno Técnico de Barragens Alpinas",
-      "lineage": "Monografias suíças de engenharia hidroestrutural em concreto e grafite",
-      "thesis": "Estação analítica silenciosa em grafite mineral e pedra fundida com grelha editorial rígida e painéis sem brilho decorativo.",
+      "kicker": "IMPECCABLE'S PICK",
+      "label": "Observatório de Vidro Mineral",
+      "lineage": "Estações de monitoramento ambiental nórdicas com painéis flutuantes translúcidos sobre cartografia limpa",
+      "thesis": "Interface arejada em alabastro claro e grafite profundo com cápsulas translúcidas (backdrop-blur) que deixam o mapa respirar e abrem uma folha inferior ou lateral animada ao escolher o alvo.",
       "palette": [
-        "#111315",
-        "#191C20",
-        "#F4F6F8",
-        "#4EA8DE"
+        "#F8FAFC",
+        "#0F172A",
+        "#0D9488",
+        "#2DD4BF",
+        "#F59E0B",
+        "#F43F5E"
       ],
       "materials": [
-        "grafite mineral",
-        "filetes técnicos",
-        "sem glow"
+        "vidro mineral fosco",
+        "bordas translúcidas",
+        "tipografia Figtree + JetBrains Mono"
       ],
-      "viewport": "Cabeçalho enxuto com seletor de cenários e busca Lat/Lon; coluna principal dividindo o viewport 3D em destaque e o mapa logo ao lado, com rack de filtros físicos alinhado à direita.",
-      "risk": "Direção segura e clássica de engenharia; corre o risco de parecer mais conservadora que o Atlas Geodésico.",
+      "viewport": "Cabeçalho em cápsula flutuante no topo esquerdo e controles de tema/camadas no topo direito sobre o mapa MapLibre em tela cheia. Ao clicar em qualquer barragem ou coordenada, um cartão inferior expansível ou gaveta direita surge com animação fluida contendo status, malha 3D e gráficos.",
+      "risk": "Visual muito limpo e agradável, mas próximo de padrões modernos de mapas interativos caso as animações e o contraste do vidro não sejam bem calibrados nos dois temas.",
       "html": ".impeccable/mocks/decision/model-pick.html",
       "comp": ".impeccable/mocks/decision/model-pick.webp"
     },
     {
-      "id": "challenger-orienteering",
+      "id": "challenger-wayfinding",
       "kind": "challenger",
-      "catalogId": "notation-diagram-systems-orienteering-map",
+      "catalogId": "wayfinding-cartography-signage-terminal-yellow-wayfinding",
       "verdict": "competitive",
-      "label": "Mapa de Orientação & Legenda ISOM",
-      "lineage": "Cartas topográficas ISOM de orientação com curvas de nível e rota em magenta",
-      "thesis": "Terreno topográfico neutro e legível na base, com toda a trajetória de inspeção e vetor LOS destacados em uma única tinta violeta-magenta.",
+      "label": "Sinalização Cartográfica Progressiva",
+      "lineage": "Sistemas de sinalização direcional de terminais traduzidos para faixas limpas de orientação geográfica",
+      "thesis": "Mapa limpo guiado por faixas objetivas de decisão: passo 1 escolher alvo no mapa, passo 2 ler diagnóstico e ajustar compensações físicas em uma coluna lateral estruturada.",
       "palette": [
-        "#0D1318",
-        "#161E26",
-        "#E2E8F0",
-        "#C026D3"
+        "#FAFAF8",
+        "#11161D",
+        "#D97706",
+        "#FBBF24",
+        "#16A34A",
+        "#DC2626"
       ],
       "materials": [
-        "curvas de nível",
-        "legenda codificada",
-        "vetor único"
+        "faixas de sinalização",
+        "pictogramas nítidos",
+        "tipografia Hanken Grotesk"
       ],
-      "viewport": "Mapa geográfico e relevo 3D como camada cartográfica contínua à esquerda, pareados a uma tabela-legenda codificada de barragens e métricas à direita.",
-      "case": "Funde muito bem na separação entre base topográfica e camadas de anomalia; perde apenas na familiaridade para leitura de séries temporais longas.",
-      "risk": "O acento magenta pode competir com marcadores de barragens rompidas se não houver separação de tons.",
-      "html": ".impeccable/mocks/decision/challenger-orienteering.html",
-      "comp": ".impeccable/mocks/decision/challenger-orienteering.webp",
-      "hero": "https://impeccable.style/worlds/cards/notation-diagram-systems-orienteering-map-hero.webp",
-      "board": "https://impeccable.style/worlds/cards/notation-diagram-systems-orienteering-map.webp"
+      "viewport": "Barra superior direta com busca e pílulas de cenário; mapa MapLibre ocupa toda a área útil com legenda clara de formas geométricas. Após clicar num ponto, faixas ordenadas por prioridade descem no painel lateral com animações de transição.",
+      "case": "Traz clareza excepcional para o fluxo antes/depois da seleção do local; perde por pouco no frescor cromático se o âmbar não for dosado com leveza.",
+      "risk": "Pode soar mais diretivo e institucional do que contemplativo se o usuário buscar suavidade visual.",
+      "html": ".impeccable/mocks/decision/challenger-wayfinding.html",
+      "comp": ".impeccable/mocks/decision/challenger-wayfinding.webp",
+      "hero": "https://impeccable.style/worlds/cards/wayfinding-cartography-signage-terminal-yellow-wayfinding-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/wayfinding-cartography-signage-terminal-yellow-wayfinding.webp"
     },
     {
-      "id": "challenger-gateboard",
+      "id": "challenger-star-atlas",
       "kind": "challenger",
-      "catalogId": "vernacular-ephemera-boarding-pass-and-gate-board",
+      "catalogId": "notation-diagram-systems-star-atlas",
       "verdict": "competitive",
-      "label": "Painel de Triagem & Passe Segmentado",
-      "lineage": "Quadros operacionais de embarque com ranking em tempo real e destaque de alteração",
-      "thesis": "Barra superior como ficha técnica segmentada da barragem ativa e lista lateral ranqueada por criticidade que evidencia mudanças de estado.",
+      "label": "Atlas Orbital de Magnitude",
+      "lineage": "Cartas celestes de observatório com escalas de magnitude por diâmetro e retícula geodésica sutil",
+      "thesis": "Cartografia em tema claro (carta astronômica em marfim) e tema escuro (céu profundo de observatório), onde cada barragem escala por magnitude de deslocamento e revela sua ficha orbital ao ser selecionada.",
       "palette": [
-        "#0A0D12",
-        "#141922",
-        "#F8FAFC",
-        "#F59E0B"
+        "#F7F5F0",
+        "#09101E",
+        "#2563EB",
+        "#60A5FA",
+        "#EA580C",
+        "#E11D48"
       ],
       "materials": [
-        "colunas tabulares",
-        "ficha segmentada",
-        "destaque de alerta"
+        "retícula de coordenadas",
+        "pontos por magnitude",
+        "tipografia Geologica + Fira Code"
       ],
-      "viewport": "Ficha segmentada no topo com alvo, sensor, período e score; abaixo, lista ranqueada de barragens e diagnóstico em colunas fixas ao lado da malha 3D.",
-      "case": "Excelente para triagem rápida das 21 barragens e leitura das 3 métricas; sacrifica um pouco a imersão espacial do mapa.",
-      "risk": "Pode lembrar painel de despacho aeroportuário se o mapa perder espaço útil.",
-      "html": ".impeccable/mocks/decision/challenger-gateboard.html",
-      "comp": ".impeccable/mocks/decision/challenger-gateboard.webp",
-      "hero": "https://impeccable.style/worlds/cards/vernacular-ephemera-boarding-pass-and-gate-board-hero.webp",
-      "board": "https://impeccable.style/worlds/cards/vernacular-ephemera-boarding-pass-and-gate-board.webp"
+      "viewport": "Mapa MapLibre com retícula geodésica discreta e marcadores proporcionais à anomalia InSAR; controles compactos flutuam nas bordas. Ao clicar em um alvo, o painel lateral desdobra a malha 3D e as séries temporais com animação escalonada.",
+      "case": "Casa diretamente com a herança espacial da NASA e destaca imediatamente áreas críticas no mapa; perde apenas na neutralidade caso o usuário prefira menos marcações geodésicas.",
+      "risk": "A retícula e os anéis de magnitude precisam ficar sutis para não poluir a leitura de ruas e relevo.",
+      "html": ".impeccable/mocks/decision/challenger-star-atlas.html",
+      "comp": ".impeccable/mocks/decision/challenger-star-atlas.webp",
+      "hero": "https://impeccable.style/worlds/cards/notation-diagram-systems-star-atlas-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/notation-diagram-systems-star-atlas.webp"
     },
     {
       "id": "challenger-specimen",
@@ -128,8 +134,8 @@
       "catalogId": "variable-font-specimen",
       "verdict": "declined",
       "label": "Espécime Tipográfico Variável",
-      "lineage": "Catálogos interativos de fundição tipográfica em papel claro",
-      "thesis": "Sliders contínuos que transformam uma grade gigante de glifos com leitura paramétrica.",
+      "lineage": "Catálogos interativos de fundição tipográfica focados em glifos gigantes",
+      "thesis": "Tipografia monumental como objeto principal da tela, controlada por sliders contínuos.",
       "palette": [
         "#FAF9F6",
         "#111111",
@@ -137,87 +143,86 @@
       ],
       "materials": [
         "papel claro",
-        "grade tipográfica"
+        "glifos monumentais"
       ],
-      "viewport": "Um único número gigante domina a tela sobre fundo claro.",
-      "case": "Inadequado para análise geoespacial: tipografia gigante não comporta mapa, malha 3D e dois gráficos.",
-      "kept": "Leitura numérica tabular responsiva aos sliders em tempo real.",
-      "risk": "Sacrifica a densidade operacional necessária ao painel.",
+      "viewport": "Números gigantes ocupam a tela acima de uma grade tipográfica.",
+      "case": "Inadequado para um front-end em que o mapa precisa ser o protagonista limpo desde o primeiro segundo.",
+      "kept": "Atualização contínua e instantânea dos números tabulares ao mover sliders.",
+      "risk": "Esconde o mapa geográfico atrás de texto decorativo gigante.",
       "hero": "https://impeccable.style/worlds/cards/variable-font-specimen-hero.webp",
       "board": "https://impeccable.style/worlds/cards/variable-font-specimen.webp"
     },
     {
-      "id": "challenger-monochrome",
+      "id": "challenger-saville",
       "kind": "challenger",
-      "catalogId": "digital-design-canon-monochrome-product-marketing",
+      "catalogId": "brand-identity-canon-saville-catalog-sleeve",
       "verdict": "declined",
-      "label": "Monocromia Editorial de Produto",
-      "lineage": "Páginas de apresentação monocromáticas de software em escala neutra",
-      "thesis": "Seções alternando afirmação e prova visual em escala neutra quase pura.",
+      "label": "Catálogo Codificado em Pulso",
+      "lineage": "Capas industriais minimalistas com blocos de cor no lugar de rótulos",
+      "thesis": "Rótulos substituídos por códigos numéricos e blocos cromáticos sobre fundo escuro.",
+      "palette": [
+        "#0B0B0D",
+        "#FFFFFF",
+        "#3B82F6"
+      ],
+      "materials": [
+        "preto fosco",
+        "linhas de pulso"
+      ],
+      "viewport": "Campo escuro quase vazio com gráfico de linhas brancas empilhadas.",
+      "case": "Ocultar nomes e métricas atrás de códigos prejudica a legibilidade e a operação segura de barragens.",
+      "kept": "Curvas limpas sem caixas visuais redundantes nos gráficos temporais.",
+      "risk": "Impossibilita leitura rápida e tema claro agradável.",
+      "hero": "https://impeccable.style/worlds/cards/brand-identity-canon-saville-catalog-sleeve-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/brand-identity-canon-saville-catalog-sleeve.webp"
+    },
+    {
+      "id": "challenger-japanese-density",
+      "kind": "challenger",
+      "catalogId": "japanese-high-density-web",
+      "verdict": "declined",
+      "label": "Mosaico de Alta Densidade",
+      "lineage": "Portais japoneses de módulos compactos empacotados borda a borda",
+      "thesis": "Dezenas de blocos e tabelas visíveis simultaneamente sem áreas de respiro.",
       "palette": [
         "#FFFFFF",
-        "#0F172A",
-        "#2563EB"
+        "#111827",
+        "#EF4444"
       ],
       "materials": [
-        "escala neutra",
-        "botões fantasma"
+        "grade densa",
+        "abas vermelhas"
       ],
-      "viewport": "Página vertical de marketing em fluxo de texto e capturas.",
-      "case": "Formato de landing page promocional inadequado para uma ferramenta interativa de monitoramento.",
-      "kept": "Disciplina de usar uma única cor de acento funcional e eliminar ruído decorativo.",
-      "risk": "Transformaria uma estação técnica em vitrine estática.",
-      "hero": "https://impeccable.style/worlds/cards/digital-design-canon-monochrome-product-marketing-hero.webp",
-      "board": "https://impeccable.style/worlds/cards/digital-design-canon-monochrome-product-marketing.webp"
+      "viewport": "Mosaico lotado de caixas e abas ocupando toda a largura da tela.",
+      "case": "Contradiz diretamente o pedido de um front-end mais limpo onde os detalhes aparecem somente após escolher o local.",
+      "kept": "Organização compacta e precisa das métricas dentro da gaveta após a seleção.",
+      "risk": "Sobrecarga visual imediata antes mesmo de interagir com o mapa.",
+      "hero": "https://impeccable.style/worlds/cards/japanese-high-density-web-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/japanese-high-density-web.webp"
     },
     {
-      "id": "challenger-gardens",
+      "id": "challenger-doujin",
       "kind": "challenger",
-      "catalogId": "aww2-zoo-gardens-guide-map",
+      "catalogId": "pop-culture-shelf-doujin-event-catalog",
       "verdict": "declined",
-      "label": "Mapa Ilustrado de Jardins",
-      "lineage": "Guias dobráveis ilustrados com áreas orgânicas de cor chapada",
-      "thesis": "Zonas geográficas desenhadas como lóbulos coloridos planos com cápsulas lúdicas.",
+      "label": "Catálogo de Mapa de Salão",
+      "lineage": "Guias impressos em papel jornal com miniaturas numeradas",
+      "thesis": "Grade de miniaturas ligadas a um mapa de estandes com marcações a caneta.",
       "palette": [
-        "#F5F1E4",
-        "#8ED462",
-        "#2C2E2A",
-        "#FF705D"
+        "#F4F1EA",
+        "#1C1917",
+        "#DC2626"
       ],
       "materials": [
-        "cor chapada",
-        "cápsulas lúdicas"
+        "papel jornal",
+        "círculos a tinta"
       ],
-      "viewport": "Mapa orgânico lúdico em papel creme com etiquetas em cápsula.",
-      "case": "Estética recreativa incompatível com análise geotécnica de risco e rompimento de barragens.",
-      "kept": "Codificação visual distinta por forma geométrica além da cor no mapa.",
-      "risk": "Passaria tom informal inadequado ao domínio de segurança de barragens.",
-      "hero": "https://impeccable.style/worlds/cards/aww2-zoo-gardens-guide-map-hero.webp",
-      "board": "https://impeccable.style/worlds/cards/aww2-zoo-gardens-guide-map.webp"
-    },
-    {
-      "id": "challenger-manual",
-      "kind": "challenger",
-      "catalogId": "rw-manual-acetate-tab-board",
-      "verdict": "declined",
-      "label": "Manual com Abas de Acetato",
-      "lineage": "Manuais técnicos impressos com folhas de acetato perfuradas e divisórias coloridas",
-      "thesis": "Camadas sobrepostas em acetato translúcido sobre divisórias de cor sólida e abas laterais.",
-      "palette": [
-        "#F59E0B",
-        "#1E293B",
-        "#F8FAFC"
-      ],
-      "materials": [
-        "acetato leitoso",
-        "abas escalonadas"
-      ],
-      "viewport": "Livro técnico aberto com abas laterais verticais e sobreposições translúcidas.",
-      "case": "Metáfora de manual impresso entra em conflito com manipulação direta de mapa Leaflet e canvas 3D.",
-      "kept": "Isolamento nítido entre sinal bruto, modelo climático e anomalia residual.",
-      "risk": "Tornaria a navegação lateral um recurso estilístico artificial.",
-      "hero": "https://impeccable.style/worlds/cards/rw-manual-acetate-tab-board-hero.webp",
-      "board": "https://impeccable.style/worlds/cards/rw-manual-acetate-tab-board.webp"
+      "viewport": "Centenas de quadrados numerados dividindo espaço com o mapa.",
+      "case": "Estética de catálogo de eventos não transmite a precisão científica e moderna do sistema.",
+      "kept": "Ligação direta e animada entre seleção na busca e foco automático no mapa.",
+      "risk": "Aspecto datado e poluído para análise geoespacial.",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-doujin-event-catalog-hero.webp",
+      "board": "https://impeccable.style/worlds/cards/pop-culture-shelf-doujin-event-catalog.webp"
     }
   ],
   "reroll": {
@@ -233,20 +238,20 @@
   "canon": true,
   "canonCard": {
     "kind": "canon",
-    "label": "Padrão de Categoria — Painel Dark Técnico",
-    "thesis": "Layout padrão de dashboard escuro com barra superior, cartões alinhados e acento azul-céu.",
+    "label": "Padrão Map-First Moderno",
+    "thesis": "Estrutura clássica de aplicativos de mapa modernos: barra de busca flutuante, alternador claro/escuro e painel lateral deslizante ao clicar no marcador.",
     "palette": [
+      "#FFFFFF",
       "#0F172A",
-      "#1E293B",
-      "#F8FAFC",
-      "#38BDF8"
+      "#2563EB",
+      "#10B981"
     ],
     "materials": [
-      "grade modular",
-      "cartões escuros"
+      "superfícies neutras",
+      "sombras suaves"
     ],
-    "viewport": "Arranjo tradicional do setor executado sem desvios, com tipografia limpa e sem emojis.",
-    "risk": "Visual previsível por escolha, menos autoral que as outras direções.",
+    "viewport": "Mapa em tela inteira com barra de busca no canto superior esquerdo e gaveta padrão à direita após selecionar o ponto.",
+    "risk": "Funciona com clareza, mas segue o padrão convencional sem assinatura visual própria.",
     "html": ".impeccable/mocks/decision/canon.html",
     "comp": ".impeccable/mocks/decision/canon.webp"
   },

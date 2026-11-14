@@ -1,16 +1,16 @@
 import "./globals.css";
-import type { Metadata, Viewport } from "next";
-import { Archivo, Fira_Code } from "next/font/google";
+import type { Metadata } from "next";
+import { Figtree, JetBrains_Mono } from "next/font/google";
 import React from "react";
 
-const archivo = Archivo({
+const figtree = Figtree({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
   display: "swap",
 });
 
-const firaCode = Fira_Code({
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   variable: "--font-mono",
@@ -18,19 +18,22 @@ const firaCode = Fira_Code({
 });
 
 export const metadata: Metadata = {
-  title: "PHASE-ZERO — Triagem Interferométrica InSAR e Compensação Ambiental",
+  title: "PHASE-ZERO — Observatório InSAR e Compensação Ambiental",
   description:
-    "Sistema de triagem e compensação ambiental para detecção de anomalias de superfície via radar SAR (NISAR Banda L e Sentinel-1 Banda C).",
+    "Plataforma de triagem interferométrica SAR (NISAR Banda L e Sentinel-1 Banda C) com mapa interativo em tempo real, tema claro/escuro e compensação climática NASA POWER.",
 };
 
-export const viewport: Viewport = {
-  colorScheme: "dark",
-};
+const COLOR_SCHEME_INIT_SCRIPT =
+  '(function(){try{var v=localStorage.getItem("color-scheme");var m=document.querySelector(\'meta[name="color-scheme"]\');if(m&&(v==="light"||v==="dark")){m.content=v;}}catch(e){}})();';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${archivo.variable} ${firaCode.variable}`}>
-      <body className="min-h-screen bg-[#0c0f14] text-[#eef2f6] font-sans antialiased">
+    <html lang="pt-BR" className={`${figtree.variable} ${jetbrainsMono.variable}`}>
+      <head>
+        <meta name="color-scheme" content="light dark" />
+        <script dangerouslySetInnerHTML={{ __html: COLOR_SCHEME_INIT_SCRIPT }} />
+      </head>
+      <body className="min-h-screen bg-[var(--pz-ground)] text-[var(--pz-text)] font-sans antialiased">
         {children}
       </body>
     </html>

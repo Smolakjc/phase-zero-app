@@ -77,6 +77,16 @@ export const ScenarioMetaSchema = z.object({
   }),
 });
 
+export const StatisticalSignificanceSchema = z.object({
+  p_value: z.number(),
+  is_significant: z.boolean(),
+  confidence_level: z.string(),
+  method: z.string(),
+  mann_kendall_s: z.number(),
+  sens_slope_mm_per_pass: z.number(),
+  trend_direction: z.enum(["subsidence", "uplift", "stable"]),
+});
+
 export const AnalysisStatusSchema = z.object({
   code: StatusCodeSchema,
   label: z.string(),
@@ -84,6 +94,7 @@ export const AnalysisStatusSchema = z.object({
   residual_trend_mm_per_pass: z.number(),
   acceleration_index_mm: z.number(),
   max_weighted_anomaly_score: z.number(),
+  significance: StatisticalSignificanceSchema.optional(),
 });
 
 export const AnalysisResponseSchema = z.object({

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Atlas Orbital de Magnitude — PHASE-ZERO</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geologica:wght@500;600;700&family=Fira+Code:wght@400;500;600&display=swap">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1440px; height: 900px; overflow: hidden; background: #09101E; color: #F1F5F9; font-family: 'Geologica', sans-serif; }
+  .mono { font-family: 'Fira Code', monospace; font-variant-numeric: tabular-nums; }
+  .atlas { position: relative; width: 1440px; height: 900px; background: radial-gradient(circle at 42% 46%, #111F3B 0%, #09101E 68%, #050912 100%); }
+  .graticule { position: absolute; inset: 0; background-image: linear-gradient(90deg, rgba(96,165,250,0.08) 1px, transparent 1px), linear-gradient(rgba(96,165,250,0.08) 1px, transparent 1px); background-size: 120px 120px; }
+  .orbit-ring { position: absolute; left: 210px; top: 180px; width: 560px; height: 560px; border-radius: 999px; border: 1px dashed rgba(96,165,250,0.22); }
+  .top { position: absolute; top: 20px; left: 24px; right: 456px; display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-radius: 14px; background: rgba(9,16,30,0.84); border: 1px solid rgba(96,165,250,0.25); }
+  .star { position: absolute; border-radius: 999px; }
+  .mag-1 { width: 10px; height: 10px; background: #22C55E; }
+  .mag-2 { width: 16px; height: 16px; background: #EA580C; box-shadow: 0 0 0 6px rgba(234,88,12,0.2); }
+  .mag-3 { width: 22px; height: 22px; background: #E11D48; box-shadow: 0 0 0 9px rgba(225,29,72,0.24); }
+  .ring-focus { position: absolute; left: 456px; top: 416px; width: 54px; height: 54px; border-radius: 999px; border: 1.5px solid #60A5FA; }
+  .inspector { position: absolute; top: 20px; right: 20px; bottom: 20px; width: 416px; background: rgba(13,22,40,0.94); border: 1px solid rgba(96,165,250,0.28); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .card { background: #09101E; border: 1px solid rgba(96,165,250,0.18); border-radius: 12px; padding: 12px; }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .k { background: #09101E; border: 1px solid rgba(96,165,250,0.18); border-radius: 10px; padding: 10px; }
+  .k span { font-size: 10px; color: #93C5FD; display: block; }
+  .k strong { font-size: 14px; margin-top: 3px; display: block; }
+</style>
+</head>
+<body>
+<div class="atlas">
+  <div class="graticule"></div>
+  <div class="orbit-ring"></div>
+
+  <header class="top">
+    <div>
+      <strong style="font-size:15px;letter-spacing:0.04em;">PHASE-ZERO · ATLAS ORBITAL</strong>
+      <div class="mono" style="font-size:11px;color:#93C5FD;">NISAR L-Band · Sentinel-1 C-Band</div>
+    </div>
+    <div style="display:flex;gap:8px;font-size:11px;">
+      <span style="padding:6px 10px;border-radius:8px;border:1px solid rgba(96,165,250,0.35);">Buscar coordenada</span>
+      <span style="padding:6px 10px;border-radius:8px;background:#2563EB;">Tema Claro / Escuro</span>
+    </div>
+  </header>
+
+  <div class="star mag-1" style="left:260px;top:610px;"></div>
+  <div class="star mag-2" style="left:475px;top:435px;"></div>
+  <div class="ring-focus"></div>
+  <div class="star mag-3" style="left:690px;top:290px;"></div>
+
+  <aside class="inspector">
+    <div style="border-bottom:1px solid rgba(96,165,250,0.18);padding-bottom:12px;">
+      <span class="mono" style="font-size:11px;color:#FB923C;">MAGNITUDE DE ANOMALIA · ALERTA</span>
+      <h2 style="font-size:19px;margin-top:4px;">Mina Gongo Soco · MG</h2>
+      <span class="mono" style="font-size:11px;color:#94A3B8;">19°56'30"S · 43°35'58"W</span>
+    </div>
+    <div class="kpis">
+      <div class="k"><span>Tendência</span><strong class="mono">-2.4 mm</strong></div>
+      <div class="k"><span>Aceleração</span><strong class="mono">4.1 mm</strong></div>
+      <div class="k"><span>Score</span><strong class="mono">3.28 σ</strong></div>
+    </div>
+    <div class="card" style="height:175px;display:flex;flex-direction:column;justify-content:space-between;">
+      <span style="font-size:12px;font-weight:600;">Malha Geodésica 3D (80m)</span>
+      <div style="height:105px;border:1px solid rgba(96,165,250,0.3);border-radius:8px;background:repeating-linear-gradient(90deg, rgba(96,165,250,0.2) 0 1px, transparent 1px 18px), repeating-linear-gradient(0deg, rgba(96,165,250,0.2) 0 1px, transparent 1px 18px);transform:perspective(320px) rotateX(45deg);"></div>
+    </div>
+    <div class="card" style="flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+      <span style="font-size:12px;font-weight:600;">Série Temporal Deconvoluída</span>
+      <svg viewBox="0 0 360 120" width="100%" height="120">
+        <path d="M 10 48 Q 110 22, 220 50 T 350 64" fill="none" stroke="#64748B" stroke-width="2" stroke-dasharray="4 4"/>
+        <path d="M 10 56 Q 130 62, 240 88 T 350 105" fill="none" stroke="#60A5FA" stroke-width="2.5"/>
+      </svg>
+    </div>
+  </aside>
+</div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { GridPixel, StatusCode } from "@phase-zero/shared";
+import React, { useMemo, useState } from "react";
+import { computeMannKendall, GridPixel, StatusCode } from "@phase-zero/shared";
 import { getStatusStrokeColor } from "../../lib/colors";
 import { computeSymmetricTicks, HorizontalGridLines } from "./Axis";
 import { ChartFrame } from "./ChartFrame";
@@ -11,6 +11,7 @@ export interface TimeSeriesChartProps {
   dates: readonly string[];
   pixel: GridPixel;
   statusCode: StatusCode;
+  className?: string;
 }
 
 const VIEW_W = 760;
@@ -23,13 +24,22 @@ const Y_BOTTOM = 204;
 /**
  * Gráfico SVG de Deconvolução Temporal com eixo Y auto-escalado, isolamento de camadas e tooltip (`K-F3`).
  */
-export function TimeSeriesChart({ dates, pixel, statusCode }: TimeSeriesChartProps) {
+export function TimeSeriesChart({
+  dates,
+  pixel,
+  statusCode,
+  className = "",
+}: TimeSeriesChartProps) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const [showRaw, setShowRaw] = useState<boolean>(true);
   const [showClimate, setShowClimate] = useState<boolean>(true);
   const [showResidual, setShowResidual] = useState<boolean>(true);
 
   const ts = pixel.pixel_time_series;
+  const mk = useMemo(
+    () => computeMannKendall(ts.residual_anomaly_mm),
+    [ts.residual_anomaly_mm],
+  );
 
   const allValues = [
     ...(showRaw ? ts.observed_raw_mm : []),
@@ -66,21 +76,21 @@ export function TimeSeriesChart({ dates, pixel, statusCode }: TimeSeriesChartPro
 
   return (
     <ChartFrame
-      className="lg:col-span-7"
+      className={className}
       title={`Deconvolução Temporal (${pixel.zone})`}
       subtitle={`Período ${dates[0] ?? "—"} até ${dates[dates.length - 1] ?? "—"} · Separação entre sinal bruto, clima NASA POWER e anomalia residual.`}
       rightSlot={
         <div
           role="group"
           aria-label="Camadas da série temporal"
-          className="flex flex-wrap items-center gap-1.5 text-[11px] bg-[#080b0f] px-2 py-1 rounded-md border border-[#222933]"
+          className="flex flex-wrap items-center gap-1.5 text-[11px] bg-[var(--pz-well)] px-2 py-1 rounded-xl border border-[var(--pz-border)]"
         >
           <button
             type="button"
             aria-pressed={showRaw}
             onClick={() => setShowRaw((v) => !v)}
-            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded transition-opacity cursor-pointer ${
-              showRaw ? "text-[#cbd5e1]" : "text-[#687588] opacity-55"
+            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md transition-opacity cursor-pointer ${
+              showRaw ? "text-[var(--pz-secondary)]" : "text-[var(--pz-muted)] opacity-50"
             }`}
           >
             <span className="w-3 h-0.5 bg-[#64748b] inline-block" aria-hidden="true" />
@@ -91,12 +101,12 @@ export function TimeSeriesChart({ dates, pixel, statusCode }: TimeSeriesChartPro
             type="button"
             aria-pressed={showClimate}
             onClick={() => setShowClimate((v) => !v)}
-            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded transition-opacity cursor-pointer ${
-              showClimate ? "text-[#fde047]" : "text-[#687588] opacity-55"
+            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md transition-opacity cursor-pointer ${
+              showClimate ? "text-[var(--pz-warn-ink)]" : "text-[var(--pz-muted)] opacity-50"
             }`}
           >
             <span
-              className="w-3 h-0 border-t-2 border-dashed border-[#eab308] inline-block"
+              className="w-3 h-0 border-t-2 border-dashed border-[#d97706] inline-block"
               aria-hidden="true"
             />
             <span>Clima</span>
@@ -106,8 +116,8 @@ export function TimeSeriesChart({ dates, pixel, statusCode }: TimeSeriesChartPro
             type="button"
             aria-pressed={showResidual}
             onClick={() => setShowResidual((v) => !v)}
-            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded font-semibold transition-opacity cursor-pointer ${
-              showResidual ? "text-[#eef2f6]" : "text-[#687588] opacity-55"
+            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md font-semibold transition-opacity cursor-pointer ${
+              showResidual ? "text-[var(--pz-text)]" : "text-[var(--pz-muted)] opacity-50"
             }`}
           >
             <span
@@ -126,7 +136,7 @@ export function TimeSeriesChart({ dates, pixel, statusCode }: TimeSeriesChartPro
           viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setHoverIdx(null)}
-          className="block w-full h-[220px] bg-[#080b0f] rounded-md border border-[#222933]"
+          className="block w-full h-auto max-h-[225px] bg-[var(--pz-well)] rounded-xl border border-[var(--pz-border)]"
         >
           <HorizontalGridLines ticks={ticks} mapY={mapY} xStart={52} xEnd={736} unit="mm" />
 
@@ -141,7 +151,7 @@ export function TimeSeriesChart({ dates, pixel, statusCode }: TimeSeriesChartPro
                 x={x}
                 y={226}
                 textAnchor={anchor}
-                fill="#8a96a8"
+                fill="var(--pz-muted)"
                 fontSize="10"
                 fontFamily="monospace"
               >
@@ -154,7 +164,7 @@ export function TimeSeriesChart({ dates, pixel, statusCode }: TimeSeriesChartPro
           {showClimate && (
             <Polyline
               points={expPts}
-              stroke="#eab308"
+              stroke="#d97706"
               strokeWidth={2}
               strokeDasharray="5,4"
             />
@@ -168,7 +178,7 @@ export function TimeSeriesChart({ dates, pixel, statusCode }: TimeSeriesChartPro
                 y1={Y_TOP}
                 x2={resPts[hoverIdx].x}
                 y2={Y_BOTTOM}
-                stroke="#3b9eeb"
+                stroke="var(--pz-accent)"
                 strokeDasharray="3,3"
                 strokeWidth="1"
               />
@@ -178,7 +188,7 @@ export function TimeSeriesChart({ dates, pixel, statusCode }: TimeSeriesChartPro
                   cy={resPts[hoverIdx].y}
                   r={4.5}
                   fill={residualColor}
-                  stroke="#eef2f6"
+                  stroke="var(--pz-surface)"
                   strokeWidth={1.5}
                 />
               )}
@@ -189,18 +199,37 @@ export function TimeSeriesChart({ dates, pixel, statusCode }: TimeSeriesChartPro
         {hoverIdx !== null && dates[hoverIdx] !== undefined && (
           <div
             data-testid="timeseries-tooltip"
-            className="flex flex-wrap items-center gap-4 text-xs font-mono tabular-nums bg-[#080b0f] px-3 py-1.5 rounded-md border border-[#222933] text-[#cbd5e1]"
+            className="flex flex-wrap items-center gap-4 text-xs font-mono tabular-nums bg-[var(--pz-well)] px-3 py-1.5 rounded-xl border border-[var(--pz-border)] text-[var(--pz-secondary)]"
           >
-            <span className="text-[#3b9eeb] font-semibold">{dates[hoverIdx]}</span>
+            <span className="text-[var(--pz-accent)] font-semibold">{dates[hoverIdx]}</span>
             <span>Bruto: {ts.observed_raw_mm[hoverIdx]} mm</span>
-            <span className="text-[#fde047]">
+            <span className="text-[var(--pz-warn-ink)]">
               Clima: {ts.expected_environmental_mm[hoverIdx]} mm
             </span>
-            <span className="text-[#eef2f6] font-semibold">
+            <span className="text-[var(--pz-text)] font-semibold">
               Residual: {ts.residual_anomaly_mm[hoverIdx]} mm
             </span>
           </div>
         )}
+
+        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] text-[11px] font-mono">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[var(--pz-muted)]">Mann-Kendall:</span>
+            <span className="text-[var(--pz-text)]">Sen&apos;s slope = {mk.sensSlope} mm/ciclo</span>
+            <span className="text-[var(--pz-accent)] font-semibold">p = {mk.pValue}</span>
+          </div>
+          <span
+            className={`px-2 py-0.5 rounded-md text-[10px] font-sans font-semibold border ${
+              mk.isSignificant
+                ? "pz-status-red"
+                : "bg-[var(--pz-surface)] text-[var(--pz-muted)] border-[var(--pz-border)]"
+            }`}
+          >
+            {mk.isSignificant
+              ? `Tendência Significativa (${mk.confidenceLevel})`
+              : "Estacionário (Ruído)"}
+          </span>
+        </div>
       </div>
     </ChartFrame>
   );

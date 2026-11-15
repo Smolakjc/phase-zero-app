@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: write
   packages: write
 
@@ -29,33 +30,38 @@ jobs:
 
       - name: Configure frontend environment
         env:
-          ENV_FILE_FRONT: ${{ vars.ENV_FILE_FRONT }}
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
+          ENV_FILE_FRONT="$(gh api "repos/${GITHUB_REPOSITORY}/actions/variables/ENV_FILE_FRONT" --jq .value)"
           if [ -z "$ENV_FILE_FRONT" ]; then
             echo 'Configure a variável Actions ENV_FILE_FRONT.' >&2
             exit 1
           fi
+          umask 077
           printf '%s' "$ENV_FILE_FRONT" > frontend/.env.production
-          if ! grep -q '^NEXT_PUBLIC_API_URL=https://api-phasezero\.smolak\.dpdns\.org$' frontend/.env.production; then
+          if ! grep -qE '^[[:space:]]*NEXT_PUBLIC_API_URL="?https?://[^"[:space:]]+"?[[:space:]]*$' frontend/.env.production \
+            || ! grep -qE '^[[:space:]]*NEXT_PUBLIC_USE_MOCK=[01][[:space:]]*$' frontend/.env.production; then
             rm -f frontend/.env.production
-            echo 'ENV_FILE_FRONT precisa apontar para https://api-phasezero.smolak.dpdns.org.' >&2
+            echo 'ENV_FILE_FRONT precisa definir NEXT_PUBLIC_API_URL e NEXT_PUBLIC_USE_MOCK.' >&2
             exit 1
           fi
 
       - name: Configure backend environment
         env:
-          ENV_FILE_BACK: ${{ vars.ENV_FILE_BACK }}
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
+          ENV_FILE_BACK="$(gh api "repos/${GITHUB_REPOSITORY}/actions/variables/ENV_FILE_BACK" --jq .value)"
           if [ -z "$ENV_FILE_BACK" ]; then
             echo 'Configure a variável Actions ENV_FILE_BACK.' >&2
             exit 1
           fi
+          umask 077
           printf '%s' "$ENV_FILE_BACK" > backend/.env.production
-          if ! grep -q '^CORS_ORIGIN=https://phasezero\.smolak\.dpdns\.org$' backend/.env.production; then
+          if ! grep -qE '^[[:space:]]*CORS_ORIGIN="?[^"[:space:]]+"?[[:space:]]*$' backend/.env.production; then
             rm -f backend/.env.production
-            echo 'ENV_FILE_BACK precisa permitir https://phasezero.smolak.dpdns.org em CORS_ORIGIN.' >&2
+            echo 'ENV_FILE_BACK precisa definir CORS_ORIGIN.' >&2
             exit 1
           fi
 

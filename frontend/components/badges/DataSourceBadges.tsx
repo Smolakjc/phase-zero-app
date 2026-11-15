@@ -1,16 +1,17 @@
 "use client";
 
 import React from "react";
-import { ScenarioMeta } from "@phase-zero/shared";
+import { AppeearsThermoPluvioAnalysis, ScenarioMeta } from "@phase-zero/shared";
 
 export interface DataSourceBadgesProps {
   meta: ScenarioMeta;
+  appeears?: AppeearsThermoPluvioAnalysis;
 }
 
 /**
  * Indicadores compactos de procedência física dos dados (`R-F4`).
  */
-export function DataSourceBadges({ meta }: DataSourceBadgesProps) {
+export function DataSourceBadges({ meta, appeears }: DataSourceBadgesProps) {
   return (
     <div
       data-testid="data-source-badges"
@@ -29,6 +30,23 @@ export function DataSourceBadges({ meta }: DataSourceBadgesProps) {
         />
         <span>NASA POWER: {meta.power_real_ok ? "Real" : "Fallback"}</span>
       </span>
+
+      {appeears && (
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border whitespace-nowrap ${
+            appeears.danger_tier === "RED"
+              ? "pz-status-red"
+              : appeears.danger_tier === "YELLOW"
+                ? "pz-status-yellow"
+                : "pz-status-green"
+          }`}
+        >
+          <span>
+            AppEEARS LST+Chuva (5a):{" "}
+            {appeears.is_future_prediction ? "Previsão" : "Ativo"}
+          </span>
+        </span>
+      )}
 
       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[var(--pz-well)] text-[var(--pz-secondary)] border border-[var(--pz-border)] whitespace-nowrap">
         <span>CMR:</span>

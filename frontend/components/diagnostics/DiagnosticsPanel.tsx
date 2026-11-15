@@ -1,7 +1,11 @@
 "use client";
 
 import React from "react";
-import { AnalysisRequest, AnalysisStatus } from "@phase-zero/shared";
+import {
+  AnalysisRequest,
+  AnalysisStatus,
+  AppeearsThermoPluvioAnalysis,
+} from "@phase-zero/shared";
 import { CoherenceSlider } from "./CoherenceSlider";
 import { CompensationToggles } from "./CompensationToggles";
 import { MetricsGrid } from "./MetricsGrid";
@@ -10,6 +14,7 @@ import { ThresholdLegend } from "./ThresholdLegend";
 
 export interface DiagnosticsPanelProps {
   status: AnalysisStatus;
+  appeears?: AppeearsThermoPluvioAnalysis;
   params: AnalysisRequest;
   minCoherenceDraft: number;
   onSetParam: <K extends keyof AnalysisRequest>(key: K, value: AnalysisRequest[K]) => void;
@@ -18,6 +23,7 @@ export interface DiagnosticsPanelProps {
 
 export function DiagnosticsPanel({
   status,
+  appeears,
   params,
   minCoherenceDraft,
   onSetParam,
@@ -35,7 +41,7 @@ export function DiagnosticsPanel({
         <span className="text-[11px] text-[var(--pz-muted)]">Pixel de referência</span>
       </div>
 
-      <StatusCard status={status} />
+      <StatusCard status={status} appeears={appeears} />
 
       <div className="p-3 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] space-y-2.5">
         <div className="text-xs font-semibold text-[var(--pz-secondary)]">

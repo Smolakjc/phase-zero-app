@@ -14,6 +14,23 @@ export const PHASE_TO_MM_NISAR_L = -LAMBDA_NISAR_L_MM / (4.0 * Math.PI);
 /** Dimensão lateral da malha quadrada de pixels (18×18 = 324 blocos de 80m×80m). */
 export const GRID_SIZE = 18;
 
+/** Limite máximo de anos para análise climática e predição (15 anos). */
+export const MAX_ANALYSIS_WINDOW_YEARS = 15;
+
+/** Retorna a janela padrão máxima de 15 anos a partir de uma data final de referência. */
+export function getFifteenYearWindow(endIso = "2026-11-15"): {
+  start_date: string;
+  end_date: string;
+} {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(endIso);
+  const endYear = match ? Number(match[1]) : 2026;
+  const startYear = endYear - MAX_ANALYSIS_WINDOW_YEARS;
+  return {
+    start_date: `${startYear}-01-01`,
+    end_date: endIso,
+  };
+}
+
 /** Passo angular aproximado (~80 m) em graus de latitude/longitude por pixel. */
 export const PIXEL_STEP_DEG = 0.00072;
 

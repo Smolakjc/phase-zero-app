@@ -4,6 +4,7 @@ import {
   AnalysisResponse,
   AnalysisResponseSchema,
   classifyCustomGridCell,
+  evaluateThermoPluvioShockAndFiveYearForecast,
   GRID_SIZE,
   LAMBDA_NISAR_L_MM,
   LAMBDA_SENTINEL_C_MM,
@@ -243,9 +244,52 @@ export async function analyze(
       }
     }
 
+    const appeearsMock = evaluateThermoPluvioShockAndFiveYearForecast({
+      lat,
+      lon,
+      start_date: parsedReq.data.start_date,
+      end_date: parsedReq.data.end_date,
+      scenario_id: parsedReq.data.scenario_id,
+      custom_name: parsedReq.data.custom_name,
+      current_climate: {
+        dates: baseMock.dates,
+        ts: baseMock.grid_pixels[0]?.pixel_time_series.thermo_loop.map((t) => t.surface_temp_c) ?? [],
+        sw: new Array(baseMock.dates.length).fill(210),
+        precip: new Array(baseMock.dates.length).fill(8.5),
+        rh: new Array(baseMock.dates.length).fill(68),
+        ps: new Array(baseMock.dates.length).fill(96),
+      },
+      appeears_live_ok: false,
+    });
+
+    if (appeearsMock.is_future_prediction) {
+      if (appeearsMock.danger_tier === "RED") {
+        mockStatus = {
+          code: "RED",
+          label: "ESCALATING SURFACE ANOMALY",
+          description:
+            "Previsão Quinquenal AppEEARS (5 Anos): Discrepância severa com mudança brusca quente-frio e chuva intensa.",
+          residual_trend_mm_per_pass: -1.85,
+          acceleration_index_mm: -11.2,
+          max_weighted_anomaly_score: 31.5,
+        };
+      } else if (appeearsMock.danger_tier === "GREEN") {
+        mockStatus = {
+          code: "GREEN",
+          label: "EXPECTED ENVIRONMENTAL MOTION",
+          description:
+            "Previsão Quinquenal AppEEARS (5 Anos): Comportamento esperado com diferença quase nula nos 5 anos anteriores.",
+          residual_trend_mm_per_pass: -0.06,
+          acceleration_index_mm: 0.0,
+          max_weighted_anomaly_score: 1.2,
+        };
+      }
+    }
+
     const adjusted: AnalysisResponse = {
       ...baseMock,
       status: mockStatus,
+      appeears_thermo_pluvio: appeearsMock,
       scenario_meta: {
         ...baseMock.scenario_meta,
         lat,

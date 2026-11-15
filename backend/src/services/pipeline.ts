@@ -3,6 +3,7 @@ import {
   AnalysisRequestInput,
   AnalysisRequestSchema,
   AnalysisResponse,
+  AppeearsThermoPluvioAnalysis,
   classifyCustomGridCell,
   ClimateResult,
   fuseRealDemWithStructure,
@@ -25,6 +26,10 @@ import {
 } from "../domain/presets.js";
 import { arange, clip, linspace, mean, round2, roundN, zeros } from "../lib/math.js";
 import { computeMannKendall } from "../lib/statisticalTrend.js";
+import {
+  GetAppeearsAnalysisInput,
+  getAppeearsThermoPluvioAnalysis,
+} from "./appeears.js";
 import { classify, computeAcceleration, computeSlope, maxScore } from "./classifier.js";
 import { searchGranules } from "./cmr.js";
 import { streamH5Slice } from "./h5Stream.js";
@@ -48,6 +53,7 @@ export interface PipelineDependencies {
     lon: number,
     size: number,
   ) => Promise<H5SliceResult>;
+  appeears: (input: GetAppeearsAnalysisInput) => Promise<AppeearsThermoPluvioAnalysis>;
 }
 
 const defaultDependencies: PipelineDependencies = {
@@ -55,6 +61,7 @@ const defaultDependencies: PipelineDependencies = {
   terrain: getTerrainGrid,
   cmr: searchGranules,
   h5: streamH5Slice,
+  appeears: getAppeearsThermoPluvioAnalysis,
 };
 
 function formatCoordLikePython(val: number): string {
@@ -130,9 +137,20 @@ export async function runPhaseZeroPipeline(
   const hydroTropoMm = tIdx.map((i) => 1.8 * (psKpa[i] - meanPs));
   const solidTidesMm = tIdx.map((t) => 2.8 * Math.cos(t * 1.7));
 
-  const [elevGrid, cmrGranules] = await Promise.all([
+  const [elevGrid, cmrGranules, appeearsAnalysis] = await Promise.all([
     deps.terrain(lat, lon, gridSize, isCustom),
     deps.cmr(lat, lon, req.start_date, req.end_date),
+    deps.appeears({
+      lat,
+      lon,
+      start_date: req.start_date,
+      end_date: req.end_date,
+      scenario_id: req.scenario_id,
+      custom_name: req.custom_name,
+      earthdata_token: req.earthdata_token,
+      current_climate: climate,
+      enable_live_fetch: customDeps.power === undefined && powerRealOk,
+    }),
   ]);
 
   let h5StreamedOk = false;
@@ -290,6 +308,20 @@ export async function runPhaseZeroPipeline(
       customGeotechLabel = `Estrutura de Barragem Estável DEM (ΔH=${roundN(elevSpan, 1)}m) + Clima NASA POWER (🟢 Estável)`;
     }
 
+    if (appeearsAnalysis.is_future_prediction) {
+      if (appeearsAnalysis.danger_tier === "RED") {
+        customRate = Math.min(customRate, -1.78);
+        customAcc = Math.min(customAcc, -0.095);
+        customGeotechLabel =
+          "Previsão Quinquenal AppEEARS (5 Anos): Choque Quente-Frio + Chuva Discrepante (🔴 Extremamente Perigoso)";
+      } else if (appeearsAnalysis.danger_tier === "GREEN") {
+        customRate = -0.05;
+        customAcc = 0.0;
+        customGeotechLabel =
+          "Previsão Quinquenal AppEEARS (5 Anos): Comportamento Esperado / Diferença Quase Nula (🟢 Não Perigoso)";
+      }
+    }
+
     if (!matchedCustomSite && isGenericLabel) {
       targetName = `Busca Live NASA: Barragem Personalizada (${formatCoordLikePython(lat)}, ${formatCoordLikePython(lon)})`;
     }
@@ -398,8 +430,17 @@ export async function runPhaseZeroPipeline(
           swW = 0.04;
         }
 
-        const rate = preset.anomaly_rate_mm_per_step;
-        const acc = preset.accel_factor;
+        let rate = preset.anomaly_rate_mm_per_step;
+        let acc = preset.accel_factor;
+        if (appeearsAnalysis.is_future_prediction) {
+          if (appeearsAnalysis.danger_tier === "RED") {
+            rate = Math.min(rate, -1.78);
+            acc = Math.min(acc, -0.095);
+          } else if (appeearsAnalysis.danger_tier === "GREEN") {
+            rate = -0.05;
+            acc = 0.0;
+          }
+        }
         trueAnomSeries = tIdx.map((t) => {
           if (t <= 3) return 0.0;
           const dt = t - 3;
@@ -530,6 +571,7 @@ export async function runPhaseZeroPipeline(
     dates,
     grid_pixels: processedPixels,
     disclaimer: OFFICIAL_DISCLAIMER,
+    appeears_thermo_pluvio: appeearsAnalysis,
   };
 }
 

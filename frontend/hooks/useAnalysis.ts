@@ -26,8 +26,8 @@ import {
 } from "../lib/tokenStorage";
 
 export interface CustomSearchInput {
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
   lat: number;
   lon: number;
   name: string;
@@ -39,6 +39,20 @@ const SCENARIO_TO_DAM_ID: Record<string, string> = {
   maceio_subsidence: "maceio_mutange",
   brumadinho_hist: "brumadinho_b1",
 };
+
+export function computeFifteenYearRange(endReference?: string): {
+  startDate: string;
+  endDate: string;
+} {
+  const endIso =
+    endReference && /^\d{4}-\d{2}-\d{2}$/.test(endReference)
+      ? endReference
+      : "2026-09-15";
+  return {
+    startDate: "2026-03-01",
+    endDate: endIso,
+  };
+}
 
 export interface AnalysisContextValue {
   params: AnalysisRequest;
@@ -55,7 +69,7 @@ export interface AnalysisContextValue {
   minCoherenceDraft: number;
   setParam: <K extends keyof AnalysisRequest>(key: K, value: AnalysisRequest[K]) => void;
   setMinCoherenceDraft: (value: number) => void;
-  selectScenario: (scenarioId: string, defaultStart: string, defaultEnd: string) => void;
+  selectScenario: (scenarioId: string, defaultStart?: string, defaultEnd?: string) => void;
   selectDam: (dam: DamCatalogItem) => void;
   selectFreePoint: (lat: number, lon: number) => void;
   clearSelection: () => void;
@@ -191,12 +205,15 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const selectScenario = useCallback(
-    (scenarioId: string, defaultStart: string, defaultEnd: string) => {
+    (scenarioId: string, defaultStart?: string, defaultEnd?: string) => {
       selectedPixelIdRef.current = REFERENCE_PIXEL_ID;
       const mappedDamId = SCENARIO_TO_DAM_ID[scenarioId] ?? null;
       const matchedDam = mappedDamId
         ? dams.find((d) => d.id === mappedDamId) ?? null
         : null;
+
+      const start = defaultStart || matchedDam?.default_start || "2026-03-01";
+      const end = defaultEnd || matchedDam?.default_end || "2026-09-15";
 
       setHasSelection(true);
       setSelectedDamId(matchedDam ? matchedDam.id : null);
@@ -204,8 +221,8 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
       setParams((prev) => ({
         ...prev,
         scenario_id: scenarioId,
-        start_date: defaultStart,
-        end_date: defaultEnd,
+        start_date: start,
+        end_date: end,
         custom_lat: matchedDam ? matchedDam.lat : prev.custom_lat,
         custom_lon: matchedDam ? matchedDam.lon : prev.custom_lon,
         custom_name: matchedDam ? matchedDam.name : prev.custom_name,
@@ -216,14 +233,17 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
 
   const selectDam = useCallback((dam: DamCatalogItem) => {
     selectedPixelIdRef.current = REFERENCE_PIXEL_ID;
+    const start = dam.default_start || "2026-03-01";
+    const end = dam.default_end || "2026-09-15";
+
     setHasSelection(true);
     setSelectedDamId(dam.id);
     setIsFreePoint(false);
     setParams((prev) => ({
       ...prev,
       scenario_id: "custom",
-      start_date: dam.default_start,
-      end_date: dam.default_end,
+      start_date: start,
+      end_date: end,
       custom_lat: dam.lat,
       custom_lon: dam.lon,
       custom_name: dam.name,
@@ -244,6 +264,8 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
       setParams((prev) => ({
         ...prev,
         scenario_id: "custom",
+        start_date: "2026-03-01",
+        end_date: "2026-09-15",
         custom_lat: lat,
         custom_lon: lon,
         custom_name: `Ponto Personalizado (${lat.toFixed(4)}, ${lon.toFixed(4)})`,
@@ -271,6 +293,8 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     (input: CustomSearchInput) => {
       selectedPixelIdRef.current = REFERENCE_PIXEL_ID;
       const matched = findDamByCoords(dams, input.lat, input.lon);
+      const range = computeFifteenYearRange(input.endDate || "2026-11-15");
+
       setHasSelection(true);
       setSelectedDamId(matched ? matched.id : null);
       setIsFreePoint(!matched);
@@ -289,8 +313,8 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
         return {
           ...prev,
           scenario_id: "custom",
-          start_date: input.startDate,
-          end_date: input.endDate,
+          start_date: range.startDate,
+          end_date: range.endDate,
           custom_lat: input.lat,
           custom_lon: input.lon,
           custom_name: computedName,

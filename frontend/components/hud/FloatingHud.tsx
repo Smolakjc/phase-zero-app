@@ -118,13 +118,6 @@ export function FloatingHud({
   const [customName, setCustomName] = useState<string>(initialName);
   const [customLat, setCustomLat] = useState<string>(String(initialLat));
   const [customLon, setCustomLon] = useState<string>(String(initialLon));
-  const [sDate, setSDate] = useState<string>(startDate);
-  const [eDate, setEDate] = useState<string>(endDate);
-
-  useEffect(() => {
-    setSDate(startDate);
-    setEDate(endDate);
-  }, [startDate, endDate]);
 
   useEffect(() => {
     setCustomLat(String(initialLat));
@@ -169,18 +162,14 @@ export function FloatingHud({
   }, [dams, query, statusFilter]);
 
   const normLat = customLat.trim().replace(",", ".");
-  const normLon = customLon.trim().replace(",", ".");
+   const normLon = customLon.trim().replace(",", ".");
   const parsedLat = Number(normLat);
   const parsedLon = Number(normLon);
-  const isDateValid =
-    /^\d{4}-\d{2}-\d{2}$/.test(sDate) &&
-    /^\d{4}-\d{2}-\d{2}$/.test(eDate) &&
-    sDate < eDate;
   const isLatValid =
     normLat !== "" && Number.isFinite(parsedLat) && parsedLat >= -90 && parsedLat <= 90;
   const isLonValid =
     normLon !== "" && Number.isFinite(parsedLon) && parsedLon >= -180 && parsedLon <= 180;
-  const canSubmitCustom = isDateValid && isLatValid && isLonValid && !loading;
+  const canSubmitCustom = isLatValid && isLonValid && !loading;
 
   const hasValidToken = isValidEarthdataToken(earthdataToken);
 
@@ -188,8 +177,6 @@ export function FloatingHud({
     e.preventDefault();
     if (!canSubmitCustom) return;
     onSearchCustom({
-      startDate: sDate,
-      endDate: eDate,
       lat: parsedLat,
       lon: parsedLon,
       name: customName,
@@ -462,33 +449,17 @@ export function FloatingHud({
                   </label>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <label className="block space-y-1 text-xs">
-                    <span className="text-[var(--pz-muted)] font-medium">Início</span>
-                    <input
-                      type="date"
-                      aria-label="Data de início"
-                      value={sDate}
-                      onChange={(e) => setSDate(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] focus:border-[var(--pz-accent)] font-mono tabular-nums text-xs text-[var(--pz-text)] focus:outline-none"
-                    />
-                  </label>
-                  <label className="block space-y-1 text-xs">
-                    <span className="text-[var(--pz-muted)] font-medium">Fim</span>
-                    <input
-                      type="date"
-                      aria-label="Data de fim"
-                      value={eDate}
-                      onChange={(e) => setEDate(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] focus:border-[var(--pz-accent)] font-mono tabular-nums text-xs text-[var(--pz-text)] focus:outline-none"
-                    />
-                  </label>
+                <div className="p-2.5 rounded-xl bg-[var(--pz-surface)] border border-[var(--pz-border)] text-[11px] flex items-center justify-between">
+                  <span className="text-[var(--pz-muted)]">Período de Análise:</span>
+                  <span className="font-mono font-semibold text-[var(--pz-text)]">
+                    Máximo de 15 Anos
+                  </span>
                 </div>
 
-                {(!isDateValid || !isLatValid || !isLonValid) && (
+                {(!isLatValid || !isLonValid) && (
                   <p role="alert" className="inline-flex items-center gap-1.5 text-xs text-rose-500">
                     <AlertTriangleIcon className="w-3.5 h-3.5 shrink-0" />
-                    <span>Verifique coordenadas (-90..90 / -180..180) e janela temporal.</span>
+                    <span>Verifique as coordenadas (-90..90 / -180..180).</span>
                   </p>
                 )}
 

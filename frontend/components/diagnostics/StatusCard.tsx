@@ -1,7 +1,11 @@
 "use client";
 
 import React from "react";
-import { AnalysisStatus, StatusCode } from "@phase-zero/shared";
+import {
+  AnalysisStatus,
+  AppeearsThermoPluvioAnalysis,
+  StatusCode,
+} from "@phase-zero/shared";
 import {
   STATUS_CARD_CLASSES,
   STATUS_TIER_LABEL,
@@ -15,6 +19,7 @@ import {
 
 export interface StatusCardProps {
   status: AnalysisStatus;
+  appeears?: AppeearsThermoPluvioAnalysis;
 }
 
 const STATUS_ICON: Record<StatusCode, React.ReactNode> = {
@@ -23,7 +28,7 @@ const STATUS_ICON: Record<StatusCode, React.ReactNode> = {
   RED: <AlertOctagonIcon className="w-4 h-4 text-[var(--pz-danger-ink)] shrink-0" />,
 };
 
-export function StatusCard({ status }: StatusCardProps) {
+export function StatusCard({ status, appeears }: StatusCardProps) {
   const cleanLabel = stripDecorativeEmojis(status.label);
   const cleanDesc = stripDecorativeEmojis(status.description);
 
@@ -47,6 +52,20 @@ export function StatusCard({ status }: StatusCardProps) {
         {cleanLabel}
       </div>
       <p className="text-xs mt-1 leading-relaxed opacity-95">{cleanDesc}</p>
+
+      {appeears && (
+        <div className="mt-2.5 pt-2 border-t border-[var(--pz-border)] space-y-1 text-[11px]">
+          <div className="font-bold">{appeears.core_question}</div>
+          <div className="font-mono font-semibold">
+            {appeears.verdict_short}
+          </div>
+          <div className="opacity-90 font-mono">
+            Quente→Frio: {appeears.current_or_predicted_metrics.max_hot_to_cold_drop_c}°C · Chuva:{" "}
+            {appeears.current_or_predicted_metrics.precip_total_mm} mm · Discrepância 5a:{" "}
+            {appeears.five_year_baseline.discrepancy_score}/100
+          </div>
+        </div>
+      )}
 
       {status.significance && (
         <div className="mt-2.5 pt-2 border-t border-[var(--pz-border)] flex flex-wrap items-center justify-between gap-1.5 text-[11px]">

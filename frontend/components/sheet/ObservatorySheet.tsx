@@ -7,6 +7,7 @@ import { stripDecorativeEmojis } from "../../lib/colors";
 import { DataSourceBadges } from "../badges/DataSourceBadges";
 import { ThermoLoopChart } from "../charts/ThermoLoopChart";
 import { TimeSeriesChart } from "../charts/TimeSeriesChart";
+import { AppeearsThermoPluvioPanel } from "../diagnostics/AppeearsThermoPluvioPanel";
 import { DiagnosticsPanel } from "../diagnostics/DiagnosticsPanel";
 import {
   CloseIcon,
@@ -30,7 +31,7 @@ export interface ObservatorySheetProps {
     value: AnalysisRequest[K],
   ) => void;
   onSetMinCoherenceDraft: (val: number) => void;
-  onUpdatePeriod: (start: string, end: string) => void;
+  onUpdatePeriod?: (start: string, end: string) => void;
   onSelectPixel: (px: GridPixel) => void;
   onClose: () => void;
 }
@@ -42,33 +43,23 @@ export function ObservatorySheet({
   params,
   selectedPixel,
   isFreePoint,
-  loading,
+  loading: _loading,
   minCoherenceDraft,
   resolvedTheme,
   onSetParam,
   onSetMinCoherenceDraft,
-  onUpdatePeriod,
+  onUpdatePeriod: _onUpdatePeriod,
   onSelectPixel,
   onClose,
 }: ObservatorySheetProps) {
   const [expanded, setExpanded] = useState<boolean>(false);
   const [mobileTab, setMobileTab] = useState<MobileSheetTab>("diagnostics");
-  const [startDraft, setStartDraft] = useState<string>(params.start_date);
-  const [endDraft, setEndDraft] = useState<string>(params.end_date);
-
-  useEffect(() => {
-    setStartDraft(params.start_date);
-    setEndDraft(params.end_date);
-  }, [params.start_date, params.end_date]);
 
   const cleanLocationName = stripDecorativeEmojis(data.scenario_meta.name);
-  const periodValid = Boolean(startDraft && endDraft && startDraft < endDraft);
-
-  const handlePeriodSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!periodValid) return;
-    onUpdatePeriod(startDraft, endDraft);
-  };
+  const yearsList = data.appeears_thermo_pluvio?.five_year_baseline.years_analyzed ?? [];
+  const yearsCount = yearsList.length > 0 ? yearsList.length : 15;
+  const firstYear = yearsList[0] ?? data.dates[0]?.slice(0, 4) ?? "2011";
+  const lastYear = yearsList[yearsList.length - 1] ?? data.dates[data.dates.length - 1]?.slice(0, 4) ?? "2026";
 
   return (
     <section
@@ -115,42 +106,18 @@ export function ObservatorySheet({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <form
-                onSubmit={handlePeriodSubmit}
-                className="flex flex-wrap items-center gap-1.5 bg-[var(--pz-well)] border border-[var(--pz-border)] rounded-full px-2.5 py-1 text-xs"
+              <div
+                data-testid="fifteen-year-range-indicator"
+                className="flex items-center gap-2 bg-[var(--pz-well)] border border-[var(--pz-border)] rounded-full px-3 py-1.5 text-xs"
               >
-                <label className="inline-flex items-center gap-1 text-[var(--pz-muted)]">
-                  <span>De</span>
-                  <input
-                    type="date"
-                    aria-label="Início da janela temporal"
-                    value={startDraft}
-                    onChange={(e) => setStartDraft(e.target.value)}
-                    className="bg-transparent font-mono tabular-nums text-[11px] text-[var(--pz-text)] focus:outline-none"
-                  />
-                </label>
-                <span className="text-[var(--pz-border-strong)]" aria-hidden="true">
-                  /
+                <span className="w-2 h-2 rounded-full bg-[var(--pz-accent)]" aria-hidden="true" />
+                <span className="font-semibold text-[var(--pz-text)]">
+                  Série Histórica: {yearsCount} Anos
                 </span>
-                <label className="inline-flex items-center gap-1 text-[var(--pz-muted)]">
-                  <span>Até</span>
-                  <input
-                    type="date"
-                    aria-label="Fim da janela temporal"
-                    value={endDraft}
-                    onChange={(e) => setEndDraft(e.target.value)}
-                    className="bg-transparent font-mono tabular-nums text-[11px] text-[var(--pz-text)] focus:outline-none"
-                  />
-                </label>
-                <button
-                  type="submit"
-                  disabled={!periodValid || loading}
-                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] disabled:opacity-40 text-[11px] font-semibold transition-opacity cursor-pointer"
-                >
-                  <RefreshIcon className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
-                  <span>Atualizar</span>
-                </button>
-              </form>
+                <span className="font-mono tabular-nums text-[var(--pz-muted)]">
+                  ({firstYear}–{lastYear})
+                </span>
+              </div>
 
               <button
                 type="button"
@@ -185,7 +152,10 @@ export function ObservatorySheet({
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <DataSourceBadges meta={data.scenario_meta} />
+            <DataSourceBadges
+              meta={data.scenario_meta}
+              appeears={data.appeears_thermo_pluvio}
+            />
 
             {/* Navegação por abas em telas menores que lg */}
             <div
@@ -219,8 +189,14 @@ export function ObservatorySheet({
           </div>
         </header>
 
-        {/* Corpo rolável da folha com grade 4-em-1 em desktop */}
+        {/* Corpo rolável da folha com grade 4-em-1 em desktop + Painel AppEEARS Termo-Pluviométrico */}
         <div className="overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-4">
+          {data.appeears_thermo_pluvio && (
+            <AppeearsThermoPluvioPanel
+              analysis={data.appeears_thermo_pluvio}
+            />
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
             <div
               className={`lg:col-span-4 xl:col-span-3 ${
@@ -229,6 +205,7 @@ export function ObservatorySheet({
             >
               <DiagnosticsPanel
                 status={data.status}
+                appeears={data.appeears_thermo_pluvio}
                 params={params}
                 minCoherenceDraft={minCoherenceDraft}
                 onSetParam={onSetParam}

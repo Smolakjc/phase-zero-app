@@ -55,6 +55,20 @@ Documentação técnica das APIs externas integradas ao sistema, detalhando obje
 
 ---
 
+### 1.5 NASA AppEEARS (Anomalia Termo-Pluviométrica e Previsão Quinquenal)
+* **Objetivo:** Consumo dedicado da API NASA AppEEARS (Application for Extracting and Exploring Analysis Ready Samples) voltado a anomalias de temperatura acopladas à precipitação. A definição de anomalia do sistema responde diretamente à pergunta: *"É perigoso essa temperatura com o índice pluviométrico no período?"*.
+* **Fundamento físico e geotécnico:** O maior índice de rompimento de barragens não vem da temperatura isolada, mas da mudança brusca quente-frio especificamente combinada com chuvas. O aquecimento prévio dilata e resseca a camada superficial do maciço, abrindo microfissuras de tração; quando entra uma frente fria chuvosa, a queda abrupta de temperatura contrai a superfície e abre as trincas por onde a chuva infiltra rapidamente, disparando a poro-pressão interna e induzindo liquefação estática ou piping.
+* **Previsão de períodos futuros (comparativo de 5 anos):** Quando o usuário consulta um período futuro (por exemplo, uma semana específica em 2027), o motor extrai e compara exatamente a mesma semana nos 5 anos passados (`Y-5` até `Y-1`). Se nos 5 anos anteriores ocorreu a mesma temperatura com o mesmo índice pluviométrico (diferença para mais ou para menos quase nula), o período é classificado como comportamento esperado e seguro. Se a diferença nos 5 anos apresentar discrepância acentuada para mais ou para menos com inversão quente-frio chuvosa, o sistema alerta que o período é extremamente perigoso para a barragem.
+* **Relação com barragens rompidas e em alerta crítico:** O módulo cruza a assinatura termo-pluviométrica com barragens que já romperam no catálogo do sistema (Brumadinho B1 em 2019, Fundão em 2015, Miraí em 2007), barragens em alerta crítico ANM Nível 3 no sistema (Gongo Soco / Sul Superior, B3/B4 Maravilhas, Forquilha I/II/III) e casos reais externos comprovados (Derna na Líbia em 2023 e Edenville nos EUA em 2020).
+* **Produtos e camadas consultadas:**
+  * `MOD11A1.061`: MODIS Terra Land Surface Temperature (`LST_Day_1km` e `LST_Night_1km`), medindo o pico quente diurno e a queda térmica abrupta na chegada de frentes frias.
+  * `GPM_3IMERGDF.07` e `NASA POWER PRECTOTCORR`: Precipitação diária acumulada e máxima para cálculo do índice acoplado quente-frio com chuva.
+* **Arquivos no projeto:** `backend/src/services/appeears.ts`, `packages/shared/src/appeearsThermoPluvio.ts`, `frontend/components/diagnostics/AppeearsThermoPluvioPanel.tsx`
+* **Endpoint base:** `https://appeears.earthdatacloud.nasa.gov/api/product/MOD11A1.061`
+* **Documentação oficial:** https://appeears.earthdatacloud.nasa.gov/api/
+
+---
+
 ## 2. APIs de Mapas e Interface (Frontend)
 
 ### 2.1 OpenStreetMap Tiles
@@ -133,7 +147,8 @@ O PHASE-ZERO integra, utiliza e referencia os seguintes recursos oficiais listad
 
 #### 3.3.3 AppEEARS (Application for Extracting and Exploring Analysis Ready Samples)
 * **Link oficial:** https://appeears.earthdatacloud.nasa.gov/
-* **Objetivo e Uso no Projeto:** Padrão arquitetural da NASA Earthdata Cloud para extração de amostras temporais e espaciais pontuais, seguido pelo módulo de streaming de dados HDF5 do backend.
+* **Objetivo e Uso no Projeto:** Extração de séries de temperatura superficial (`MOD11A1.061` `LST_Day_1km` / `LST_Night_1km`) e acoplamento termo-pluviométrico para responder se a mudança brusca quente-frio com chuva no período é perigosa, além de prever janelas futuras (como uma semana específica em 2027) comparando a discrepância nos 5 anos anteriores e relacionando a casos reais de ruptura e alerta crítico.
+* **Arquivos no projeto:** `backend/src/services/appeears.ts`, `packages/shared/src/appeearsThermoPluvio.ts`, `frontend/components/diagnostics/AppeearsThermoPluvioPanel.tsx`.
 
 #### 3.3.4 Climate Data Online (CDO - NOAA NCEI)
 * **Link oficial:** https://www.ncei.noaa.gov/cdo-web/

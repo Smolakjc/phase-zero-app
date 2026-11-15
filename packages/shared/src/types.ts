@@ -3,11 +3,18 @@ import {
   AnalysisRequestSchema,
   AnalysisResponseSchema,
   AnalysisStatusSchema,
+  AppeearsThermoPluvioAnalysisSchema,
+  CorrelatedDamCategorySchema,
+  CorrelatedDamEvidenceSchema,
   DamCatalogItemSchema,
   DamPhysicalStatusSchema,
   DamsResponseSchema,
+  FiveYearDiscrepancyDirectionSchema,
+  FiveYearDiscrepancyTrendSchema,
+  FiveYearHistoricalWindowSchema,
   GridPixelSchema,
   LosVectorSchema,
+  MonthlyThermoPluvioDataSchema,
   PixelTimeSeriesSchema,
   ScenarioItemSchema,
   ScenarioMetaSchema,
@@ -19,6 +26,13 @@ import {
 
 export type StatusCode = z.infer<typeof StatusCodeSchema>;
 export type StatisticalSignificance = z.infer<typeof StatisticalSignificanceSchema>;
+export type FiveYearDiscrepancyDirection = z.infer<typeof FiveYearDiscrepancyDirectionSchema>;
+export type MonthlyThermoPluvioData = z.infer<typeof MonthlyThermoPluvioDataSchema>;
+export type FiveYearHistoricalWindow = z.infer<typeof FiveYearHistoricalWindowSchema>;
+export type CorrelatedDamCategory = z.infer<typeof CorrelatedDamCategorySchema>;
+export type CorrelatedDamEvidence = z.infer<typeof CorrelatedDamEvidenceSchema>;
+export type FiveYearDiscrepancyTrend = z.infer<typeof FiveYearDiscrepancyTrendSchema>;
+export type AppeearsThermoPluvioAnalysis = z.infer<typeof AppeearsThermoPluvioAnalysisSchema>;
 export type AnalysisRequest = z.infer<typeof AnalysisRequestSchema>;
 export type AnalysisRequestInput = z.input<typeof AnalysisRequestSchema>;
 export type ThermoLoopPoint = z.infer<typeof ThermoLoopPointSchema>;

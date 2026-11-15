@@ -23,6 +23,7 @@ env/
 .env
 .env.local
 .env.*.local
+**/.env.production
 nasa_token.txt
 
 # --- Arquivos Brutos Gigantes da NASA (>100MB bloqueiam o GitHub) ---

@@ -24,6 +24,7 @@ import {
   getPresetOrDefault,
   matchKnownDamSite,
 } from "../domain/presets.js";
+import { config as defaultConfig } from "../config.js";
 import { arange, clip, linspace, mean, round2, roundN, zeros } from "../lib/math.js";
 import { computeMannKendall } from "../lib/statisticalTrend.js";
 import {
@@ -137,6 +138,13 @@ export async function runPhaseZeroPipeline(
   const hydroTropoMm = tIdx.map((i) => 1.8 * (psKpa[i] - meanPs));
   const solidTidesMm = tIdx.map((t) => 2.8 * Math.cos(t * 1.7));
 
+  const effectiveToken =
+    req.earthdata_token && req.earthdata_token.trim().length > 20
+      ? req.earthdata_token.trim()
+      : defaultConfig.EARTHDATA_TOKEN && defaultConfig.EARTHDATA_TOKEN.trim().length > 20
+        ? defaultConfig.EARTHDATA_TOKEN.trim()
+        : null;
+
   const [elevGrid, cmrGranules, appeearsAnalysis] = await Promise.all([
     deps.terrain(lat, lon, gridSize, isCustom),
     deps.cmr(lat, lon, req.start_date, req.end_date),
@@ -147,7 +155,7 @@ export async function runPhaseZeroPipeline(
       end_date: req.end_date,
       scenario_id: req.scenario_id,
       custom_name: req.custom_name,
-      earthdata_token: req.earthdata_token,
+      earthdata_token: effectiveToken,
       current_climate: climate,
       enable_live_fetch: customDeps.power === undefined && powerRealOk,
     }),
@@ -159,14 +167,13 @@ export async function runPhaseZeroPipeline(
   if (
     isCustom &&
     cmrGranules.length > 0 &&
-    req.earthdata_token &&
-    req.earthdata_token.trim().length > 20
+    effectiveToken
   ) {
     try {
       const latestGranule = cmrGranules[cmrGranules.length - 1];
       streamedSlice = await deps.h5(
         latestGranule.h5_url,
-        req.earthdata_token,
+        effectiveToken,
         lat,
         lon,
         gridSize,

@@ -1,16 +1,14 @@
 "use client";
 
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
-import { DamCatalogItem, DamPhysicalStatus, ScenarioItem } from "@phase-zero/shared";
+import { DamCatalogItem, DamPhysicalStatus } from "@phase-zero/shared";
 import { CustomSearchInput } from "../../hooks/useAnalysis";
 import { ResolvedTheme, ThemePreference } from "../../hooks/useTheme";
 import { stripDecorativeEmojis } from "../../lib/colors";
-import { isValidEarthdataToken } from "../../lib/tokenStorage";
 import {
   AlertTriangleIcon,
   BrandMarkIcon,
   CrosshairIcon,
-  KeyIcon,
   LayersIcon,
   MonitorIcon,
   MoonIcon,
@@ -22,9 +20,7 @@ import {
 import { MapStyleMode } from "../map/ObservatoryMap";
 
 export interface FloatingHudProps {
-  scenarios: readonly ScenarioItem[];
-  activeScenarioId: string;
-  hasSelection: boolean;
+  hasSelection?: boolean;
   dams: readonly DamCatalogItem[];
   selectedDamId: string | null;
   startDate: string;
@@ -32,14 +28,12 @@ export interface FloatingHudProps {
   initialLat: number;
   initialLon: number;
   initialName: string;
-  earthdataToken: string;
   loading: boolean;
   revalidating: boolean;
   themePreference: ThemePreference;
   resolvedTheme: ResolvedTheme;
   styleMode: MapStyleMode;
   terrain3D: boolean;
-  onSelectScenario: (id: string, defaultStart: string, defaultEnd: string) => void;
   onSelectDam: (dam: DamCatalogItem) => void;
   onSearchCustom: (input: CustomSearchInput) => void;
   onFlyRegion: (center: [number, number], zoom: number) => void;
@@ -47,7 +41,6 @@ export interface FloatingHudProps {
   onSetThemePreference: (pref: ThemePreference) => void;
   onChangeStyleMode: (mode: MapStyleMode) => void;
   onToggleTerrain3D: () => void;
-  onOpenTokenModal: () => void;
 }
 
 type StatusFilter = "all" | DamPhysicalStatus;
@@ -66,24 +59,7 @@ const REGION_PRESETS: readonly {
   { id: "norte", label: "Norte", center: [-4.8, -52.5], zoom: 5 },
 ];
 
-const SCENARIO_SHORT_LABEL: Record<string, string> = {
-  itaipu_normal: "Itaipu (PR)",
-  gongo_soco_active: "Gongo Soco (MG)",
-  maceio_subsidence: "Maceió (AL)",
-  brumadinho_hist: "Brumadinho (MG)",
-};
-
-const SCENARIO_DOT_HEX: Record<string, string> = {
-  itaipu_normal: "#10b981",
-  gongo_soco_active: "#f59e0b",
-  maceio_subsidence: "#f43f5e",
-  brumadinho_hist: "#f43f5e",
-};
-
 export function FloatingHud({
-  scenarios,
-  activeScenarioId,
-  hasSelection,
   dams,
   selectedDamId,
   startDate: _startDate,
@@ -91,14 +67,12 @@ export function FloatingHud({
   initialLat,
   initialLon,
   initialName,
-  earthdataToken,
   loading,
   revalidating,
   themePreference,
   resolvedTheme,
   styleMode,
   terrain3D,
-  onSelectScenario,
   onSelectDam,
   onSearchCustom,
   onFlyRegion,
@@ -106,7 +80,6 @@ export function FloatingHud({
   onSetThemePreference,
   onChangeStyleMode,
   onToggleTerrain3D,
-  onOpenTokenModal,
 }: FloatingHudProps) {
   const searchPanelRef = useRef<HTMLDivElement | null>(null);
   const searchInputId = useId();
@@ -162,7 +135,7 @@ export function FloatingHud({
   }, [dams, query, statusFilter]);
 
   const normLat = customLat.trim().replace(",", ".");
-   const normLon = customLon.trim().replace(",", ".");
+  const normLon = customLon.trim().replace(",", ".");
   const parsedLat = Number(normLat);
   const parsedLon = Number(normLon);
   const isLatValid =
@@ -170,8 +143,6 @@ export function FloatingHud({
   const isLonValid =
     normLon !== "" && Number.isFinite(parsedLon) && parsedLon >= -180 && parsedLon <= 180;
   const canSubmitCustom = isLatValid && isLonValid && !loading;
-
-  const hasValidToken = isValidEarthdataToken(earthdataToken);
 
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -248,7 +219,7 @@ export function FloatingHud({
                   className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
                     searchTab === "catalog"
                       ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)]"
-                      : "text-[var(--pz-muted)] hover:text-[var(--pz-text)]"
+                      : "text-[var(--pz-secondary)] hover:text-[var(--pz-text)]"
                   }`}
                 >
                   Catálogo ({dams.length})
@@ -262,11 +233,22 @@ export function FloatingHud({
                   className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
                     searchTab === "coords"
                       ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)]"
-                      : "text-[var(--pz-muted)] hover:text-[var(--pz-text)]"
+                      : "text-[var(--pz-secondary)] hover:text-[var(--pz-text)]"
                   }`}
                 >
-                  Coordenada Livre
+                  Coordenadas Livres
                 </button>
+              </div>
+
+              <span className="text-[11px] font-mono text-[var(--pz-muted)]">
+                {searchTab === "catalog" ? `${filteredDams.length} alvos` : "Live NASA"}
+              </span>
+            </div>
+
+            {/* Atalhos de Região para navegação rápida do mapa */}
+            <div className="space-y-1.5 pb-1 border-b border-[var(--pz-border)]">
+              <div className="text-[11px] font-semibold text-[var(--pz-muted)]">
+                Ir para região no mapa
               </div>
 
               <div className="flex flex-wrap gap-1">
@@ -282,41 +264,6 @@ export function FloatingHud({
                     {reg.label}
                   </button>
                 ))}
-              </div>
-            </div>
-
-            <div className="lg:hidden space-y-1.5 pb-1 border-b border-[var(--pz-border)]">
-              <div className="text-[11px] font-semibold text-[var(--pz-muted)]">
-                Cenários calibrados
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {scenarios.map((sc) => {
-                  const isActive = hasSelection && activeScenarioId === sc.id;
-                  const cleanLabel = stripDecorativeEmojis(sc.label);
-                  const dotHex = SCENARIO_DOT_HEX[sc.id] ?? "#14b8a6";
-                  return (
-                    <button
-                      key={`mob-${sc.id}`}
-                      type="button"
-                      onClick={() => {
-                        onSelectScenario(sc.id, sc.default_start, sc.default_end);
-                        setSearchOpen(false);
-                      }}
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
-                        isActive
-                          ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)]"
-                          : "bg-[var(--pz-well)] border border-[var(--pz-border)] text-[var(--pz-secondary)] hover:text-[var(--pz-text)]"
-                      }`}
-                    >
-                      <span
-                        className="w-2 h-2 rounded-full shrink-0"
-                        style={{ backgroundColor: isActive ? "currentColor" : dotHex }}
-                        aria-hidden="true"
-                      />
-                      <span>{cleanLabel}</span>
-                    </button>
-                  );
-                })}
               </div>
             </div>
 
@@ -338,130 +285,157 @@ export function FloatingHud({
                   />
                 </div>
 
-                <div className="flex flex-wrap gap-1" role="group" aria-label="Situação física">
+                <div className="flex items-center gap-1 overflow-x-auto pb-0.5">
                   {(
                     [
                       { id: "all", label: "Todas" },
-                      { id: "standing", label: "De pé" },
-                      { id: "decommissioning", label: "Descaract." },
-                      { id: "collapsed", label: "Históricas" },
+                      { id: "standing", label: "De Pé" },
+                      { id: "decommissioning", label: "Descaracterização" },
+                      { id: "collapsed", label: "Rompida (Histórico)" },
                     ] as const
-                  ).map((flt) => (
+                  ).map((f) => (
                     <button
-                      key={flt.id}
+                      key={f.id}
                       type="button"
-                      aria-pressed={statusFilter === flt.id}
-                      onClick={() => setStatusFilter(flt.id)}
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors cursor-pointer ${
-                        statusFilter === flt.id
-                          ? "bg-[var(--pz-accent-soft)] text-[var(--pz-accent)] border-[var(--pz-accent)]"
-                          : "bg-[var(--pz-well)] text-[var(--pz-muted)] border-[var(--pz-border)] hover:text-[var(--pz-text)]"
+                      onClick={() => setStatusFilter(f.id)}
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                        statusFilter === f.id
+                          ? "bg-[var(--pz-accent-soft)] text-[var(--pz-accent)] font-semibold border border-[var(--pz-accent)]/40"
+                          : "text-[var(--pz-secondary)] hover:text-[var(--pz-text)] bg-[var(--pz-well)]"
                       }`}
                     >
-                      {flt.label}
+                      {f.label}
                     </button>
                   ))}
                 </div>
 
-                <ul className="max-h-60 overflow-y-auto space-y-1 pr-1">
-                  {filteredDams.map((dam) => {
-                    const isSelected = hasSelection && dam.id === selectedDamId;
-                    return (
-                      <li key={dam.id}>
+                <div className="max-h-60 overflow-y-auto space-y-1 pr-1">
+                  {filteredDams.length === 0 ? (
+                    <p className="text-xs text-[var(--pz-muted)] py-4 text-center">
+                      Nenhuma barragem encontrada para o filtro atual.
+                    </p>
+                  ) : (
+                    filteredDams.map((dam) => {
+                      const isSelected = dam.id === selectedDamId;
+                      return (
                         <button
+                          key={dam.id}
                           type="button"
                           onClick={() => {
                             onSelectDam(dam);
                             setSearchOpen(false);
                           }}
-                          className={`w-full text-left px-3 py-2 rounded-xl border transition-colors cursor-pointer ${
+                          className={`w-full text-left p-2 rounded-xl transition-all duration-150 cursor-pointer ${
                             isSelected
-                              ? "bg-[var(--pz-accent-soft)] border-[var(--pz-accent)]"
-                              : "bg-[var(--pz-well)]/70 border-[var(--pz-border)] hover:border-[var(--pz-border-strong)]"
+                              ? "bg-[var(--pz-accent-soft)] border border-[var(--pz-accent)]/50"
+                              : "hover:bg-[var(--pz-well)] border border-transparent"
                           }`}
                         >
                           <div className="flex items-center justify-between gap-2">
                             <span className="text-xs font-semibold text-[var(--pz-text)] truncate">
                               {dam.name}
                             </span>
-                            <span className="font-mono text-[10px] text-[var(--pz-muted)] shrink-0">
+                            <span
+                              className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full shrink-0 ${
+                                dam.risk_tier === "RED"
+                                  ? "pz-status-red"
+                                  : dam.risk_tier === "YELLOW"
+                                    ? "pz-status-yellow"
+                                    : "pz-status-green"
+                              }`}
+                            >
                               {dam.risk_tier}
                             </span>
                           </div>
-                          <div className="text-[11px] text-[var(--pz-muted)] mt-0.5 flex justify-between gap-2">
-                            <span className="truncate">{dam.physical_status_label}</span>
-                            <span className="font-mono tabular-nums shrink-0">
-                              {dam.lat.toFixed(2)}, {dam.lon.toFixed(2)}
-                            </span>
+                          <div className="flex items-center justify-between text-[11px] text-[var(--pz-muted)] mt-0.5">
+                            <span>{dam.location}</span>
+                            <span>{stripDecorativeEmojis(dam.physical_status_label)}</span>
                           </div>
                         </button>
-                      </li>
-                    );
-                  })}
-                  {filteredDams.length === 0 && (
-                    <li className="text-xs text-[var(--pz-muted)] text-center py-6">
-                      Nenhuma barragem encontrada.
-                    </li>
+                      );
+                    })
                   )}
-                </ul>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleCustomSubmit} className="space-y-2.5">
-                <label className="block space-y-1 text-xs">
-                  <span className="text-[var(--pz-muted)] font-medium">Nome do local</span>
+                <div>
+                  <label
+                    htmlFor="custom-target-name-input"
+                    className="block text-[11px] font-semibold text-[var(--pz-secondary)] mb-1"
+                  >
+                    Identificação / Nome do Local
+                  </label>
                   <input
-                    type="text"
-                    aria-label="Nome do Local"
+                    id="custom-target-name-input"
                     data-testid="custom-name-input"
+                    type="text"
                     value={customName}
                     onChange={(e) => setCustomName(e.target.value)}
-                    placeholder="Ex.: Vale do Paraopeba"
-                    className="w-full px-3 py-2 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] focus:border-[var(--pz-accent)] text-xs text-[var(--pz-text)] focus:outline-none"
+                    placeholder="Ex: Barragem Maravilhas III, Talude Norte..."
+                    className="w-full px-3 py-2 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] focus:border-[var(--pz-accent)] text-xs text-[var(--pz-text)] placeholder:text-[var(--pz-muted)] focus:outline-none"
                   />
-                </label>
+                </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  <label className="block space-y-1 text-xs">
-                    <span className="text-[var(--pz-muted)] font-medium">Latitude</span>
+                  <div>
+                    <label
+                      htmlFor="custom-target-lat-input"
+                      className="block text-[11px] font-semibold text-[var(--pz-secondary)] mb-1"
+                    >
+                      Latitude (-90 a 90)
+                    </label>
                     <input
+                      id="custom-target-lat-input"
+                      data-testid="custom-lat-input"
                       type="text"
                       inputMode="decimal"
-                      aria-label="Latitude"
-                      data-testid="custom-lat-input"
                       value={customLat}
                       onChange={(e) => setCustomLat(e.target.value)}
                       placeholder="-19.9419"
-                      className="w-full px-3 py-2 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] focus:border-[var(--pz-accent)] font-mono tabular-nums text-xs text-[var(--pz-text)] focus:outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] focus:border-[var(--pz-accent)] text-xs font-mono text-[var(--pz-text)] placeholder:text-[var(--pz-muted)] focus:outline-none"
                     />
-                  </label>
-                  <label className="block space-y-1 text-xs">
-                    <span className="text-[var(--pz-muted)] font-medium">Longitude</span>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="custom-target-lon-input"
+                      className="block text-[11px] font-semibold text-[var(--pz-secondary)] mb-1"
+                    >
+                      Longitude (-180 a 180)
+                    </label>
                     <input
+                      id="custom-target-lon-input"
+                      data-testid="custom-lon-input"
                       type="text"
                       inputMode="decimal"
-                      aria-label="Longitude"
-                      data-testid="custom-lon-input"
                       value={customLon}
                       onChange={(e) => setCustomLon(e.target.value)}
                       placeholder="-43.5997"
-                      className="w-full px-3 py-2 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] focus:border-[var(--pz-accent)] font-mono tabular-nums text-xs text-[var(--pz-text)] focus:outline-none"
+                      className="w-full px-3 py-2 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] focus:border-[var(--pz-accent)] text-xs font-mono text-[var(--pz-text)] placeholder:text-[var(--pz-muted)] focus:outline-none"
                     />
-                  </label>
+                  </div>
                 </div>
 
-                <div className="p-2.5 rounded-xl bg-[var(--pz-surface)] border border-[var(--pz-border)] text-[11px] flex items-center justify-between">
-                  <span className="text-[var(--pz-muted)]">Período de Análise:</span>
-                  <span className="font-mono font-semibold text-[var(--pz-text)]">
-                    Máximo de 15 Anos
-                  </span>
-                </div>
-
-                {(!isLatValid || !isLonValid) && (
-                  <p role="alert" className="inline-flex items-center gap-1.5 text-xs text-rose-500">
-                    <AlertTriangleIcon className="w-3.5 h-3.5 shrink-0" />
-                    <span>Verifique as coordenadas (-90..90 / -180..180).</span>
+                {!isLatValid && normLat !== "" && (
+                  <p className="text-[11px] text-[var(--pz-status-red)]">
+                    Latitude inválida. Use um valor entre -90 e 90.
                   </p>
                 )}
+
+                {!isLonValid && normLon !== "" && (
+                  <p className="text-[11px] text-[var(--pz-status-red)]">
+                    Longitude inválida. Use um valor entre -180 e 180.
+                  </p>
+                )}
+
+                <div className="p-2.5 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] text-[11px] text-[var(--pz-muted)] leading-relaxed flex items-start gap-2">
+                  <AlertTriangleIcon className="w-4 h-4 text-[var(--pz-accent)] shrink-0 mt-0.5" />
+                  <span>
+                    A consulta live buscará automaticamente o relevo DEM 30m, catálogo CMR de radar
+                    orbital e a série meteorológica diária da NASA POWER.
+                  </span>
+                </div>
 
                 <button
                   type="submit"
@@ -478,50 +452,8 @@ export function FloatingHud({
         )}
       </div>
 
-      {/* Lado Direito: Cenários, Camadas do Mapa, Tema Claro/Escuro e Token */}
+      {/* Lado Direito: Camadas do Mapa e Tema Claro/Escuro */}
       <div className="pointer-events-auto flex flex-wrap items-center gap-2">
-        <nav
-          aria-label="Cenários calibrados"
-          className="pz-glass hidden lg:flex items-center gap-1 p-1 rounded-full"
-        >
-          {scenarios.map((sc) => {
-            const isActive = hasSelection && activeScenarioId === sc.id;
-            const fullLabel = stripDecorativeEmojis(sc.label);
-            const pillLabel = SCENARIO_SHORT_LABEL[sc.id] ?? fullLabel;
-            const dotHex = SCENARIO_DOT_HEX[sc.id] ?? "#14b8a6";
-            return (
-              <button
-                key={sc.id}
-                type="button"
-                data-testid={`scenario-btn-${sc.id}`}
-                title={fullLabel}
-                aria-pressed={isActive}
-                onClick={() => onSelectScenario(sc.id, sc.default_start, sc.default_end)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer active:scale-95 ${
-                  isActive
-                    ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] pz-glow-accent shadow-sm scale-[1.02]"
-                    : "text-[var(--pz-secondary)] hover:text-[var(--pz-text)] hover:bg-[var(--pz-well)] border border-transparent hover:border-[var(--pz-border)]"
-                }`}
-              >
-                <span className="relative flex h-2 w-2 shrink-0">
-                  {isActive && (
-                    <span
-                      className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                      style={{ backgroundColor: dotHex }}
-                    />
-                  )}
-                  <span
-                    className="relative inline-flex rounded-full h-2 w-2 shrink-0"
-                    style={{ backgroundColor: isActive ? "currentColor" : dotHex }}
-                    aria-hidden="true"
-                  />
-                </span>
-                <span>{pillLabel}</span>
-              </button>
-            );
-          })}
-        </nav>
-
         <div
           role="group"
           aria-label="Estilo do mapa gratuito"
@@ -609,22 +541,6 @@ export function FloatingHud({
             </button>
           )}
         </div>
-
-        <button
-          type="button"
-          data-testid="open-token-modal-btn"
-          onClick={onOpenTokenModal}
-          className={`pz-glass inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
-            hasValidToken
-              ? "pz-status-green"
-              : "text-[var(--pz-secondary)] hover:text-[var(--pz-text)] hover:border-[var(--pz-accent)]"
-          }`}
-        >
-          <KeyIcon className="w-3.5 h-3.5 text-[var(--pz-accent)] shrink-0" />
-          <span className="hidden sm:inline">
-            {hasValidToken ? "Token Earthdata: Ativo" : "Token NASA"}
-          </span>
-        </button>
       </div>
     </header>
   );

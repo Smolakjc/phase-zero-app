@@ -119,10 +119,6 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
   const hasLoadedOnceRef = useRef<boolean>(false);
 
   useEffect(() => {
-    const saved = getStoredToken();
-    if (saved) {
-      setParams((prev) => ({ ...prev, earthdata_token: saved }));
-    }
     const ctrl = new AbortController();
     getScenarios(ctrl.signal).then((list) => {
       if (list.length > 0) setScenarios(list);

@@ -5,14 +5,12 @@ import { FloatingHud } from "../components/hud/FloatingHud";
 import { AlertTriangleIcon, CrosshairIcon } from "../components/icons/SurveyIcons";
 import { MapStyleMode, ObservatoryMap } from "../components/map/ObservatoryMap";
 import { ObservatorySheet } from "../components/sheet/ObservatorySheet";
-import { TokenModal } from "../components/token/TokenModal";
 import { AnalysisProvider, useAnalysis } from "../hooks/useAnalysis";
 import { useTheme } from "../hooks/useTheme";
 
 function ObservatoryWorkspace() {
   const {
     params,
-    scenarios,
     dams,
     selectedDamId,
     hasSelection,
@@ -25,15 +23,12 @@ function ObservatoryWorkspace() {
     minCoherenceDraft,
     setParam,
     setMinCoherenceDraft,
-    selectScenario,
     selectDam,
     selectFreePoint,
     clearSelection,
     updatePeriod,
     runCustom,
     selectPixel,
-    saveToken,
-    removeToken,
     retry,
   } = useAnalysis();
 
@@ -44,7 +39,6 @@ function ObservatoryWorkspace() {
     setPreference: setThemePreference,
   } = useTheme();
 
-  const [tokenModalOpen, setTokenModalOpen] = useState<boolean>(false);
   const [styleMode, setStyleMode] = useState<MapStyleMode>("vector");
   const [terrain3D, setTerrain3D] = useState<boolean>(false);
   const [regionFlyTarget, setRegionFlyTarget] = useState<{
@@ -79,8 +73,6 @@ function ObservatoryWorkspace() {
 
       {/* HUD flutuante superior */}
       <FloatingHud
-        scenarios={scenarios}
-        activeScenarioId={params.scenario_id}
         hasSelection={hasSelection}
         dams={dams}
         selectedDamId={selectedDamId}
@@ -89,14 +81,12 @@ function ObservatoryWorkspace() {
         initialLat={params.custom_lat ?? -19.9419}
         initialLon={params.custom_lon ?? -43.5997}
         initialName={params.custom_name ?? ""}
-        earthdataToken={params.earthdata_token ?? ""}
         loading={loading}
         revalidating={revalidating}
         themePreference={themePreference}
         resolvedTheme={resolvedTheme}
         styleMode={styleMode}
         terrain3D={terrain3D}
-        onSelectScenario={selectScenario}
         onSelectDam={selectDam}
         onSearchCustom={runCustom}
         onFlyRegion={handleFlyRegion}
@@ -104,115 +94,95 @@ function ObservatoryWorkspace() {
         onSetThemePreference={setThemePreference}
         onChangeStyleMode={setStyleMode}
         onToggleTerrain3D={() => setTerrain3D((v) => !v)}
-        onOpenTokenModal={() => setTokenModalOpen(true)}
       />
 
       {/* Estado inicial limpo: convite sutil + legenda mínima no rodapé */}
-      {!hasSelection && (
-        <div className="pointer-events-none fixed bottom-[76px] sm:bottom-5 left-3 right-16 sm:left-4 sm:right-4 z-10 flex justify-center">
+      {!hasSelection && !loading && (
+        <div className="pointer-events-none fixed bottom-4 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 max-w-[92vw]">
           <div
             data-testid="map-prompt-pill"
-            className="pointer-events-auto pz-glass pz-sheet-reveal px-4 py-2.5 rounded-full flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-xs text-[var(--pz-secondary)] max-w-[94vw]"
+            className="pz-glass pointer-events-auto px-4 py-2 rounded-full text-xs font-medium text-[var(--pz-secondary)] flex items-center gap-2 shadow-sm animate-pulse"
           >
-            <span className="inline-flex items-center gap-2 font-medium text-[var(--pz-text)]">
-              <CrosshairIcon className="w-3.5 h-3.5 text-[var(--pz-accent)] shrink-0" />
-              <span>
-                Clique em qualquer ponto ou marcador do mapa para inspecionar a série InSAR
-              </span>
+            <CrosshairIcon className="w-3.5 h-3.5 text-[var(--pz-accent)]" />
+            <span>
+              Clique em qualquer barragem ou em um ponto livre do mapa para iniciar a análise
             </span>
-            <span
-              className="hidden sm:inline-flex items-center gap-3 pl-3 border-l border-[var(--pz-border)] text-[11px] text-[var(--pz-muted)]"
-              aria-hidden="true"
-            >
-              <span className="inline-flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#10b981]" />
-                Estável
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#f59e0b]" />
-                Atenção
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#f43f5e]" />
-                Crítico
-              </span>
+          </div>
+
+          <div className="pz-glass pointer-events-auto hidden sm:flex items-center gap-3 px-3.5 py-1.5 rounded-full text-[11px] text-[var(--pz-muted)]">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[var(--pz-status-red)]" />
+              <span>Crítica / Rompida</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[var(--pz-status-yellow)]" />
+              <span>Atenção</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[var(--pz-status-green)]" />
+              <span>Operação Normal</span>
             </span>
           </div>
         </div>
       )}
 
-      {/* Carregando primeiro alvo selecionado */}
-      {hasSelection && loading && !data && (
-        <div className="pointer-events-none fixed bottom-6 left-4 right-4 z-20 flex justify-center">
-          <div
-            role="status"
-            aria-live="polite"
-            className="pointer-events-auto pz-glass-strong pz-sheet-reveal px-5 py-3 rounded-full flex items-center gap-3 text-xs font-medium text-[var(--pz-text)]"
-          >
-            <span className="w-2.5 h-2.5 rounded-full bg-[var(--pz-accent)] animate-pulse" />
-            <span>Processando interferometria NISAR e correções físicas...</span>
-          </div>
-        </div>
-      )}
-
-      {/* Erro sem dados prévios */}
-      {hasSelection && error && !data && !loading && (
-        <div className="pointer-events-none fixed bottom-6 left-4 right-4 z-20 flex justify-center">
-          <div
-            data-testid="error-alert"
-            role="alert"
-            className="pointer-events-auto pz-glass-strong pz-sheet-reveal px-5 py-4 rounded-2xl max-w-lg w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-          >
-            <div className="flex items-start gap-2.5 text-xs">
-              <AlertTriangleIcon className="w-4 h-4 text-[var(--pz-danger-ink)] shrink-0 mt-0.5" />
-              <div>
-                <div className="font-bold text-[var(--pz-text)]">
-                  Falha ao consultar o motor InSAR
-                </div>
-                <div className="text-[var(--pz-muted)] mt-0.5">{error}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={retry}
-                className="px-3 py-1.5 rounded-full bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] text-xs font-semibold cursor-pointer"
-              >
-                Tentar novamente
-              </button>
-              <button
-                type="button"
-                onClick={clearSelection}
-                className="px-3 py-1.5 rounded-full bg-[var(--pz-well)] border border-[var(--pz-border)] text-[var(--pz-secondary)] text-xs font-medium cursor-pointer"
-              >
-                Fechar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Erro durante revalidação com dados existentes */}
-      {hasSelection && error && data && (
+      {/* Indicador de carregamento inicial centralizado */}
+      {loading && !hasSelection && (
         <div
-          data-testid="error-alert"
-          role="alert"
-          className="fixed top-20 left-1/2 -translate-x-1/2 z-30 pz-glass-strong px-4 py-2 rounded-full flex items-center gap-3 text-xs max-w-[92vw]"
+          data-testid="initial-loading-card"
+          className="pointer-events-none fixed inset-0 z-30 flex items-center justify-center p-4 bg-[var(--pz-ground)]/40 backdrop-blur-xs"
         >
-          <AlertTriangleIcon className="w-3.5 h-3.5 text-[var(--pz-danger-ink)] shrink-0" />
-          <span className="truncate text-[var(--pz-text)]">{error}</span>
-          <button
-            type="button"
-            onClick={retry}
-            className="px-2.5 py-0.5 rounded-full bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] font-semibold shrink-0 cursor-pointer"
-          >
-            Repetir
-          </button>
+          <div className="pz-glass-strong pointer-events-auto p-5 rounded-2xl max-w-sm w-full text-center space-y-3 shadow-lg">
+            <div className="w-10 h-10 mx-auto rounded-full bg-[var(--pz-accent-soft)] text-[var(--pz-accent)] flex items-center justify-center">
+              <CrosshairIcon className="w-5 h-5 animate-spin" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-[var(--pz-text)]">
+                Carregando Observatório InSAR
+              </h2>
+              <p className="text-xs text-[var(--pz-muted)] mt-1">
+                Conectando ao catálogo de barragens e sincronizando topografia DEM 30m...
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Menu completo Busca Live NASA (desliza da esquerda para a direita ao selecionar local) */}
-      {hasSelection && (data || loading) && (
+      {/* Banner de erro flutuante com opção de tentar novamente */}
+      {error && !loading && (
+        <aside
+          role="alert"
+          aria-live="assertive"
+          data-testid="error-banner"
+          className="pointer-events-auto fixed bottom-4 right-4 z-30 max-w-md p-3.5 rounded-2xl bg-[var(--pz-well)] border border-[var(--pz-status-red)]/40 text-xs shadow-lg space-y-2"
+        >
+          <div className="flex items-start gap-2 text-[var(--pz-status-red)]">
+            <AlertTriangleIcon className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="flex-1 leading-relaxed">
+              <span className="font-semibold">Falha na Análise:</span> {error}
+            </div>
+          </div>
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={retry}
+              className="px-3 py-1 rounded-lg bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] font-semibold text-[11px] hover:opacity-90 transition-opacity cursor-pointer"
+            >
+              Tentar Novamente
+            </button>
+            <button
+              type="button"
+              onClick={clearSelection}
+              className="px-3 py-1 rounded-lg bg-[var(--pz-well)] hover:bg-[var(--pz-border)] text-[var(--pz-secondary)] text-[11px] transition-colors cursor-pointer"
+            >
+              Fechar
+            </button>
+          </div>
+        </aside>
+      )}
+
+      {/* Folha deslizante com análise detalhada do alvo */}
+      {hasSelection && (
         <ObservatorySheet
           data={data}
           params={params}
@@ -228,14 +198,6 @@ function ObservatoryWorkspace() {
           onClose={clearSelection}
         />
       )}
-
-      <TokenModal
-        open={tokenModalOpen}
-        initialToken={params.earthdata_token ?? ""}
-        onSave={saveToken}
-        onRemove={removeToken}
-        onClose={() => setTokenModalOpen(false)}
-      />
     </main>
   );
 }

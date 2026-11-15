@@ -3,6 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { convertNisarH5ToCache, ExtractedH5Payload } from "../scripts/extract-h5.js";
+import { config } from "../config.js";
 import { streamH5Slice } from "../services/h5Stream.js";
 import { syntheticClimate } from "../services/nasaPower.js";
 import { runPhaseZeroPipeline } from "../services/pipeline.js";
@@ -94,6 +95,37 @@ describe("HDF5 Stream e CLI Extractor (K-B3, K-B4, K-B5)", () => {
     expect(resp.scenario_meta.h5_streamed_ok).toBe(true);
     expect(resp.scenario_meta.sensor).toContain("LIVE HDF5 STREAM:");
     expect(resp.grid_pixels[0].zone).toBe("PIXEL REAL HDF5 (0,0)");
+  });
+
+  it("utiliza o EARTHDATA_TOKEN do ambiente/config quando não fornecido na requisição", async () => {
+    const origToken = config.EARTHDATA_TOKEN;
+    try {
+      config.EARTHDATA_TOKEN = "env_token_valido_com_mais_de_20_caracteres";
+      const resp = await runPhaseZeroPipeline(
+        {
+          scenario_id: "custom",
+          custom_lat: -19.963,
+          custom_lon: -43.593,
+          custom_name: "Gongo Soco Fallback Env Token",
+          start_date: "2026-03-01",
+          end_date: "2026-09-15",
+        },
+        {
+          power: async (lat, lon, s, e, n) => ({
+            climate: syntheticClimate(s, e, n),
+            isReal: false,
+          }),
+          terrain: async (lat, lon, size) => getTerrainGrid(lat, lon, size, false),
+          cmr: async () => [{ title: "NISAR_L2_GUNW_LIVE_TEST_GRANULE", h5_url: nisarH5Path }],
+          h5: streamH5Slice,
+        },
+      );
+
+      expect(resp.scenario_meta.h5_streamed_ok).toBe(true);
+      expect(resp.scenario_meta.sensor).toContain("LIVE HDF5 STREAM:");
+    } finally {
+      config.EARTHDATA_TOKEN = origToken;
+    }
   });
 
   it("nunca expõe o earthdata_token em mensagens de erro de download HDF5", async () => {

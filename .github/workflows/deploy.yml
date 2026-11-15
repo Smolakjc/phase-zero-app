@@ -1,0 +1,129 @@
+name: Build and publish Phase Zero images
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: phasezero-images-main
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set source image tag
+        id: source
+        shell: bash
+        run: echo "tag=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Configure frontend environment
+        env:
+          ENV_FILE_FRONT: ${{ vars.ENV_FILE_FRONT }}
+        shell: bash
+        run: |
+          if [ -z "$ENV_FILE_FRONT" ]; then
+            echo 'Configure a variável Actions ENV_FILE_FRONT.' >&2
+            exit 1
+          fi
+          printf '%s' "$ENV_FILE_FRONT" > frontend/.env.production
+          if ! grep -q '^NEXT_PUBLIC_API_URL=https://api-phasezero\.smolak\.dpdns\.org$' frontend/.env.production; then
+            rm -f frontend/.env.production
+            echo 'ENV_FILE_FRONT precisa apontar para https://api-phasezero.smolak.dpdns.org.' >&2
+            exit 1
+          fi
+
+      - name: Configure backend environment
+        env:
+          ENV_FILE_BACK: ${{ vars.ENV_FILE_BACK }}
+        shell: bash
+        run: |
+          if [ -z "$ENV_FILE_BACK" ]; then
+            echo 'Configure a variável Actions ENV_FILE_BACK.' >&2
+            exit 1
+          fi
+          printf '%s' "$ENV_FILE_BACK" > backend/.env.production
+          if ! grep -q '^CORS_ORIGIN=https://phasezero\.smolak\.dpdns\.org$' backend/.env.production; then
+            rm -f backend/.env.production
+            echo 'ENV_FILE_BACK precisa permitir https://phasezero.smolak.dpdns.org em CORS_ORIGIN.' >&2
+            exit 1
+          fi
+
+      - name: Set image owner
+        id: image
+        shell: bash
+        run: echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push API
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./backend/Dockerfile
+          push: true
+          platforms: linux/arm64
+          tags: |
+            ghcr.io/${{ steps.image.outputs.owner }}/api-phasezero:${{ steps.source.outputs.tag }}
+            ghcr.io/${{ steps.image.outputs.owner }}/api-phasezero:latest
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./frontend/Dockerfile
+          push: true
+          platforms: linux/arm64
+          tags: |
+            ghcr.io/${{ steps.image.outputs.owner }}/phasezero:${{ steps.source.outputs.tag }}
+            ghcr.io/${{ steps.image.outputs.owner }}/phasezero:latest
+
+      - name: Update Flux image references
+        env:
+          IMAGE_OWNER: ${{ steps.image.outputs.owner }}
+          IMAGE_TAG: ${{ steps.source.outputs.tag }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          manifest = Path("deployment/rubix/phasezero.yaml")
+          text = manifest.read_text()
+          owner = os.environ["IMAGE_OWNER"]
+          tag = os.environ["IMAGE_TAG"]
+          for image in ("phasezero", "api-phasezero"):
+              pattern = re.compile(rf"(ghcr\.io/[^/\s]+/{re.escape(image)}:)[^\s]+")
+              text, count = pattern.subn(rf"\g<1>{tag}", text)
+              if not count:
+                  raise RuntimeError(f"Nenhuma referência GHCR encontrada para {image}")
+          text = text.replace("ghcr.io/smolakjc/", f"ghcr.io/{owner}/")
+          manifest.write_text(text)
+          PY
+          if git diff --quiet -- deployment/rubix/phasezero.yaml; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add deployment/rubix/phasezero.yaml
+          git commit -m ":bricks: ci(deploy): atualizar imagens"
+          git push origin main

@@ -1,0 +1,124 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phasezero
+  namespace: phasezero
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phasezero
+  template:
+    metadata:
+      labels:
+        app: phasezero
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: phasezero
+          image: ghcr.io/smolakjc/phasezero:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 25
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              memory: 768Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: phasezero
+  namespace: phasezero
+  labels:
+    rubix.expose: "true"
+spec:
+  type: ClusterIP
+  selector:
+    app: phasezero
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-phasezero
+  namespace: phasezero
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-phasezero
+  template:
+    metadata:
+      labels:
+        app: api-phasezero
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: api-phasezero
+          image: ghcr.io/smolakjc/api-phasezero:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: PORT
+              value: "8000"
+            - name: HOST
+              value: 0.0.0.0
+            - name: NODE_ENV
+              value: production
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 25
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              memory: 3Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-phasezero
+  namespace: phasezero
+  labels:
+    rubix.expose: "true"
+spec:
+  type: ClusterIP
+  selector:
+    app: api-phasezero
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

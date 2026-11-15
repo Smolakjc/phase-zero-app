@@ -211,8 +211,8 @@ function ObservatoryWorkspace() {
         </div>
       )}
 
-      {/* Folha inferior do observatório (exibida apenas após selecionar um local) */}
-      {hasSelection && data && selectedPixel && (
+      {/* Menu completo Busca Live NASA (desliza da esquerda para a direita ao selecionar local) */}
+      {hasSelection && (data || loading) && (
         <ObservatorySheet
           data={data}
           params={params}

@@ -21,11 +21,13 @@ import {
   ScenariosResponseSchema,
   StatusCodeSchema,
   StatisticalSignificanceSchema,
+  ThermalShockLevelSchema,
   ThermoLoopPointSchema,
 } from "./schemas";
 
 export type StatusCode = z.infer<typeof StatusCodeSchema>;
 export type StatisticalSignificance = z.infer<typeof StatisticalSignificanceSchema>;
+export type ThermalShockLevel = z.infer<typeof ThermalShockLevelSchema>;
 export type FiveYearDiscrepancyDirection = z.infer<typeof FiveYearDiscrepancyDirectionSchema>;
 export type MonthlyThermoPluvioData = z.infer<typeof MonthlyThermoPluvioDataSchema>;
 export type FiveYearHistoricalWindow = z.infer<typeof FiveYearHistoricalWindowSchema>;

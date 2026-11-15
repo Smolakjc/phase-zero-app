@@ -9,16 +9,16 @@ export interface DataSourceBadgesProps {
 }
 
 /**
- * Indicadores compactos de procedência física dos dados (`R-F4`).
+ * Indicadores compactos e enxutos de procedência física dos dados (`R-F4`).
  */
 export function DataSourceBadges({ meta, appeears }: DataSourceBadgesProps) {
   return (
     <div
       data-testid="data-source-badges"
-      className="flex flex-wrap items-center gap-1.5 text-[11px]"
+      className="flex flex-wrap items-center gap-1.5 text-[10px]"
     >
       <span
-        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border whitespace-nowrap ${
+        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border whitespace-nowrap ${
           meta.power_real_ok ? "pz-status-green" : "pz-status-yellow"
         }`}
       >
@@ -33,7 +33,7 @@ export function DataSourceBadges({ meta, appeears }: DataSourceBadgesProps) {
 
       {appeears && (
         <span
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border whitespace-nowrap ${
+          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border whitespace-nowrap ${
             appeears.danger_tier === "RED"
               ? "pz-status-red"
               : appeears.danger_tier === "YELLOW"
@@ -42,13 +42,13 @@ export function DataSourceBadges({ meta, appeears }: DataSourceBadgesProps) {
           }`}
         >
           <span>
-            AppEEARS LST+Chuva (5a):{" "}
+            AppEEARS LST ({appeears.five_year_baseline.years_analyzed.length}a):{" "}
             {appeears.is_future_prediction ? "Previsão" : "Ativo"}
           </span>
         </span>
       )}
 
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[var(--pz-well)] text-[var(--pz-secondary)] border border-[var(--pz-border)] whitespace-nowrap">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[var(--pz-well)] text-[var(--pz-secondary)] border border-[var(--pz-border)] whitespace-nowrap">
         <span>CMR:</span>
         <span className="font-mono tabular-nums font-semibold text-[var(--pz-text)]">
           {meta.cmr_granules_count}
@@ -56,7 +56,7 @@ export function DataSourceBadges({ meta, appeears }: DataSourceBadgesProps) {
       </span>
 
       <span
-        className={`inline-flex items-center px-2.5 py-1 rounded-full border whitespace-nowrap ${
+        className={`inline-flex items-center px-2 py-0.5 rounded-full border whitespace-nowrap ${
           meta.h5_streamed_ok
             ? "pz-status-green"
             : "bg-[var(--pz-well)] text-[var(--pz-muted)] border-[var(--pz-border)]"
@@ -67,7 +67,7 @@ export function DataSourceBadges({ meta, appeears }: DataSourceBadgesProps) {
 
       <span
         title={meta.sensor}
-        className="inline-flex items-center px-2.5 py-1 rounded-full bg-[var(--pz-well)] text-[var(--pz-muted)] border border-[var(--pz-border)] font-mono max-w-[300px]"
+        className="inline-flex items-center px-2 py-0.5 rounded-full bg-[var(--pz-well)] text-[var(--pz-muted)] border border-[var(--pz-border)] font-mono max-w-[260px]"
       >
         <span className="truncate">{meta.sensor}</span>
       </span>

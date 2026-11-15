@@ -55,14 +55,20 @@ Documentação técnica das APIs externas integradas ao sistema, detalhando obje
 
 ---
 
-### 1.5 NASA AppEEARS (Anomalia Termo-Pluviométrica e Previsão Quinquenal)
-* **Objetivo:** Consumo dedicado da API NASA AppEEARS (Application for Extracting and Exploring Analysis Ready Samples) voltado a anomalias de temperatura acopladas à precipitação. A definição de anomalia do sistema responde diretamente à pergunta: *"É perigoso essa temperatura com o índice pluviométrico no período?"*.
-* **Fundamento físico e geotécnico:** O maior índice de rompimento de barragens não vem da temperatura isolada, mas da mudança brusca quente-frio especificamente combinada com chuvas. O aquecimento prévio dilata e resseca a camada superficial do maciço, abrindo microfissuras de tração; quando entra uma frente fria chuvosa, a queda abrupta de temperatura contrai a superfície e abre as trincas por onde a chuva infiltra rapidamente, disparando a poro-pressão interna e induzindo liquefação estática ou piping.
-* **Previsão de períodos futuros (comparativo de 5 anos):** Quando o usuário consulta um período futuro (por exemplo, uma semana específica em 2027), o motor extrai e compara exatamente a mesma semana nos 5 anos passados (`Y-5` até `Y-1`). Se nos 5 anos anteriores ocorreu a mesma temperatura com o mesmo índice pluviométrico (diferença para mais ou para menos quase nula), o período é classificado como comportamento esperado e seguro. Se a diferença nos 5 anos apresentar discrepância acentuada para mais ou para menos com inversão quente-frio chuvosa, o sistema alerta que o período é extremamente perigoso para a barragem.
-* **Relação com barragens rompidas e em alerta crítico:** O módulo cruza a assinatura termo-pluviométrica com barragens que já romperam no catálogo do sistema (Brumadinho B1 em 2019, Fundão em 2015, Miraí em 2007), barragens em alerta crítico ANM Nível 3 no sistema (Gongo Soco / Sul Superior, B3/B4 Maravilhas, Forquilha I/II/III) e casos reais externos comprovados (Derna na Líbia em 2023 e Edenville nos EUA em 2020).
+### 1.5 NASA AppEEARS (Cálculo Mensal de Possível Choque Térmico por Fórmula THM)
+* **Objetivo:** Consumo dedicado da API NASA AppEEARS (`MOD11A1.061`) combinada com a série diária da NASA POWER para determinar, mês a mês, se houve ou não possível choque térmico no Mês X a partir da temperatura confirmada do mês e do índice pluviométrico acumulado no mês.
+* **Proxy Heurístico e Fundamentação Física:** Como sensores orbitais (NASA POWER / MODIS) medem variáveis meteorológicas de superfície e não parâmetros geotécnicos intrínsecos do material em subsuperfície ($E, \alpha_T, k(\theta)$), o sistema utiliza um **índice heurístico de triagem hidrotermal ($I_{\text{CT}}$, escala 0–100)** cujos termos refletem os mecanismos físicos descritos por **Zhu Bofang (2013) / ICOLD Bulletin 145** (tensão de tração por resfriamento superficial brusco), **Fredlund & Rahardjo (1993)** (perda de sucção matricial por chuva acumulada) e **Painel Forense Robertson et al. (2019)** (gatilho de poro-pressão por infiltração intensa):
+  * Fator de Contração Térmica ($F_T$): $F_T = (|\Delta T_{24\text{h–}48\text{h}}| / 11.5^\circ\text{C})^{1.25}$, onde $|\Delta T_{24\text{h–}48\text{h}}|$ é estritamente a **maior queda térmica contínua em janela curta de passagem frontal (1 a 2 dias consecutivos, sem reaquecimento intermediário)**, e nunca a diferença bruta entre o dia mais quente do início do mês e o dia mais frio do fim do mês.
+  * Fator de Infiltração Pluviométrica ($F_P$): $F_P = 0.55 \cdot (P_{\text{mês}} / 110\text{ mm}) + 0.45 \cdot (P_{\text{máx24h}} / 34\text{ mm/d})$.
+  * Índice de Choque Termo-Pluviométrico do Mês: $I_{\text{CT}} = \text{clip}(52 \cdot F_T \cdot F_P, 0, 100)$ (com trava física $I_{\text{CT}} < 16$ caso $P_{\text{mês}} < 4\text{ mm}$ ou $|\Delta T_{24\text{h–}48\text{h}}| < 3.5^\circ\text{C}$).
+  * Regra de decisão direta para o Mês X:
+    * $I_{\text{CT}} \ge 38$: **SIM — Possível Choque Térmico Crítico**
+    * $20 \le I_{\text{CT}} < 38$: **POSSÍVEL — Choque Térmico Moderado**
+    * $I_{\text{CT}} < 20$: **NÃO — Sem Choque Térmico**
+* **Relação com barragens rompidas e em alerta crítico:** O módulo cruza a queda térmica ($\Delta T$) e o índice pluviométrico do mês com casos forenses documentados no sistema (Brumadinho B1 em 2019, Fundão em 2015, Miraí em 2007, Gongo Soco / Sul Superior, B3/B4 Maravilhas, Forquilha I/II/III, Derna 2023 e Edenville 2020).
 * **Produtos e camadas consultadas:**
-  * `MOD11A1.061`: MODIS Terra Land Surface Temperature (`LST_Day_1km` e `LST_Night_1km`), medindo o pico quente diurno e a queda térmica abrupta na chegada de frentes frias.
-  * `GPM_3IMERGDF.07` e `NASA POWER PRECTOTCORR`: Precipitação diária acumulada e máxima para cálculo do índice acoplado quente-frio com chuva.
+  * `MOD11A1.061`: MODIS Terra Land Surface Temperature (`LST_Day_1km` e `LST_Night_1km`).
+  * `GPM_3IMERGDF.07` e `NASA POWER PRECTOTCORR`: Precipitação diária acumulada no mês ($P_{\text{mês}}$) e máxima em 24h ($P_{\text{máx24h}}$).
 * **Arquivos no projeto:** `backend/src/services/appeears.ts`, `packages/shared/src/appeearsThermoPluvio.ts`, `frontend/components/diagnostics/AppeearsThermoPluvioPanel.tsx`
 * **Endpoint base:** `https://appeears.earthdatacloud.nasa.gov/api/product/MOD11A1.061`
 * **Documentação oficial:** https://appeears.earthdatacloud.nasa.gov/api/

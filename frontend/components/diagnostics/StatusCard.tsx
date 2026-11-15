@@ -54,16 +54,21 @@ export function StatusCard({ status, appeears }: StatusCardProps) {
       <p className="text-xs mt-1 leading-relaxed opacity-95">{cleanDesc}</p>
 
       {appeears && (
-        <div className="mt-2.5 pt-2 border-t border-[var(--pz-border)] space-y-1 text-[11px]">
-          <div className="font-bold">{appeears.core_question}</div>
-          <div className="font-mono font-semibold">
-            {appeears.verdict_short}
-          </div>
-          <div className="opacity-90 font-mono">
-            Quente→Frio: {appeears.current_or_predicted_metrics.max_hot_to_cold_drop_c}°C · Chuva:{" "}
-            {appeears.current_or_predicted_metrics.precip_total_mm} mm · Discrepância 5a:{" "}
-            {appeears.five_year_baseline.discrepancy_score}/100
-          </div>
+        <div className="mt-2.5 pt-2 border-t border-[var(--pz-border)] flex items-center justify-between text-[11px]">
+          <span className="opacity-90">Choque Hidrotermal:</span>
+          <span className="font-mono font-semibold inline-flex items-center gap-1.5">
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                appeears.danger_tier === "RED"
+                  ? "bg-[#f43f5e]"
+                  : appeears.danger_tier === "YELLOW"
+                    ? "bg-[#f59e0b]"
+                    : "bg-[#10b981]"
+              }`}
+              aria-hidden="true"
+            />
+            <span>{appeears.verdict_short}</span>
+          </span>
         </div>
       )}
 

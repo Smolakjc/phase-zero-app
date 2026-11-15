@@ -104,11 +104,11 @@ function createDamMarkerElement(
   dam: DamCatalogItem,
   isSelected: boolean,
   theme: ResolvedTheme,
-): HTMLButtonElement {
+): HTMLDivElement {
   const isCollapsed = dam.physical_status === "collapsed";
   const isDecomm = dam.physical_status === "decommissioning";
   const fill = isCollapsed ? "#d946ef" : RISK_HEX[dam.risk_tier];
-  const size = isSelected ? 20 : 14;
+  const size = isSelected ? 22 : 14;
   const ringBorder = isSelected
     ? theme === "dark"
       ? "#f8fafc"
@@ -119,22 +119,37 @@ function createDamMarkerElement(
         ? "#0b111c"
         : "#ffffff";
 
+  // Container gerenciado exclusivamente pelo MapLibre (posicionamento via translate).
+  // JAMAIS aplicar CSS transition em transform neste elemento ou em seus filhos para
+  // evitar o efeito de atraso/deslizamento elástico ao arrastar o mapa.
+  const container = document.createElement("div");
+  container.className = "pz-dam-marker-wrap";
+  container.setAttribute("data-dam-id", dam.id);
+  container.style.width = `${size}px`;
+  container.style.height = `${size}px`;
+  container.style.display = "flex";
+  container.style.alignItems = "center";
+  container.style.justifyContent = "center";
+  container.style.cursor = "pointer";
+  container.style.transition = "none";
+
   const btn = document.createElement("button");
   btn.type = "button";
   btn.setAttribute("aria-label", `${dam.name} (${dam.physical_status_label})`);
   btn.setAttribute("data-dam-id", dam.id);
-  btn.style.width = `${size}px`;
-  btn.style.height = `${size}px`;
+  btn.style.width = "100%";
+  btn.style.height = "100%";
   btn.style.padding = "0";
+  btn.style.margin = "0";
   btn.style.borderRadius = isCollapsed ? "4px" : "9999px";
   btn.style.background = fill;
   btn.style.border = `2.5px ${isCollapsed || isDecomm ? "dashed" : "solid"} ${ringBorder}`;
   btn.style.cursor = "pointer";
   btn.style.display = "block";
   btn.style.boxShadow = isSelected
-    ? "0 0 0 6px rgba(45, 212, 191, 0.32), 0 6px 16px rgba(0, 0, 0, 0.35)"
+    ? "0 0 0 6px rgba(45, 212, 191, 0.35), 0 6px 16px rgba(0, 0, 0, 0.4)"
     : "0 2px 8px rgba(0, 0, 0, 0.35)";
-  btn.style.transition = "transform 160ms ease, box-shadow 180ms ease";
+  btn.style.transition = "box-shadow 180ms ease, border-color 180ms ease, background-color 180ms ease";
   if (isCollapsed) {
     btn.style.transform = "rotate(45deg)";
   }
@@ -142,20 +157,32 @@ function createDamMarkerElement(
     btn.classList.add("pz-marker-active");
   }
 
-  return btn;
+  container.appendChild(btn);
+  return container;
 }
 
 function createFreeMarkerElement(): HTMLDivElement {
-  const el = document.createElement("div");
-  el.className = "pz-marker-active";
-  el.style.width = "18px";
-  el.style.height = "18px";
-  el.style.borderRadius = "9999px";
-  el.style.background = "#14b8a6";
-  el.style.border = "3px solid #ffffff";
-  el.style.boxShadow = "0 4px 14px rgba(0, 0, 0, 0.35)";
-  el.style.pointerEvents = "none";
-  return el;
+  const container = document.createElement("div");
+  container.className = "pz-free-marker-wrap";
+  container.style.width = "18px";
+  container.style.height = "18px";
+  container.style.display = "flex";
+  container.style.alignItems = "center";
+  container.style.justifyContent = "center";
+  container.style.pointerEvents = "none";
+  container.style.transition = "none";
+
+  const dot = document.createElement("div");
+  dot.className = "pz-marker-active";
+  dot.style.width = "100%";
+  dot.style.height = "100%";
+  dot.style.borderRadius = "9999px";
+  dot.style.background = "#14b8a6";
+  dot.style.border = "3px solid #ffffff";
+  dot.style.boxShadow = "0 4px 14px rgba(0, 0, 0, 0.35)";
+
+  container.appendChild(dot);
+  return container;
 }
 
 function prefersReducedMotion(): boolean {
@@ -385,7 +412,11 @@ export function ObservatoryMap({
         hoverPopupRef.current?.remove();
       });
 
-      const marker = new ml.Marker({ element: el, anchor: "center" })
+      const marker = new ml.Marker({
+        element: el,
+        anchor: "center",
+        subpixelPositioning: true,
+      })
         .setLngLat([dam.lon, dam.lat])
         .addTo(map);
 
@@ -409,7 +440,11 @@ export function ObservatoryMap({
       Number.isFinite(activeLon)
     ) {
       const el = createFreeMarkerElement();
-      freeMarkerRef.current = new ml.Marker({ element: el, anchor: "center" })
+      freeMarkerRef.current = new ml.Marker({
+        element: el,
+        anchor: "center",
+        subpixelPositioning: true,
+      })
         .setLngLat([activeLon, activeLat])
         .addTo(map);
     }

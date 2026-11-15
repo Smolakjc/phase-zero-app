@@ -94,6 +94,8 @@ export const FiveYearDiscrepancyDirectionSchema = z.enum([
   "null_expected",
 ]);
 
+export const ThermalShockLevelSchema = z.enum(["NONE", "MODERATE", "SEVERE"]);
+
 export const MonthlyThermoPluvioDataSchema = z.object({
   month: z.number().int().min(1).max(12),
   month_name: z.string(),
@@ -106,7 +108,13 @@ export const MonthlyThermoPluvioDataSchema = z.object({
   thermal_shock_drop_c: z.number(),
   precip_total_mm: z.number(),
   precip_max_daily_mm: z.number(),
+  thermal_factor: z.number().optional(),
+  pluvio_factor: z.number().optional(),
   coupled_shock_index: z.number(),
+  possible_thermal_shock: z.boolean().optional(),
+  thermal_shock_level: ThermalShockLevelSchema.optional(),
+  thermal_shock_verdict: z.string().optional(),
+  formula_calculation: z.string().optional(),
   temp_diff_from_monthly_baseline_c: z.number(),
   precip_diff_from_monthly_baseline_mm: z.number(),
   month_discrepancy_score: z.number(),
@@ -131,6 +139,8 @@ export const FiveYearHistoricalWindowSchema = z.object({
   year_discrepancy_score: z.number(),
   discrepancy_direction: FiveYearDiscrepancyDirectionSchema,
   dominant_monthly_behavior: z.string().optional(),
+  shock_months_count: z.number().int().optional(),
+  shock_months_names: z.array(z.string()).optional(),
   monthly_breakdown: z.array(MonthlyThermoPluvioDataSchema).optional(),
   was_same_as_expected: z.boolean(),
 });
@@ -166,6 +176,9 @@ export const AppeearsThermoPluvioAnalysisSchema = z.object({
   appeears_live_ok: z.boolean(),
   is_future_prediction: z.boolean(),
   target_period_label: z.string(),
+  target_month_label: z.string().optional(),
+  study_reference: z.string().optional(),
+  formula_expression: z.string().optional(),
   core_question: z.string(),
   is_dangerous: z.boolean(),
   danger_tier: StatusCodeSchema,
@@ -179,7 +192,12 @@ export const AppeearsThermoPluvioAnalysisSchema = z.object({
     max_hot_to_cold_drop_c: z.number(),
     precip_total_mm: z.number(),
     precip_max_daily_mm: z.number(),
+    thermal_factor: z.number().optional(),
+    pluvio_factor: z.number().optional(),
     thermo_pluvio_shock_index: z.number(),
+    possible_thermal_shock: z.boolean().optional(),
+    thermal_shock_level: ThermalShockLevelSchema.optional(),
+    formula_calculation: z.string().optional(),
   }),
   five_year_baseline: z.object({
     years_analyzed: z.array(z.number().int()),

@@ -2,7 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   APPEEARS_CORE_QUESTION,
   computeCoupledThermoPluvioShockIndex,
+  computeMaxHotToColdDropC,
+  computeThermoPluvioFormulaBreakdown,
   evaluateThermoPluvioShockAndFiveYearForecast,
+  THERMAL_SHOCK_FORMULA_EXPRESSION,
+  THERMAL_SHOCK_STUDY_REFERENCE,
 } from "@phase-zero/shared";
 import {
   clearAppeearsCache,
@@ -59,6 +63,69 @@ describe("Serviço NASA AppEEARS: Choque Quente-Frio com Chuva e Previsão Hist�
     // 3. Mudança brusca quente-frio (-14.2°C) ESPECIFICAMENTE com chuvas fortes (185 mm total, 52 mm/d pico) -> altíssimo risco!
     const coupledShockWithRain = computeCoupledThermoPluvioShockIndex(-14.2, 185.0, 52.0);
     expect(coupledShockWithRain).toBeGreaterThan(65.0);
+
+    // 4. Prova contra falso positivo de amplitude mensal:
+    // Mês de 30 dias com 32°C no dia 5 e 16°C no dia 22 (amplitude bruta do mês = 16°C),
+    // mas com reaquecimento intermediário e queda máxima em 24h-72h de apenas -5.5°C (21.5°C -> 16.0°C).
+    // Com P_mês = 100 mm e P_máx24h = 25 mm/d, NÃO deve usar 16°C (que daria I_CT = 65.2 CRÍTICO),
+    // e sim a queda frontal de 24h-72h (-5.5°C), resultando em I_CT < 20 (NÃO houve choque térmico).
+    const thirtyDayTs = [
+      27.0, 28.0, 29.5, 31.0, 32.0, // dia 5: 32°C
+      29.0, 27.5, 28.5, 29.5, 30.0, // esfriou 4.5°C e voltou a esquentar para 30°C
+      29.0, 28.0, 27.0, 26.5, 27.0,
+      26.0, 25.0, 24.0, 23.0, 21.5, // dia 20: 21.5°C
+      18.5, 16.0, 18.0, 20.0, 22.0, // dia 22: 16.0°C (queda frontal de -5.5°C em 48h)
+      23.5, 24.5, 25.0, 25.5, 26.0,
+    ];
+    const thirtyDayPrecip = [
+      0, 0, 0, 0, 0,
+      2, 5, 0, 0, 0,
+      0, 5, 8, 5, 0,
+      0, 5, 10, 10, 15,
+      25, 10, 0, 0, 0, // pico de 25 mm/d junto à frente fria dos dias 20-22 (soma = 100 mm)
+      0, 0, 0, 0, 0,
+    ];
+    const drop30d = computeMaxHotToColdDropC(thirtyDayTs, thirtyDayPrecip);
+    expect(drop30d.maxDropC).toBe(-5.5);
+    expect(drop30d.peakHotC).toBe(21.5);
+    expect(drop30d.troughColdC).toBe(16.0);
+
+    const formula30d = computeThermoPluvioFormulaBreakdown(drop30d.maxDropC, 100.0, 25.0);
+    expect(formula30d.coupled_shock_index).toBeLessThan(20.0);
+    expect(formula30d.possible_thermal_shock).toBe(false);
+    expect(formula30d.thermal_shock_level).toBe("NONE");
+
+    // 5. Prova contra o "Degrau dos 3.0°C" (frente seca de -13°C no início do mês + chuva quente de 2.8°C no dia 20):
+    // Se esfriar apenas 2.8°C durante a chuva no dia 20, JAMAIS pode cair no fallback da frente seca de -13°C do dia 3!
+    const dryFrontPlusWarmRainTs = [
+      28.0, 31.0, 24.0, 18.0, 21.0, // dias 2-4: frente SECA derruba de 31°C para 18°C (-13.0°C, 0 mm de chuva)
+      24.0, 26.0, 27.0, 27.5, 28.0,
+      28.0, 27.5, 27.0, 27.5, 28.0,
+      28.0, 27.5, 27.0, 26.4, 26.5, // dia 20: 26.5°C com chuva forte, caindo apenas -2.8°C para 23.7°C no dia 21
+      23.7, 24.5, 25.5, 26.0, 26.5,
+      26.5, 27.0, 27.0, 27.5, 27.5,
+    ];
+    const dryFrontPlusWarmRainPrecip = [
+      0, 0, 0, 0, 0, // 0 mm na frente fria seca dos dias 2-4
+      0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0,
+      0, 0, 0, 15, 45, // chuva pré-frontal (i-1) e frontal nos dias 19-21 (total = 100 mm)
+      40, 0, 0, 0, 0,
+      0, 0, 0, 0, 0,
+    ];
+    const warmRainDrop = computeMaxHotToColdDropC(
+      dryFrontPlusWarmRainTs,
+      dryFrontPlusWarmRainPrecip,
+    );
+    expect(warmRainDrop.maxDropC).toBe(-2.8);
+    const warmRainFormula = computeThermoPluvioFormulaBreakdown(
+      warmRainDrop.maxDropC,
+      100.0,
+      45.0,
+    );
+    expect(warmRainFormula.coupled_shock_index).toBeLessThan(16.0);
+    expect(warmRainFormula.possible_thermal_shock).toBe(false);
+    expect(warmRainFormula.thermal_shock_level).toBe("NONE");
   });
 
   it("prevê semana específica em 2027 comparando a mesma semana nos anos passados (até 15 anos): discrepância alta = EXTREMAMENTE PERIGOSO (RED)", async () => {
@@ -285,5 +352,113 @@ describe("Serviço NASA AppEEARS: Choque Quente-Frio com Chuva e Previsão Hist�
     });
     expect(coupledResult.danger_tier).toBe("RED");
     expect(coupledResult.verdict_short).toContain("SIM, É EXTREMAMENTE PERIGOSO PARA A BARRAGEM");
+  });
+
+  it("mantém coerência total entre cenários (Itaipu GREEN, Gongo Soco YELLOW, Brumadinho RED), identidade matemática (Vale - Pico = ΔT) e variabilidade real nos 15 anos", async () => {
+    const mockDeps = {
+      power: async (_lat: number, _lon: number, s: string, e: string, n?: number) => ({
+        climate: syntheticClimate(s, e, n),
+        isReal: false,
+      }),
+      terrain: async (lat: number, lon: number, size: number) =>
+        getTerrainGrid(lat, lon, size, false),
+      cmr: async () => [],
+    };
+
+    const itaipuRes = await runPhaseZeroPipeline({ scenario_id: "itaipu_normal" }, mockDeps);
+    const gongoRes = await runPhaseZeroPipeline({ scenario_id: "gongo_soco_active" }, mockDeps);
+    const brumRes = await runPhaseZeroPipeline({ scenario_id: "brumadinho_hist" }, mockDeps);
+
+    // 1. Alinhamento entre status estrutural e diagnóstico termo-pluviométrico
+    expect(itaipuRes.status.code).toBe("GREEN");
+    expect(itaipuRes.appeears_thermo_pluvio?.danger_tier).toBe("GREEN");
+    expect(itaipuRes.appeears_thermo_pluvio?.is_dangerous).toBe(false);
+
+    expect(gongoRes.status.code).toBe("YELLOW");
+    expect(gongoRes.appeears_thermo_pluvio?.danger_tier).toBe("YELLOW");
+
+    expect(brumRes.status.code).toBe("RED");
+    expect(brumRes.appeears_thermo_pluvio?.danger_tier).toBe("RED");
+
+    // 2. Coerência forense exata em Brumadinho (-13.8°C e 164 mm)
+    expect(brumRes.appeears_thermo_pluvio?.current_or_predicted_metrics.max_hot_to_cold_drop_c).toBe(
+      -13.8,
+    );
+    expect(brumRes.appeears_thermo_pluvio?.current_or_predicted_metrics.precip_total_mm).toBe(
+      164.0,
+    );
+
+    // 3. Identidade matemática exata (Vale - Pico = ΔT) e variabilidade interanual real (sem 15 anos clonados)
+    for (const res of [itaipuRes, gongoRes, brumRes]) {
+      const app = res.appeears_thermo_pluvio!;
+      const m = app.current_or_predicted_metrics;
+      expect(
+        Math.abs(m.trough_cold_temp_c - m.peak_hot_temp_c - m.max_hot_to_cold_drop_c),
+      ).toBeLessThanOrEqual(0.11);
+
+      expect(app.five_year_baseline.mean_abs_temp_diff_5y_c).toBeGreaterThan(0);
+      expect(app.five_year_baseline.mean_abs_precip_diff_5y_mm).toBeGreaterThan(0);
+
+      const distinctAnnualPrecip = new Set(
+        app.five_year_baseline.historical_windows.map((w) => w.precip_total_mm),
+      );
+      expect(distinctAnnualPrecip.size).toBeGreaterThanOrEqual(5);
+    }
+
+    // 4. Caso real: Usina Hidrelétrica de Barra Bonita (SP) — NUNCA pode ter 12/12 meses sem nenhuma anomalia
+    const barraBonitaRes = await runPhaseZeroPipeline(
+      {
+        scenario_id: "custom",
+        custom_lat: -22.5203,
+        custom_lon: -48.5339,
+        custom_name: "Usina Hidrelétrica de Barra Bonita (Barra Bonita, SP)",
+        start_date: "2026-03-01",
+        end_date: "2026-09-15",
+      },
+      mockDeps,
+    );
+
+    const bbApp = barraBonitaRes.appeears_thermo_pluvio!;
+    expect(barraBonitaRes.status.code).toBe("GREEN");
+    expect(bbApp.danger_tier).toBe("GREEN");
+    expect(bbApp.study_reference).toBe(THERMAL_SHOCK_STUDY_REFERENCE);
+    expect(bbApp.formula_expression).toBe(THERMAL_SHOCK_FORMULA_EXPRESSION);
+    expect(typeof bbApp.current_or_predicted_metrics.thermal_factor).toBe("number");
+    expect(typeof bbApp.current_or_predicted_metrics.pluvio_factor).toBe("number");
+    expect(bbApp.current_or_predicted_metrics.possible_thermal_shock).toBe(false);
+
+    // Em todos os 15 anos, cada mês calcula com certeza a temperatura, o índice pluviométrico e se houve possível choque térmico
+    for (const win of bbApp.five_year_baseline.historical_windows) {
+      const months = win.monthly_breakdown ?? [];
+      expect(months.length).toBe(12);
+      const shockMonths = months.filter((m) => m.possible_thermal_shock === true);
+      expect(shockMonths.length).toBeGreaterThanOrEqual(2);
+      expect(shockMonths.length).toBeLessThan(12);
+      expect(win.shock_months_count).toBe(shockMonths.length);
+      expect(win.shock_months_names?.length).toBe(shockMonths.length);
+
+      for (const m of months) {
+        const checkFormula = computeThermoPluvioFormulaBreakdown(
+          m.thermal_shock_drop_c,
+          m.precip_total_mm,
+          m.precip_max_daily_mm,
+        );
+        expect(m.coupled_shock_index).toBe(checkFormula.coupled_shock_index);
+        expect(m.possible_thermal_shock).toBe(checkFormula.possible_thermal_shock);
+        expect(m.thermal_shock_level).toBe(checkFormula.thermal_shock_level);
+      }
+    }
+
+    // Ao longo dos 15 anos de Barra Bonita, existem meses sem choque (null_expected) e meses com possível choque (positive_surplus / thermal_inversion_rain)
+    const allMonthDirections = new Set(
+      bbApp.five_year_baseline.historical_windows.flatMap((w) =>
+        (w.monthly_breakdown ?? []).map((m) => m.discrepancy_direction),
+      ),
+    );
+    expect(allMonthDirections.has("null_expected")).toBe(true);
+    expect(
+      allMonthDirections.has("positive_surplus") ||
+        allMonthDirections.has("thermal_inversion_rain"),
+    ).toBe(true);
   });
 });

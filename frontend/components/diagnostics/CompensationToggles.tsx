@@ -26,36 +26,36 @@ export function CompensationToggles({
   const items = [
     {
       id: "ionosphere",
-      label: "Ionospheric Split-Spectrum",
-      sub: "Corrige atraso dispersivo na Banda L (~24 cm)",
+      label: "Ionosphere Split-Spectrum",
+      sub: "Atraso dispersivo Banda L (~24 cm)",
       val: applyIonosphere,
       toggle: () => onToggleIonosphere(!applyIonosphere),
     },
     {
       id: "troposphere",
-      label: "Wet & Hydrostatic Troposphere",
-      sub: "Corrige atraso de vapor d'água e pressão",
+      label: "Troposphere Wet & Hydro",
+      sub: "Atraso de vapor d'água e pressão",
       val: applyTroposphere,
       toggle: () => onToggleTroposphere(!applyTroposphere),
     },
     {
       id: "solid_tides",
       label: "Solid Earth Tides",
-      sub: "Subtrai maré terrestre gravitacional (Sol/Lua)",
+      sub: "Maré gravitacional da crosta",
       val: applySolidTides,
       toggle: () => onToggleSolidTides(!applySolidTides),
     },
     {
       id: "nasa_power",
       label: "NASA POWER Thermo-Hydro",
-      sub: "Subtrai dilatação térmica (TS/SW) e precipitação",
+      sub: "Dilatação térmica TS e precipitação",
       val: applyNasaPower,
       toggle: () => onToggleNasaPower(!applyNasaPower),
     },
   ];
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1">
       {items.map((item) => (
         <button
           key={item.id}
@@ -64,37 +64,41 @@ export function CompensationToggles({
           aria-checked={item.val}
           data-testid={`toggle-${item.id}`}
           onClick={item.toggle}
-          className={`w-full text-left flex items-center justify-between gap-3 px-3 py-2 rounded-xl border cursor-pointer transition-colors ${
+          className={`w-full text-left flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-lg border cursor-pointer transition-colors ${
             item.val
               ? "bg-[var(--pz-surface)] border-[var(--pz-border-strong)] hover:border-[var(--pz-accent)]"
-              : "bg-[var(--pz-well)] border-[var(--pz-border)] opacity-75 hover:opacity-100"
+              : "bg-[var(--pz-well)]/60 border-[var(--pz-border)] opacity-70 hover:opacity-100"
           }`}
         >
           <div className="min-w-0">
-            <div className="text-xs font-semibold text-[var(--pz-text)]">{item.label}</div>
-            <div className="text-[11px] text-[var(--pz-muted)] mt-0.5">{item.sub}</div>
+            <div className="text-xs font-medium text-[var(--pz-text)] leading-tight">
+              {item.label}
+            </div>
+            <div className="text-[10px] text-[var(--pz-muted)] truncate mt-0.5">
+              {item.sub}
+            </div>
           </div>
 
-          <span className="inline-flex items-center gap-2 shrink-0">
+          <span className="inline-flex items-center gap-1.5 shrink-0">
             <span
-              className={`text-[11px] font-medium ${
+              className={`text-[10px] font-medium ${
                 item.val ? "text-[var(--pz-ok-ink)]" : "text-[var(--pz-muted)]"
               }`}
             >
-              {item.val ? "Ativo" : "Inativo"}
+              {item.val ? "Ativo" : "Off"}
             </span>
             <span
               aria-hidden="true"
-              className={`relative inline-flex w-8 h-[18px] items-center rounded-full transition-colors p-0.5 border ${
+              className={`relative inline-flex w-7 h-4 items-center rounded-full transition-colors p-0.5 border ${
                 item.val
                   ? "bg-[var(--pz-accent-soft)] border-[var(--pz-accent)]"
                   : "bg-[var(--pz-well)] border-[var(--pz-border-strong)]"
               }`}
             >
               <span
-                className={`block w-3 h-3 rounded-full transition-transform ${
+                className={`block w-2.5 h-2.5 rounded-full transition-transform ${
                   item.val
-                    ? "translate-x-3.5 bg-[var(--pz-accent)]"
+                    ? "translate-x-3 bg-[var(--pz-accent)]"
                     : "translate-x-0 bg-[var(--pz-muted)]"
                 }`}
               />

@@ -32,28 +32,28 @@ export function DiagnosticsPanel({
   return (
     <aside
       aria-labelledby="diagnostics-heading"
-      className="flex flex-col gap-3 h-full"
+      className="flex flex-col gap-2.5 h-full"
     >
-      <div className="flex items-center justify-between border-b border-[var(--pz-border)] pb-2">
-        <h2 id="diagnostics-heading" className="text-sm font-bold text-[var(--pz-text)]">
-          Diagnóstico Estrutural
+      <div className="flex items-center justify-between border-b border-[var(--pz-border)] pb-1.5">
+        <h2 id="diagnostics-heading" className="text-xs sm:text-sm font-bold text-[var(--pz-text)]">
+          Diagnóstico InSAR
         </h2>
-        <span className="text-[11px] text-[var(--pz-muted)]">Pixel de referência</span>
+        <span className="text-[10px] text-[var(--pz-muted)] font-mono">Pixel Crítico</span>
       </div>
 
       <StatusCard status={status} appeears={appeears} />
 
-      <div className="p-3 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] space-y-2.5">
-        <div className="text-xs font-semibold text-[var(--pz-secondary)]">
-          Métricas Decisórias e Limiares
+      <div className="p-2.5 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] space-y-1.5">
+        <div className="text-[11px] font-semibold text-[var(--pz-secondary)]">
+          Métricas Decisórias
         </div>
         <MetricsGrid status={status} />
         <ThresholdLegend />
       </div>
 
-      <div className="space-y-2">
-        <div className="text-xs font-semibold text-[var(--pz-secondary)]">
-          Estágios de Compensação Física
+      <div className="space-y-1.5">
+        <div className="text-[11px] font-semibold text-[var(--pz-secondary)] px-0.5">
+          Compensação Física
         </div>
         <CompensationToggles
           applyIonosphere={params.apply_ionosphere}

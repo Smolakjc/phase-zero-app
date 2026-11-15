@@ -82,7 +82,7 @@ export async function fetchMultiYearHomologousWindows(
   startStr: string,
   endStr: string,
   maxYears = 15,
-  nSteps = 12,
+  nSteps = 366,
 ): Promise<HistoricalYearClimateSample[]> {
   const targetYear = Number(endStr.slice(0, 4)) || Number(startStr.slice(0, 4)) || 2026;
   const startYear = Number(startStr.slice(0, 4)) || 2026;
@@ -106,8 +106,10 @@ export async function fetchMultiYearHomologousWindows(
     const wEnd = isMultiYearSpan
       ? `${String(histYear).padStart(4, "0")}-${endStr.slice(5)}`
       : shiftIsoDateYears(endStr, delta);
+    const fullYearStart = `${String(histYear).padStart(4, "0")}-01-01`;
+    const fullYearEnd = `${String(histYear).padStart(4, "0")}-12-31`;
     try {
-      const climate = await fetchLiveNasaPower(lat, lon, wStart, wEnd, nSteps);
+      const climate = await fetchLiveNasaPower(lat, lon, fullYearStart, fullYearEnd, nSteps);
       return {
         year: histYear,
         start_date: wStart,
@@ -153,7 +155,7 @@ export async function getAppeearsThermoPluvioAnalysis(
           input.start_date,
           input.end_date,
           15,
-          12,
+          366,
         ),
       ]);
       appeearsLiveOk = productCheck.ok || samples.length >= 3;

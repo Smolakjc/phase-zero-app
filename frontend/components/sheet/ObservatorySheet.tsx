@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { AnalysisRequest, AnalysisResponse, GridPixel } from "@phase-zero/shared";
 import type { ResolvedTheme } from "../../hooks/useTheme";
 import { stripDecorativeEmojis } from "../../lib/colors";
+import { exportAnalysisToExcel } from "../../lib/exportExcel";
 import { DataSourceBadges } from "../badges/DataSourceBadges";
 import { ThermoLoopChart } from "../charts/ThermoLoopChart";
 import { TimeSeriesChart } from "../charts/TimeSeriesChart";
@@ -14,6 +15,7 @@ import { ThresholdLegend } from "../diagnostics/ThresholdLegend";
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
+  FileSpreadsheetIcon,
   LayersIcon,
   MapPinIcon,
   MountainIcon,
@@ -61,6 +63,19 @@ export function ObservatorySheet({
   // Dropdowns recolhidos no final do menu para detalhamento avançado
   const [metricsExpanded, setMetricsExpanded] = useState<boolean>(false);
   const [terrainExpanded, setTerrainExpanded] = useState<boolean>(false);
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+
+  const handleExportExcel = useCallback(() => {
+    if (!data || isExporting) return;
+    setIsExporting(true);
+    try {
+      exportAnalysisToExcel(data, selectedPixel, params);
+    } catch (err) {
+      console.error("Falha ao exportar planilha Excel:", err);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [data, selectedPixel, params, isExporting]);
 
   // Gatilho da animação suave da esquerda para a direita logo após o mount
   useEffect(() => {
@@ -143,8 +158,24 @@ export function ObservatorySheet({
               </div>
             </div>
 
-            {/* Topo na direita: Série histórica e Botão de Recolher */}
+            {/* Topo na direita: Exportar .xlsx, Série histórica e Botão de Recolher */}
             <div className="flex items-center gap-2 shrink-0">
+              {data && (
+                <button
+                  type="button"
+                  data-testid="sheet-export-excel-btn"
+                  aria-label="Exportar relatório completo em Excel (.xlsx)"
+                  title="Exportar dados completos em planilha Excel (.xlsx)"
+                  onClick={handleExportExcel}
+                  disabled={isExporting}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--pz-surface)] hover:bg-[var(--pz-well)] border border-[var(--pz-border)] hover:border-[var(--pz-border-strong)] text-[var(--pz-text)] text-xs font-semibold transition-all shadow-xs cursor-pointer disabled:opacity-50 active:scale-95"
+                >
+                  <FileSpreadsheetIcon className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span className="hidden sm:inline">Exportar</span>
+                  <span className="font-mono text-[11px] text-[var(--pz-muted)]">.xlsx</span>
+                </button>
+              )}
+
               {data && (
                 <div
                   data-testid="fifteen-year-range-indicator"

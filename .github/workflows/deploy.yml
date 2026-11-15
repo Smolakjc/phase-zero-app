@@ -6,7 +6,6 @@ on:
   workflow_dispatch:
 
 permissions:
-  actions: read
   contents: write
   packages: write
 
@@ -17,7 +16,23 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-24.04-arm
+    env:
+      ENV_FILE_FRONT: ${{ vars.ENV_FILE_FRONT }}
+      ENV_FILE_BACK: ${{ vars.ENV_FILE_BACK }}
     steps:
+      - name: Mask deployment variables
+        shell: bash
+        run: |
+          mask_value() {
+            local escaped="$1"
+            escaped="${escaped//%/%25}"
+            escaped="${escaped//$'\r'/%0D}"
+            escaped="${escaped//$'\n'/%0A}"
+            if [ -n "$escaped" ]; then printf '::add-mask::%s\n' "$escaped"; fi
+          }
+          mask_value "$ENV_FILE_FRONT"
+          mask_value "$ENV_FILE_BACK"
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -29,11 +44,8 @@ jobs:
         run: echo "tag=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Configure frontend environment
-        env:
-          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          ENV_FILE_FRONT="$(gh api "repos/${GITHUB_REPOSITORY}/actions/variables/ENV_FILE_FRONT" --jq .value)"
           if [ -z "$ENV_FILE_FRONT" ]; then
             echo 'Configure a variável Actions ENV_FILE_FRONT.' >&2
             exit 1
@@ -48,11 +60,8 @@ jobs:
           fi
 
       - name: Configure backend environment
-        env:
-          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          ENV_FILE_BACK="$(gh api "repos/${GITHUB_REPOSITORY}/actions/variables/ENV_FILE_BACK" --jq .value)"
           if [ -z "$ENV_FILE_BACK" ]; then
             echo 'Configure a variável Actions ENV_FILE_BACK.' >&2
             exit 1

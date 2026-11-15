@@ -8,8 +8,16 @@ import { DataSourceBadges } from "../badges/DataSourceBadges";
 import { ThermoLoopChart } from "../charts/ThermoLoopChart";
 import { TimeSeriesChart } from "../charts/TimeSeriesChart";
 import { AppeearsThermoPluvioPanel } from "../diagnostics/AppeearsThermoPluvioPanel";
-import { DiagnosticsPanel } from "../diagnostics/DiagnosticsPanel";
-import { ChevronLeftIcon, MapPinIcon } from "../icons/SurveyIcons";
+import { MetricsGrid } from "../diagnostics/MetricsGrid";
+import { StatusCard } from "../diagnostics/StatusCard";
+import { ThresholdLegend } from "../diagnostics/ThresholdLegend";
+import {
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  LayersIcon,
+  MapPinIcon,
+  MountainIcon,
+} from "../icons/SurveyIcons";
 import { TerrainViewport3D } from "../viewport/TerrainViewport3D";
 
 export interface ObservatorySheetProps {
@@ -30,7 +38,7 @@ export interface ObservatorySheetProps {
   onClose: () => void;
 }
 
-type MobileSheetTab = "diagnostics" | "terrain" | "charts" | "hydrothermal";
+type MobileSheetTab = "all" | "charts" | "hydrothermal";
 
 export function ObservatorySheet({
   data,
@@ -38,17 +46,21 @@ export function ObservatorySheet({
   selectedPixel,
   isFreePoint,
   loading: _loading,
-  minCoherenceDraft,
+  minCoherenceDraft: _minCoherenceDraft,
   resolvedTheme,
-  onSetParam,
-  onSetMinCoherenceDraft,
+  onSetParam: _onSetParam,
+  onSetMinCoherenceDraft: _onSetMinCoherenceDraft,
   onUpdatePeriod: _onUpdatePeriod,
   onSelectPixel,
   onClose,
 }: ObservatorySheetProps) {
   const [isClosing, setIsClosing] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState<boolean>(false);
-  const [mobileTab, setMobileTab] = useState<MobileSheetTab>("diagnostics");
+  const [mobileTab, setMobileTab] = useState<MobileSheetTab>("all");
+
+  // Dropdowns recolhidos no final do menu para detalhamento avançado
+  const [metricsExpanded, setMetricsExpanded] = useState<boolean>(false);
+  const [terrainExpanded, setTerrainExpanded] = useState<boolean>(false);
 
   // Gatilho da animação suave da esquerda para a direita logo após o mount
   useEffect(() => {
@@ -173,15 +185,14 @@ export function ObservatorySheet({
               {/* Navegação por abas em telas menores que lg */}
               <div
                 role="tablist"
-                aria-label="Seções de análise do local"
+                aria-label="Filtro de visualização do painel"
                 className="lg:hidden inline-flex items-center rounded-full p-0.5 bg-[var(--pz-well)] border border-[var(--pz-border)]"
               >
                 {(
                   [
-                    { id: "diagnostics", label: "Diagnóstico" },
-                    { id: "terrain", label: "Malha 3D" },
-                    { id: "charts", label: "Séries" },
-                    { id: "hydrothermal", label: "Choque" },
+                    { id: "all", label: "Tudo" },
+                    { id: "charts", label: "Séries & Loop" },
+                    { id: "hydrothermal", label: "Pluviometria" },
                   ] as const
                 ).map((tab) => (
                   <button
@@ -205,64 +216,30 @@ export function ObservatorySheet({
         </header>
 
         {/* Corpo rolável do menu */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-5 space-y-3.5">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-5 space-y-4">
           {!data || !selectedPixel ? (
             <div className="flex flex-col items-center justify-center min-h-[55vh] text-center space-y-3">
               <div className="w-8 h-8 rounded-full border-2 border-[var(--pz-accent)] border-t-transparent animate-spin" />
               <div className="space-y-1">
-                <h3 className="text-xs sm:text-sm font-semibold text-[var(--pz-text)]">
-                  Processando interferometria NISAR e dados NASA POWER...
+                <h3 className="text-sm font-semibold tracking-tight text-[var(--pz-text)]">
+                  Sincronizando telemetria orbital...
                 </h3>
-                <p className="text-[11px] text-[var(--pz-muted)] max-w-sm">
-                  Consultando séries históricas e correções físicas operacionais.
+                <p className="text-xs text-[var(--pz-muted)] max-w-sm">
+                  Recuperando séries temporais InSAR e dados hidroclimáticos.
                 </p>
               </div>
             </div>
           ) : (
             <>
-              {/* Painel Executivo Enxuto de Choque Térmico (AppEEARS / MODIS LST) */}
-              {data.appeears_thermo_pluvio && (
-                <div className={`transition-all ${mobileTab === "hydrothermal" ? "block" : "hidden lg:block"}`}>
-                  <AppeearsThermoPluvioPanel
-                    analysis={data.appeears_thermo_pluvio}
-                  />
-                </div>
-              )}
+              {/* 1. Diagnóstico Geral do Alvo: StatusCard direto e limpo */}
+              <StatusCard status={data.status} appeears={data.appeears_thermo_pluvio} />
 
-              {/* Grid 12 Colunas Workstation InSAR */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
+              {/* 2. Monitoramento Central: Duas Frentes lado a lado (Séries/Loop Térmico + Índices Pluviométricos) */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+                {/* Lado Esquerdo: Deconvolução Temporal + Loop Termo-Mecânico */}
                 <div
-                  className={`lg:col-span-4 xl:col-span-3 ${
-                    mobileTab === "diagnostics" ? "block" : "hidden lg:block"
-                  }`}
-                >
-                  <DiagnosticsPanel
-                    status={data.status}
-                    appeears={data.appeears_thermo_pluvio}
-                    params={params}
-                    minCoherenceDraft={minCoherenceDraft}
-                    onSetParam={onSetParam}
-                    onSetMinCoherenceDraft={onSetMinCoherenceDraft}
-                  />
-                </div>
-
-                <div
-                  className={`lg:col-span-8 xl:col-span-5 ${
-                    mobileTab === "terrain" ? "block" : "hidden lg:block"
-                  }`}
-                >
-                  <TerrainViewport3D
-                    meta={data.scenario_meta}
-                    pixels={data.grid_pixels}
-                    selectedPixel={selectedPixel}
-                    resolvedTheme={resolvedTheme}
-                    onSelectPixel={onSelectPixel}
-                  />
-                </div>
-
-                <div
-                  className={`lg:col-span-12 xl:col-span-4 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-1 gap-3.5 ${
-                    mobileTab === "charts" ? "grid" : "hidden lg:grid"
+                  className={`flex flex-col gap-3.5 ${
+                    mobileTab === "hydrothermal" ? "hidden lg:flex" : "flex"
                   }`}
                 >
                   <TimeSeriesChart
@@ -275,11 +252,135 @@ export function ObservatorySheet({
                     residualTrendMmPerPass={data.status.residual_trend_mm_per_pass}
                   />
                 </div>
+
+                {/* Lado Direito: Situação dos Índices Pluviométricos & Choque Térmico (ABERTO E VISÍVEL) */}
+                {data.appeears_thermo_pluvio && (
+                  <div
+                    className={`${
+                      mobileTab === "charts" ? "hidden lg:block" : "block"
+                    }`}
+                  >
+                    <AppeearsThermoPluvioPanel
+                      analysis={data.appeears_thermo_pluvio}
+                    />
+                  </div>
+                )}
               </div>
 
-              <footer className="pt-2.5 border-t border-[var(--pz-border)] text-center text-[10px] text-[var(--pz-muted)] leading-relaxed">
-                Satellite InSAR is a broad-area monitoring and triage layer, not a standalone
-                structural safety system. Uses NISAR Provisional Data.
+              {/* 3. Detalhamento Técnico Avançado no Final do Menu (Ocultos em Dropdowns) */}
+              <div className="pt-2 border-t border-[var(--pz-border)] space-y-3">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-xs font-bold text-[var(--pz-secondary)] uppercase tracking-wider">
+                    Detalhamento Técnico Avançado
+                  </span>
+                  <span className="text-[11px] text-[var(--pz-muted)]">
+                    Clique para detalhar
+                  </span>
+                </div>
+
+                {/* Dropdown 1: Métricas Decisórias InSAR */}
+                <div className="rounded-2xl border border-[var(--pz-border)] bg-[var(--pz-surface)] overflow-hidden transition-all shadow-sm">
+                  <button
+                    type="button"
+                    aria-expanded={metricsExpanded}
+                    onClick={() => setMetricsExpanded((v) => !v)}
+                    className="w-full px-4 py-3 flex items-center justify-between gap-3 text-left hover:bg-[var(--pz-well)]/60 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="w-8 h-8 rounded-xl bg-[var(--pz-well)] text-[var(--pz-accent)] flex items-center justify-center shrink-0 border border-[var(--pz-border)]">
+                        <LayersIcon className="w-4 h-4" />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs sm:text-sm font-bold text-[var(--pz-text)]">
+                            Métricas Decisórias & Limiares InSAR
+                          </span>
+                        </div>
+                        <span className="text-[11px] font-mono tabular-nums text-[var(--pz-muted)] truncate block">
+                          Velocidade: {data.status.residual_trend_mm_per_pass} mm/c · Aceleração: {data.status.acceleration_index_mm} mm · Score: {data.status.max_weighted_anomaly_score}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="hidden sm:inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--pz-well)] text-[var(--pz-secondary)] border border-[var(--pz-border)]">
+                        {metricsExpanded ? "Ocultar" : "Ver Detalhes"}
+                      </span>
+                      <ChevronDownIcon
+                        className={`w-4 h-4 text-[var(--pz-muted)] transition-transform duration-200 ${
+                          metricsExpanded ? "rotate-180" : ""
+                        }`}
+                      />
+                    </div>
+                  </button>
+
+                  {metricsExpanded && (
+                    <div className="p-4 border-t border-[var(--pz-border)] space-y-3 bg-[var(--pz-well)]/30">
+                      <div className="text-[11px] font-semibold text-[var(--pz-secondary)]">
+                        Valores Estatísticos Calculados
+                      </div>
+                      <MetricsGrid status={data.status} />
+                      <ThresholdLegend />
+                    </div>
+                  )}
+                </div>
+
+                {/* Dropdown 2: Malha Topográfica 3D */}
+                <div className="rounded-2xl border border-[var(--pz-border)] bg-[var(--pz-surface)] overflow-hidden transition-all shadow-sm">
+                  <button
+                    type="button"
+                    aria-expanded={terrainExpanded}
+                    onClick={() => setTerrainExpanded((v) => !v)}
+                    className="w-full px-4 py-3 flex items-center justify-between gap-3 text-left hover:bg-[var(--pz-well)]/60 transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="w-8 h-8 rounded-xl bg-[var(--pz-well)] text-[var(--pz-accent)] flex items-center justify-center shrink-0 border border-[var(--pz-border)]">
+                        <MountainIcon className="w-4 h-4" />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs sm:text-sm font-bold text-[var(--pz-text)]">
+                            Malha Topográfica 3D & Relevo
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-[var(--pz-muted)] truncate block">
+                          Visualização tridimensional da geometria da barragem ({data.grid_pixels.length} nós)
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="hidden sm:inline-block text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--pz-well)] text-[var(--pz-secondary)] border border-[var(--pz-border)]">
+                        {terrainExpanded ? "Ocultar" : "Abrir Malha 3D"}
+                      </span>
+                      <ChevronDownIcon
+                        className={`w-4 h-4 text-[var(--pz-muted)] transition-transform duration-200 ${
+                          terrainExpanded ? "rotate-180" : ""
+                        }`}
+                      />
+                    </div>
+                  </button>
+
+                  {terrainExpanded && (
+                    <div className="p-4 border-t border-[var(--pz-border)] bg-[var(--pz-well)]/20">
+                      <TerrainViewport3D
+                        meta={data.scenario_meta}
+                        pixels={data.grid_pixels}
+                        selectedPixel={selectedPixel}
+                        resolvedTheme={resolvedTheme}
+                        onSelectPixel={onSelectPixel}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <footer className="pt-3 border-t border-[var(--pz-border)] text-center text-[11px] text-[var(--pz-muted)] flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+                <span>NISAR Provisional · Sentinel-1 SAR</span>
+                <span className="hidden sm:inline opacity-40" aria-hidden="true">·</span>
+                <span>NASA POWER & AppEEARS</span>
+                <span className="hidden sm:inline opacity-40" aria-hidden="true">·</span>
+                <span>Triagem Geotécnica Orbital</span>
               </footer>
             </>
           )}

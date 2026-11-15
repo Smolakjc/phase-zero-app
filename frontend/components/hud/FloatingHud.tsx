@@ -221,11 +221,11 @@ export function FloatingHud({
           data-testid="open-search-btn"
           aria-expanded={searchOpen}
           onClick={() => setSearchOpen((v) => !v)}
-          className="pz-glass inline-flex items-center gap-2 px-3.5 py-2.5 rounded-full text-xs font-medium text-[var(--pz-secondary)] hover:text-[var(--pz-text)] hover:border-[var(--pz-accent)] transition-colors cursor-pointer shrink-0"
+          className="pz-glass inline-flex items-center gap-2 px-3.5 py-2 rounded-full text-xs font-medium text-[var(--pz-secondary)] hover:text-[var(--pz-text)] hover:border-[var(--pz-accent)]/60 transition-all duration-150 cursor-pointer shrink-0 hover:scale-[1.02] active:scale-95 shadow-sm"
         >
           <SearchIcon className="w-3.5 h-3.5 text-[var(--pz-accent)] shrink-0" />
-          <span className="truncate max-w-[155px] sm:max-w-[165px]">
-            Buscar barragem / Lat-Lon
+          <span className="truncate max-w-[155px] sm:max-w-[175px]">
+            Buscar Alvo ou Coordenada
           </span>
         </button>
 
@@ -497,17 +497,25 @@ export function FloatingHud({
                 title={fullLabel}
                 aria-pressed={isActive}
                 onClick={() => onSelectScenario(sc.id, sc.default_start, sc.default_end)}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-150 cursor-pointer active:scale-95 ${
                   isActive
-                    ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)]"
-                    : "text-[var(--pz-secondary)] hover:text-[var(--pz-text)] hover:bg-[var(--pz-accent-soft)]"
+                    ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] pz-glow-accent shadow-sm scale-[1.02]"
+                    : "text-[var(--pz-secondary)] hover:text-[var(--pz-text)] hover:bg-[var(--pz-well)] border border-transparent hover:border-[var(--pz-border)]"
                 }`}
               >
-                <span
-                  className="w-2 h-2 rounded-full shrink-0"
-                  style={{ backgroundColor: isActive ? "currentColor" : dotHex }}
-                  aria-hidden="true"
-                />
+                <span className="relative flex h-2 w-2 shrink-0">
+                  {isActive && (
+                    <span
+                      className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                      style={{ backgroundColor: dotHex }}
+                    />
+                  )}
+                  <span
+                    className="relative inline-flex rounded-full h-2 w-2 shrink-0"
+                    style={{ backgroundColor: isActive ? "currentColor" : dotHex }}
+                    aria-hidden="true"
+                  />
+                </span>
                 <span>{pillLabel}</span>
               </button>
             );
@@ -517,7 +525,7 @@ export function FloatingHud({
         <div
           role="group"
           aria-label="Estilo do mapa gratuito"
-          className="pz-glass inline-flex items-center gap-1 p-1 rounded-full"
+          className="pz-glass inline-flex items-center gap-0.5 p-1 rounded-full shadow-sm"
         >
           <span className="pl-2 pr-0.5 text-[var(--pz-muted)] hidden sm:inline-flex" aria-hidden="true">
             <LayersIcon className="w-3.5 h-3.5" />
@@ -534,10 +542,10 @@ export function FloatingHud({
               type="button"
               aria-pressed={styleMode === item.id}
               onClick={() => onChangeStyleMode(item.id)}
-              className={`px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-150 cursor-pointer active:scale-95 ${
                 styleMode === item.id
-                  ? "bg-[var(--pz-accent-soft)] text-[var(--pz-accent)] font-semibold"
-                  : "text-[var(--pz-secondary)] hover:text-[var(--pz-text)]"
+                  ? "bg-[var(--pz-accent-soft)] text-[var(--pz-accent)] font-semibold shadow-xs"
+                  : "text-[var(--pz-secondary)] hover:text-[var(--pz-text)] hover:bg-[var(--pz-well)]"
               }`}
             >
               {item.label}
@@ -548,10 +556,10 @@ export function FloatingHud({
             aria-pressed={terrain3D}
             onClick={onToggleTerrain3D}
             title="Ativar relevo topográfico 3D (AWS Terrarium DEM)"
-            className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all duration-150 cursor-pointer active:scale-95 ${
               terrain3D
-                ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] font-semibold"
-                : "text-[var(--pz-secondary)] hover:text-[var(--pz-text)]"
+                ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] font-semibold shadow-xs"
+                : "text-[var(--pz-secondary)] hover:text-[var(--pz-text)] hover:bg-[var(--pz-well)]"
             }`}
           >
             <MountainIcon className="w-3.5 h-3.5" />

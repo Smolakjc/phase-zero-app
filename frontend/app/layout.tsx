@@ -1,10 +1,10 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./globals.css";
 import type { Metadata } from "next";
-import { Figtree, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import React from "react";
 
-const figtree = Figtree({
+const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
@@ -29,12 +29,12 @@ const COLOR_SCHEME_INIT_SCRIPT =
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${figtree.variable} ${jetbrainsMono.variable}`}>
+    <html lang="pt-BR" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <head>
         <meta name="color-scheme" content="light dark" />
         <script dangerouslySetInnerHTML={{ __html: COLOR_SCHEME_INIT_SCRIPT }} />
       </head>
-      <body className="min-h-screen bg-[var(--pz-ground)] text-[var(--pz-text)] font-sans antialiased">
+      <body className="min-h-screen bg-[var(--pz-ground)] text-[var(--pz-text)] font-sans antialiased selection:bg-[var(--pz-accent)]/20 selection:text-[var(--pz-accent)]">
         {children}
       </body>
     </html>

@@ -13,42 +13,50 @@ export function ThresholdLegend() {
   } = CLASSIFICATION_THRESHOLDS;
 
   return (
-    <details className="group pt-2 border-t border-[var(--pz-border)] text-[11px] text-[var(--pz-muted)]">
-      <summary className="flex items-center justify-between cursor-pointer list-none hover:text-[var(--pz-text)] transition-colors select-none">
-        <span className="inline-flex items-center gap-1.5 font-medium">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" aria-hidden="true" />
-          <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b]" aria-hidden="true" />
-          <span className="w-1.5 h-1.5 rounded-full bg-[#f43f5e]" aria-hidden="true" />
-          <span>Regras de Limiares</span>
+    <details className="group pt-2 border-t border-[var(--pz-border)] text-xs text-[var(--pz-muted)]">
+      <summary className="flex items-center justify-between cursor-pointer list-none hover:text-[var(--pz-text)] transition-colors select-none py-1">
+        <span className="inline-flex items-center gap-2 font-medium">
+          <span className="inline-flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-emerald-400" aria-hidden="true" />
+            <span className="w-2 h-2 rounded-full bg-amber-400" aria-hidden="true" />
+            <span className="w-2 h-2 rounded-full bg-rose-500" aria-hidden="true" />
+          </span>
+          <span className="text-[11px] font-semibold text-[var(--pz-secondary)]">Critérios e Limiares Operacionais</span>
         </span>
-        <span className="text-[10px] text-[var(--pz-muted)] group-open:rotate-180 transition-transform">
+        <span className="text-[10px] text-[var(--pz-muted)] group-open:rotate-180 transition-transform duration-200">
           ▼
         </span>
       </summary>
 
-      <div className="space-y-1.5 pt-2 font-mono tabular-nums text-[10px]">
-        <div className="flex items-start gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#10b981] shrink-0 mt-0.5" aria-hidden="true" />
-          <span>
-            <strong className="text-[var(--pz-text)] font-sans">Verde:</strong> |Vel| &lt;{" "}
-            {GREEN_MAX_SLOPE_MM_PER_PASS.toFixed(2)} mm/c e Score &lt; {GREEN_MAX_SCORE.toFixed(1)}
-          </span>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2.5 font-mono tabular-nums text-[11px]">
+        <div className="p-2.5 rounded-xl bg-[var(--pz-surface)] border border-[var(--pz-border)] space-y-1">
+          <div className="flex items-center gap-1.5 font-sans font-bold text-emerald-500 text-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" aria-hidden="true" />
+            <span>Verde (Estável)</span>
+          </div>
+          <div className="text-[10px] text-[var(--pz-secondary)] leading-relaxed">
+            |Vel| &lt; {GREEN_MAX_SLOPE_MM_PER_PASS.toFixed(2)} mm/c e Score &lt; {GREEN_MAX_SCORE.toFixed(1)}
+          </div>
         </div>
-        <div className="flex items-start gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#f59e0b] shrink-0 mt-0.5" aria-hidden="true" />
-          <span>
-            <strong className="text-[var(--pz-text)] font-sans">Amarelo:</strong> |Vel|{" "}
-            {GREEN_MAX_SLOPE_MM_PER_PASS.toFixed(2)}–{YELLOW_MAX_SLOPE_MM_PER_PASS.toFixed(2)}, |Acel| &lt;{" "}
-            {YELLOW_MAX_ACCEL_MM.toFixed(1)} e Score &lt; {YELLOW_MAX_SCORE.toFixed(1)}
-          </span>
+
+        <div className="p-2.5 rounded-xl bg-[var(--pz-surface)] border border-[var(--pz-border)] space-y-1">
+          <div className="flex items-center gap-1.5 font-sans font-bold text-amber-500 text-xs">
+            <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
+            <span>Amarelo (Atenção)</span>
+          </div>
+          <div className="text-[10px] text-[var(--pz-secondary)] leading-relaxed">
+            |Vel| {GREEN_MAX_SLOPE_MM_PER_PASS.toFixed(2)}–{YELLOW_MAX_SLOPE_MM_PER_PASS.toFixed(2)} mm/c ou |Acel| &lt; {YELLOW_MAX_ACCEL_MM.toFixed(1)} mm
+          </div>
         </div>
-        <div className="flex items-start gap-2">
-          <span className="w-2 h-2 rounded-full bg-[#f43f5e] shrink-0 mt-0.5" aria-hidden="true" />
-          <span>
-            <strong className="text-[var(--pz-text)] font-sans">Vermelho:</strong> |Vel| &ge;{" "}
-            {YELLOW_MAX_SLOPE_MM_PER_PASS.toFixed(2)}, |Acel| &ge; {YELLOW_MAX_ACCEL_MM.toFixed(1)} ou Score &ge;{" "}
-            {YELLOW_MAX_SCORE.toFixed(1)}
-          </span>
+
+        <div className="p-2.5 rounded-xl bg-[var(--pz-surface)] border border-[var(--pz-border)] space-y-1">
+          <div className="flex items-center gap-1.5 font-sans font-bold text-rose-500 text-xs">
+            <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" aria-hidden="true" />
+            <span>Vermelho (Crítico)</span>
+          </div>
+          <div className="text-[10px] text-[var(--pz-secondary)] leading-relaxed">
+            |Vel| &ge; {YELLOW_MAX_SLOPE_MM_PER_PASS.toFixed(2)} mm/c, |Acel| &ge; {YELLOW_MAX_ACCEL_MM.toFixed(1)} ou Score &ge; {YELLOW_MAX_SCORE.toFixed(1)}
+          </div>
         </div>
       </div>
     </details>

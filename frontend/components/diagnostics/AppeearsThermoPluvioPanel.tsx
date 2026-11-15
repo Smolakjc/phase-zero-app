@@ -13,7 +13,6 @@ import {
   AlertOctagonIcon,
   AlertTriangleIcon,
   CheckCircleIcon,
-  ChevronDownIcon,
 } from "../icons/SurveyIcons";
 
 export interface AppeearsThermoPluvioPanelProps {
@@ -33,9 +32,9 @@ const CATEGORY_META: Record<
     className: "pz-status-yellow",
   },
   external_proven_case: {
-    badge: "Caso Real Externo",
+    badge: "Caso Real",
     className:
-      "bg-[var(--pz-accent-soft)] text-[var(--pz-accent)] border-[var(--pz-accent)]",
+      "bg-[var(--pz-accent-soft)] text-[var(--pz-accent)] border-[var(--pz-accent)]/30",
   },
 };
 
@@ -53,18 +52,18 @@ function getMonthShockBadge(mVal: MonthlyThermoPluvioData): {
 
   if (level === "SEVERE") {
     return {
-      label: `SIM · Choque em ${mVal.month_short}`,
+      label: "Crítico",
       className: "pz-status-red",
     };
   }
   if (level === "MODERATE") {
     return {
-      label: `POSSÍVEL · Moderado em ${mVal.month_short}`,
+      label: "Moderado",
       className: "pz-status-yellow",
     };
   }
   return {
-    label: "NÃO · Sem Choque",
+    label: "Normal",
     className: "pz-status-green",
   };
 }
@@ -75,29 +74,28 @@ function getYearShockBadge(maxIndex: number, shockMonthsCount: number): {
 } {
   if (maxIndex >= 38) {
     return {
-      label: `SIM · Choque Crítico (${shockMonthsCount}/12m)`,
+      label: `Crítico (${shockMonthsCount}/12m)`,
       className: "pz-status-red",
     };
   }
   if (maxIndex >= 20 || shockMonthsCount > 0) {
     return {
-      label: `POSSÍVEL · Moderado (${shockMonthsCount}/12m)`,
+      label: `Moderado (${shockMonthsCount}/12m)`,
       className: "pz-status-yellow",
     };
   }
   return {
-    label: "NÃO · Sem Choque",
+    label: "Normal",
     className: "pz-status-green",
   };
 }
 
-type DetailTab = "history" | "correlations" | "methodology";
+type DetailTab = "months" | "history" | "correlations" | "methodology";
 
 export function AppeearsThermoPluvioPanel({
   analysis,
 }: AppeearsThermoPluvioPanelProps) {
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<DetailTab>("history");
+  const [activeTab, setActiveTab] = useState<DetailTab>("months");
   const [damCategoryFilter, setDamCategoryFilter] = useState<
     "all" | CorrelatedDamCategory
   >("all");
@@ -106,7 +104,23 @@ export function AppeearsThermoPluvioPanel({
   const b = analysis.five_year_baseline;
   const totalYears = b.historical_windows.length;
 
-  // Inicia com os anos recolhidos para visualização rápida e enxuta
+  const targetYear = typeof analysis.target_period_label === "string"
+    ? parseInt(analysis.target_period_label.slice(0, 4), 10)
+    : NaN;
+
+  const currentWindow =
+    (!isNaN(targetYear)
+      ? b.historical_windows.find((w) => w.year === targetYear)
+      : null) ??
+    b.historical_windows[b.historical_windows.length - 1] ??
+    b.historical_windows[0];
+
+  const currentMonths = currentWindow?.monthly_breakdown ?? [];
+  const maxMonthPrecip = Math.max(
+    1,
+    ...currentMonths.map((x) => x.precip_total_mm),
+  );
+
   const [expandedYears, setExpandedYears] = useState<Set<number>>(new Set());
 
   const toggleYear = (year: number) => {
@@ -130,7 +144,7 @@ export function AppeearsThermoPluvioPanel({
     (d) => damCategoryFilter === "all" || d.category === damCategoryFilter,
   );
 
-  const targetMonthLabel = analysis.target_month_label ?? "Mês Consultado";
+  const targetMonthLabel = analysis.target_month_label ?? "Período Consultado";
   const studyRef = analysis.study_reference ?? THERMAL_SHOCK_STUDY_REFERENCE;
   const formulaExpr =
     analysis.formula_expression ?? THERMAL_SHOCK_FORMULA_EXPRESSION;
@@ -149,12 +163,11 @@ export function AppeearsThermoPluvioPanel({
   return (
     <section
       data-testid="appeears-thermo-pluvio-panel"
-      aria-label="Cálculo Mensal de Choque Térmico: Temperatura e Índice Pluviométrico"
-      className="rounded-2xl bg-[var(--pz-surface)] border border-[var(--pz-border)] p-3.5 space-y-3 transition-all"
+      aria-label="Situação dos Índices Pluviométricos e Choque Térmico"
+      className="rounded-2xl bg-[var(--pz-surface)] border border-[var(--pz-border)] p-4 sm:p-5 flex flex-col gap-4 shadow-sm backdrop-blur-md"
     >
-      {/* Faixa Executiva Enxuta: Veredito + KPIs Essenciais + Botão de Divulgação Progressiva */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        {/* Veredito e Identificação */}
+      {/* 1. Cabeçalho Executivo */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--pz-border)]">
         <div className="flex items-center gap-3 min-w-0">
           <div
             data-testid="appeears-verdict-banner"
@@ -177,141 +190,290 @@ export function AppeearsThermoPluvioPanel({
           </div>
 
           <div className="min-w-0">
-            <h3
+            <h3 className="text-sm font-bold text-[var(--pz-text)] tracking-tight">
+              Choque Hidrotermal & Pluviometria
+            </h3>
+            <p
               data-testid="appeears-core-question"
-              className="text-xs sm:text-sm font-semibold text-[var(--pz-text)] truncate"
+              className="text-xs text-[var(--pz-muted)] truncate"
               title={analysis.core_question}
             >
-              Choque Hidrotermal em {targetMonthLabel}: {analysis.core_question}
-            </h3>
-            <p className="text-[11px] text-[var(--pz-muted)] truncate">
-              {analysis.verdict_summary}
+              {targetMonthLabel} · {analysis.verdict_summary || "Triagem climática e saturação"}
             </p>
           </div>
         </div>
 
-        {/* 4 Métricas Chave em Linha Limpa + Gatilho de Expansão */}
-        <div className="flex flex-wrap items-center justify-between lg:justify-end gap-2.5 shrink-0 pt-2 lg:pt-0 border-t lg:border-t-0 border-[var(--pz-border)]">
-          <div className="flex items-center gap-3 text-xs font-mono tabular-nums">
-            <div className="text-left">
-              <span className="text-[10px] text-[var(--pz-muted)] block font-sans" title="Maior queda térmica contínua em janela curta de 24h a 48h">Queda ΔT (24h–48h)</span>
-              <span data-testid="appeears-metric-drop" className="font-bold text-[var(--pz-text)]">
-                {m.max_hot_to_cold_drop_c}°C
-              </span>
-            </div>
+        <span className="text-[10px] font-mono text-[var(--pz-muted)] self-start sm:self-center bg-[var(--pz-well)] px-2.5 py-1 rounded-lg border border-[var(--pz-border)]">
+          GPM 3IMERG · MODIS LST
+        </span>
+      </div>
 
-            <div className="h-6 w-px bg-[var(--pz-border)]" aria-hidden="true" />
-
-            <div className="text-left">
-              <span className="text-[10px] text-[var(--pz-muted)] block font-sans">Chuva</span>
-              <span data-testid="appeears-metric-precip" className="font-bold text-[var(--pz-text)]">
-                {m.precip_total_mm} mm
-              </span>
-            </div>
-
-            <div className="h-6 w-px bg-[var(--pz-border)]" aria-hidden="true" />
-
-            <div className="text-left">
-              <span className="text-[10px] text-[var(--pz-muted)] block font-sans">Índice I_CT</span>
-              <span data-testid="appeears-metric-shock" className="font-bold text-[var(--pz-accent)]">
-                {m.thermo_pluvio_shock_index} <span className="text-[10px] text-[var(--pz-muted)]">/ 100</span>
-              </span>
-            </div>
-
-            <div className="h-6 w-px bg-[var(--pz-border)]" aria-hidden="true" />
-
-            <div className="text-left">
-              <span className="text-[10px] text-[var(--pz-muted)] block font-sans">Choque</span>
-              <span data-testid="appeears-metric-5y-same" className="font-bold text-[var(--pz-text)]">
-                {shockLevel === "SEVERE"
-                  ? "Crítico"
-                  : shockLevel === "MODERATE" || possibleShock
-                    ? "Possível"
-                    : "Normal"}
-              </span>
-            </div>
+      {/* 2. Destaque dos 4 KPIs em Cards Telemetria */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+        {/* KPI 1: Chuva Acumulada */}
+        <div className="p-3.5 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] space-y-1 hover:border-[var(--pz-border-strong)] transition-colors">
+          <span className="text-[10px] uppercase tracking-wider text-[var(--pz-muted)] font-semibold block">
+            Chuva Total
+          </span>
+          <div className="flex items-baseline gap-1.5">
+            <span
+              data-testid="appeears-metric-precip"
+              className="text-xl sm:text-2xl font-mono tabular-nums font-bold text-[var(--pz-text)] tracking-tight"
+            >
+              {m.precip_total_mm}
+            </span>
+            <span className="text-xs font-mono text-[var(--pz-muted)]">mm</span>
           </div>
+          <span className="text-[10px] text-[var(--pz-muted)] block font-mono">
+            Média: {b.expected_precip_total_mm} mm
+          </span>
+        </div>
 
-          <button
-            type="button"
-            aria-expanded={isExpanded}
-            onClick={() => setIsExpanded((v) => !v)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--pz-well)] hover:bg-[var(--pz-accent-soft)] text-[var(--pz-secondary)] hover:text-[var(--pz-text)] border border-[var(--pz-border)] text-xs font-semibold transition-colors cursor-pointer"
+        {/* KPI 2: Pico Diário 24h */}
+        <div className="p-3.5 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] space-y-1 hover:border-[var(--pz-border-strong)] transition-colors">
+          <span className="text-[10px] uppercase tracking-wider text-[var(--pz-muted)] font-semibold block">
+            Pico Chuva 24h
+          </span>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-xl sm:text-2xl font-mono tabular-nums font-bold text-[var(--pz-text)] tracking-tight">
+              {m.precip_max_daily_mm}
+            </span>
+            <span className="text-xs font-mono text-[var(--pz-muted)]">mm/d</span>
+          </div>
+          <span className="text-[10px] text-[var(--pz-muted)] block font-mono">
+            {m.precip_max_daily_mm >= 34 ? (
+              <span className="text-[var(--pz-danger-ink)] font-semibold">Gatilho &gt; 34 mm</span>
+            ) : (
+              "Sem pico crítico"
+            )}
+          </span>
+        </div>
+
+        {/* KPI 3: Queda Térmica ΔT */}
+        <div className="p-3.5 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] space-y-1 hover:border-[var(--pz-border-strong)] transition-colors">
+          <span
+            className="text-[10px] uppercase tracking-wider text-[var(--pz-muted)] font-semibold block"
+            title="Maior queda contínua em 24h–48h na passagem de frente fria"
           >
-            <span>{isExpanded ? "Recolher detalhes" : "Ver histórico e fórmula"}</span>
-            <ChevronDownIcon
-              className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                isExpanded ? "rotate-180" : ""
-              }`}
-            />
-          </button>
+            Queda ΔT (24h–48h)
+          </span>
+          <div className="flex items-baseline gap-1.5">
+            <span
+              data-testid="appeears-metric-drop"
+              className="text-xl sm:text-2xl font-mono tabular-nums font-bold text-[var(--pz-text)] tracking-tight"
+            >
+              {m.max_hot_to_cold_drop_c}
+            </span>
+            <span className="text-xs font-mono text-[var(--pz-muted)]">°C</span>
+          </div>
+          <span className="text-[10px] text-[var(--pz-muted)] block font-mono">
+            Tração estrutural
+          </span>
+        </div>
+
+        {/* KPI 4: Índice Combinado I_CT */}
+        <div className="p-3.5 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] space-y-1 hover:border-[var(--pz-border-strong)] transition-colors">
+          <span className="text-[10px] uppercase tracking-wider text-[var(--pz-muted)] font-semibold block">
+            Índice I_CT
+          </span>
+          <div className="flex items-baseline gap-1.5">
+            <span
+              data-testid="appeears-metric-shock"
+              className="text-xl sm:text-2xl font-mono tabular-nums font-bold text-[var(--pz-accent)] tracking-tight"
+            >
+              {m.thermo_pluvio_shock_index}
+            </span>
+            <span className="text-xs font-mono text-[var(--pz-muted)]">/ 100</span>
+          </div>
+          <span
+            data-testid="appeears-metric-5y-same"
+            className="text-[10px] font-semibold block font-mono text-[var(--pz-text)]"
+          >
+            {shockLevel === "SEVERE"
+              ? "🔴 Choque Crítico"
+              : shockLevel === "MODERATE" || possibleShock
+                ? "🟡 Risco Moderado"
+                : "🟢 Normal"}
+          </span>
         </div>
       </div>
 
-      {/* Seção Detalhada (Progressive Disclosure) */}
-      <div className={isExpanded ? "space-y-3 pt-3 border-t border-[var(--pz-border)]" : "hidden"}>
-        {/* Abas Internas de Navegação */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div
-            role="tablist"
-            aria-label="Detalhes da análise hidrotermal"
-            className="inline-flex rounded-full p-0.5 bg-[var(--pz-well)] border border-[var(--pz-border)]"
+      {/* 3. Navegação de Abas */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-[var(--pz-border)]">
+        <div
+          role="tablist"
+          aria-label="Abas da situação pluviométrica e choque"
+          className="inline-flex rounded-full p-0.5 bg-[var(--pz-well)] border border-[var(--pz-border)]"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "months"}
+            onClick={() => setActiveTab("months")}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              activeTab === "months"
+                ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] shadow-sm"
+                : "text-[var(--pz-muted)] hover:text-[var(--pz-text)]"
+            }`}
           >
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === "history"}
-              onClick={() => setActiveTab("history")}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
-                activeTab === "history"
-                  ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)]"
-                  : "text-[var(--pz-muted)] hover:text-[var(--pz-text)]"
-              }`}
-            >
-              Histórico ({totalYears} Anos)
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === "correlations"}
-              onClick={() => setActiveTab("correlations")}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
-                activeTab === "correlations"
-                  ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)]"
-                  : "text-[var(--pz-muted)] hover:text-[var(--pz-text)]"
-              }`}
-            >
-              Casos Correlatos ({filteredCorrelations.length})
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === "methodology"}
-              onClick={() => setActiveTab("methodology")}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
-                activeTab === "methodology"
-                  ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)]"
-                  : "text-[var(--pz-muted)] hover:text-[var(--pz-text)]"
-              }`}
-            >
-              Fórmula & Metodologia
-            </button>
-          </div>
-
-          {activeTab === "history" && (
-            <button
-              type="button"
-              data-testid="toggle-all-months-btn"
-              onClick={toggleAllYears}
-              className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-[var(--pz-well)] hover:bg-[var(--pz-accent-soft)] text-[var(--pz-secondary)] hover:text-[var(--pz-text)] border border-[var(--pz-border)] transition-colors cursor-pointer"
-            >
-              {expandedYears.size === totalYears ? "Recolher Todos os Meses" : "Expandir Todos os Meses"}
-            </button>
-          )}
+            Meses ({currentWindow?.year ?? "Ano"})
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "history"}
+            onClick={() => setActiveTab("history")}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              activeTab === "history"
+                ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] shadow-sm"
+                : "text-[var(--pz-muted)] hover:text-[var(--pz-text)]"
+            }`}
+          >
+            Histórico ({totalYears} Anos)
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "correlations"}
+            onClick={() => setActiveTab("correlations")}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              activeTab === "correlations"
+                ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] shadow-sm"
+                : "text-[var(--pz-muted)] hover:text-[var(--pz-text)]"
+            }`}
+          >
+            Casos Correlatos ({filteredCorrelations.length})
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "methodology"}
+            onClick={() => setActiveTab("methodology")}
+            className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              activeTab === "methodology"
+                ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] shadow-sm"
+                : "text-[var(--pz-muted)] hover:text-[var(--pz-text)]"
+            }`}
+          >
+            Metodologia & Fórmula
+          </button>
         </div>
 
-        {/* Tab 1: Histórico de 15 Anos */}
-        <div className={activeTab === "history" ? "space-y-2" : "hidden"}>
+        {activeTab === "history" && (
+          <button
+            type="button"
+            data-testid="toggle-all-months-btn"
+            onClick={toggleAllYears}
+            className="text-[11px] font-medium px-2.5 py-1 rounded-lg bg-[var(--pz-well)] hover:bg-[var(--pz-accent-soft)] text-[var(--pz-secondary)] hover:text-[var(--pz-text)] border border-[var(--pz-border)] transition-colors cursor-pointer"
+          >
+            {expandedYears.size === totalYears ? "Recolher Todos" : "Expandir Todos"}
+          </button>
+        )}
+      </div>
+
+      {/* 4. Aba 1: Matriz Pluviométrica Mensal Aberta */}
+      {activeTab === "months" && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-[11px] text-[var(--pz-muted)] px-1">
+            <span>
+              Precipitação mensal acumulada e picos em 24h (Ano:{" "}
+              <strong className="text-[var(--pz-text)]">{currentWindow?.year}</strong>):
+            </span>
+            <span className="font-mono">Total ano: {currentWindow?.precip_total_mm} mm</span>
+          </div>
+
+          <div className="overflow-x-auto rounded-xl border border-[var(--pz-border)] bg-[var(--pz-surface)]">
+            <table className="w-full text-left border-collapse text-[11px]">
+              <thead>
+                <tr className="border-b border-[var(--pz-border)] bg-[var(--pz-well)]/60 text-[var(--pz-muted)]">
+                  <th className="py-2 px-3 font-semibold">Mês</th>
+                  <th className="py-2 px-3 font-semibold">Chuva Total (mm)</th>
+                  <th className="py-2 px-2.5 font-semibold">Pico 24h</th>
+                  <th className="py-2 px-2.5 font-semibold">Temp. Média</th>
+                  <th className="py-2 px-2.5 font-semibold">Queda ΔT</th>
+                  <th className="py-2 px-2.5 font-semibold">Índice I_CT</th>
+                  <th className="py-2 px-3 font-semibold">Veredito</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--pz-border)] font-mono tabular-nums">
+                {currentMonths.length > 0 ? (
+                  currentMonths.map((mVal) => {
+                    const mBadge = getMonthShockBadge(mVal);
+                    const pctBar = Math.min(
+                      100,
+                      Math.round((mVal.precip_total_mm / maxMonthPrecip) * 100),
+                    );
+
+                    return (
+                      <tr
+                        key={mVal.month}
+                        className="hover:bg-[var(--pz-well)]/50 transition-colors"
+                      >
+                        <td className="py-2 px-3 font-bold font-sans text-[var(--pz-text)]">
+                          {mVal.month_short}
+                        </td>
+                        <td className="py-2 px-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-[var(--pz-text)] min-w-[48px]">
+                              {mVal.precip_total_mm} mm
+                            </span>
+                            <div className="hidden sm:block flex-1 max-w-[80px] h-1.5 rounded-full bg-[var(--pz-well)] overflow-hidden">
+                              <div
+                                className="h-full bg-gradient-to-r from-sky-500/40 to-sky-400 rounded-full"
+                                style={{ width: `${pctBar}%` }}
+                              />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-2 px-2.5 text-[var(--pz-text)]">
+                          <span
+                            className={
+                              mVal.precip_max_daily_mm >= 34
+                                ? "text-[var(--pz-danger-ink)] font-bold"
+                                : ""
+                            }
+                          >
+                            {mVal.precip_max_daily_mm} mm/d
+                          </span>
+                        </td>
+                        <td className="py-2 px-2.5 text-[var(--pz-muted)]">
+                          {mVal.mean_temp_c}°C
+                        </td>
+                        <td className="py-2 px-2.5 font-semibold text-[var(--pz-text)]">
+                          {mVal.thermal_shock_drop_c}°C
+                        </td>
+                        <td className="py-2 px-2.5 font-bold text-[var(--pz-accent)]">
+                          {mVal.coupled_shock_index}
+                        </td>
+                        <td className="py-2 px-3 font-sans">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border whitespace-nowrap ${mBadge.className}`}
+                          >
+                            {mBadge.label}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="py-4 text-center text-xs text-[var(--pz-muted)]"
+                    >
+                      Amostragem mensal em processamento...
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Aba 2: Histórico de 15 Anos */}
+      {activeTab === "history" && (
+        <div className="space-y-2">
           <div className="overflow-x-auto rounded-xl border border-[var(--pz-border)] bg-[var(--pz-surface)]">
             <table
               data-testid="five-year-comparison-table"
@@ -320,12 +482,12 @@ export function AppeearsThermoPluvioPanel({
               <thead>
                 <tr className="border-b border-[var(--pz-border)] bg-[var(--pz-well)]/50 text-[var(--pz-muted)]">
                   <th className="py-2 px-3 font-semibold">Ano</th>
-                  <th className="py-2 px-2 font-semibold" title="Temperatura média anual com amplitude entre os vales e picos das frentes">Temp. Média</th>
-                  <th className="py-2 px-2 font-semibold" title="Maior queda térmica contínua em janela curta de 24h a 48h registrada no ano">Maior Queda ΔT (24h–48h)</th>
+                  <th className="py-2 px-2 font-semibold">Temp. Média</th>
+                  <th className="py-2 px-2 font-semibold">Maior Queda ΔT</th>
                   <th className="py-2 px-2 font-semibold">Precipitação Total</th>
                   <th className="py-2 px-2 font-semibold">Pico I_CT</th>
                   <th className="py-2 px-2 font-semibold">Meses c/ Choque</th>
-                  <th className="py-2 px-3 font-semibold">Veredito do Ano</th>
+                  <th className="py-2 px-3 font-semibold">Veredito</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--pz-border)] font-mono tabular-nums">
@@ -411,11 +573,11 @@ export function AppeearsThermoPluvioPanel({
                                   <thead>
                                     <tr className="border-b border-[var(--pz-border)] text-[var(--pz-muted)]">
                                       <th className="py-1 px-1.5 font-semibold">Mês</th>
-                                      <th className="py-1 px-1.5 font-semibold whitespace-nowrap" title="Temperatura média de todos os dias do mês">Temp. Média</th>
-                                      <th className="py-1 px-1.5 font-semibold whitespace-nowrap" title="Temperatura no início e término da maior queda contínua em janela de 24h a 48h (passagem de frente fria)">Início → Fim (24h–48h)</th>
-                                      <th className="py-1 px-1.5 font-semibold whitespace-nowrap" title="Maior salto térmico contínuo em janela curta de 24h a 48h sem reaquecimento intermediário">Queda ΔT (24h–48h)</th>
-                                      <th className="py-1 px-1.5 font-semibold whitespace-nowrap" title="Precipitação total acumulada no mês inteiro">Chuva Total</th>
-                                      <th className="py-1 px-1.5 font-semibold whitespace-nowrap" title="Maior volume de chuva diária registrado no mês (24h)">Pico Chuva 24h</th>
+                                      <th className="py-1 px-1.5 font-semibold whitespace-nowrap">Temp. Média</th>
+                                      <th className="py-1 px-1.5 font-semibold whitespace-nowrap">Início → Fim (24h–48h)</th>
+                                      <th className="py-1 px-1.5 font-semibold whitespace-nowrap">Queda ΔT</th>
+                                      <th className="py-1 px-1.5 font-semibold whitespace-nowrap">Chuva Total</th>
+                                      <th className="py-1 px-1.5 font-semibold whitespace-nowrap">Pico Chuva 24h</th>
                                       <th className="py-1 px-1.5 font-semibold">I_CT</th>
                                       <th className="py-1 px-1.5 font-semibold">Veredito</th>
                                     </tr>
@@ -428,13 +590,13 @@ export function AppeearsThermoPluvioPanel({
                                           <td className="py-1 px-1.5 font-bold font-sans text-[var(--pz-text)]">
                                             {mVal.month_short}
                                           </td>
-                                          <td className="py-1 px-1.5 text-[var(--pz-text)]" title="Temperatura média de todos os dias do mês">
+                                          <td className="py-1 px-1.5 text-[var(--pz-text)]">
                                             {mVal.mean_temp_c}°C
                                           </td>
-                                          <td className="py-1 px-1.5 text-[var(--pz-muted)]" title="Pico inicial e vale final da maior queda contínua em 24h–48h">
+                                          <td className="py-1 px-1.5 text-[var(--pz-muted)]">
                                             {mVal.max_temp_c}° → {mVal.min_temp_c}°
                                           </td>
-                                          <td className="py-1 px-1.5 font-semibold text-[var(--pz-text)]" title="Maior queda contínua em 24h a 48h (termo da fórmula I_CT)">
+                                          <td className="py-1 px-1.5 font-semibold text-[var(--pz-text)]">
                                             {mVal.thermal_shock_drop_c}°C
                                           </td>
                                           <td className="py-1 px-1.5 font-semibold text-[var(--pz-text)]">
@@ -474,12 +636,14 @@ export function AppeearsThermoPluvioPanel({
             {b.discrepancy_explanation}
           </p>
         </div>
+      )}
 
-        {/* Tab 2: Casos Correlatos */}
-        <div className={activeTab === "correlations" ? "space-y-2.5" : "hidden"}>
+      {/* 6. Aba 3: Casos Reais Correlatos */}
+      {activeTab === "correlations" && (
+        <div className="space-y-2.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs text-[var(--pz-muted)]">
-              Comparação da queda térmica (ΔT) e índice pluviométrico com eventos documentados:
+              Eventos históricos e acoplamento termo-pluviométrico documentados:
             </span>
             <div className="flex flex-wrap gap-1" role="group" aria-label="Filtrar eventos">
               {(
@@ -494,7 +658,7 @@ export function AppeearsThermoPluvioPanel({
                   key={flt.id}
                   type="button"
                   onClick={() => setDamCategoryFilter(flt.id)}
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border cursor-pointer transition-colors ${
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border cursor-pointer transition-colors ${
                     damCategoryFilter === flt.id
                       ? "bg-[var(--pz-accent)] text-[var(--pz-accent-ink)] border-[var(--pz-accent)]"
                       : "bg-[var(--pz-well)] text-[var(--pz-muted)] border-[var(--pz-border)] hover:text-[var(--pz-text)]"
@@ -515,7 +679,7 @@ export function AppeearsThermoPluvioPanel({
               return (
                 <article
                   key={ev.dam_id}
-                  className="p-2.5 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] space-y-1.5"
+                  className="p-3 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] space-y-1.5 hover:border-[var(--pz-border-strong)] transition-colors"
                 >
                   <div className="flex items-center justify-between gap-1.5">
                     <span className="text-xs font-bold text-[var(--pz-text)] truncate">
@@ -548,19 +712,21 @@ export function AppeearsThermoPluvioPanel({
             })}
           </div>
         </div>
+      )}
 
-        {/* Tab 3: Fórmula & Metodologia */}
+      {/* 7. Aba 4: Metodologia & Fórmula */}
+      {activeTab === "methodology" && (
         <div
           data-testid="appeears-formula-box"
-          className={activeTab === "methodology" ? "p-3 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] space-y-2 text-xs" : "hidden"}
+          className="p-3.5 rounded-xl bg-[var(--pz-well)] border border-[var(--pz-border)] space-y-2 text-xs"
         >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <span className="font-bold text-[var(--pz-text)] block">
-                Índice Heurístico de Triagem Hidrotermal (Proxy THM Orbital)
+                Triagem Hidrotermal Combinada
               </span>
               <span className="text-[11px] text-[var(--pz-muted)]">
-                Literatura: {studyRef}
+                {studyRef}
               </span>
             </div>
             <code className="px-2.5 py-1 rounded-lg bg-[var(--pz-surface)] border border-[var(--pz-border)] text-xs font-mono font-bold text-[var(--pz-accent)] self-start sm:self-auto">
@@ -581,7 +747,7 @@ export function AppeearsThermoPluvioPanel({
             </div>
           </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }

@@ -9,6 +9,7 @@ RUN npm ci
 FROM node:22-alpine AS builder
 WORKDIR /app
 COPY --from=dependencies /app/node_modules ./node_modules
+COPY --from=dependencies /app/backend/node_modules ./backend/node_modules
 COPY . .
 RUN npm run build --workspace=backend
 RUN test -f backend/.env.production || : > backend/.env.production
@@ -29,6 +30,7 @@ ENV PORT=8000
 RUN addgroup --system --gid 1001 phasezero \
   && adduser --system --uid 1001 phasezero
 COPY --from=production-dependencies --chown=phasezero:phasezero /app/node_modules ./node_modules
+COPY --from=production-dependencies --chown=phasezero:phasezero /app/backend/node_modules ./backend/node_modules
 COPY --from=production-dependencies --chown=phasezero:phasezero /app/package.json ./package.json
 COPY --from=production-dependencies --chown=phasezero:phasezero /app/backend/package.json ./backend/package.json
 COPY --from=production-dependencies --chown=phasezero:phasezero /app/packages/shared/package.json ./packages/shared/package.json

@@ -25,7 +25,7 @@ jobs:
       - name: Lint (zero explicit any)
         run: npm run lint
 
-      - name: Typecheck (strict: true)
+      - name: "Typecheck (strict: true)"
         run: npm run typecheck
 
       - name: Run unit & parity tests (Vitest)

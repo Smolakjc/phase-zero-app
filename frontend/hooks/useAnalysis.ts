@@ -21,7 +21,6 @@ import { analyze, FALLBACK_SCENARIOS, getApiBaseUrl, getScenarios } from "../lib
 import { FALLBACK_DAMS, fetchDamCatalog, findDamByCoords } from "../lib/dams";
 import {
   clearStoredToken,
-  getStoredToken,
   saveStoredToken,
 } from "../lib/tokenStorage";
 

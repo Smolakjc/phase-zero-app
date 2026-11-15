@@ -487,3 +487,181 @@ dialog::backdrop {
     color: light-dark(#1e3a8a, #bfdbfe);
   }
 }
+
+/* ============================================================================
+   Animação de carregamento do Observatório (Lupa em varredura + skeleton)
+   ============================================================================ */
+
+.pz-radar-grid {
+  background-image:
+    linear-gradient(to right, var(--pz-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--pz-border) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+@keyframes pz-loupe-orbit {
+  0% {
+    transform: translate3d(-110px, -42px, 0) rotate(-10deg) scale(0.96);
+  }
+  18% {
+    transform: translate3d(40px, -68px, 0) rotate(6deg) scale(1.04);
+  }
+  36% {
+    transform: translate3d(130px, 8px, 0) rotate(12deg) scale(1);
+  }
+  54% {
+    transform: translate3d(36px, 68px, 0) rotate(-4deg) scale(1.05);
+  }
+  72% {
+    transform: translate3d(-96px, 52px, 0) rotate(-14deg) scale(0.98);
+  }
+  88% {
+    transform: translate3d(-14px, -8px, 0) rotate(4deg) scale(1.03);
+  }
+  100% {
+    transform: translate3d(-110px, -42px, 0) rotate(-10deg) scale(0.96);
+  }
+}
+
+@keyframes pz-loupe-orbit-compact {
+  0% {
+    transform: translate3d(-52px, -24px, 0) rotate(-8deg) scale(0.96);
+  }
+  25% {
+    transform: translate3d(48px, -32px, 0) rotate(8deg) scale(1.04);
+  }
+  50% {
+    transform: translate3d(56px, 26px, 0) rotate(4deg) scale(1);
+  }
+  75% {
+    transform: translate3d(-44px, 28px, 0) rotate(-10deg) scale(1.03);
+  }
+  100% {
+    transform: translate3d(-52px, -24px, 0) rotate(-8deg) scale(0.96);
+  }
+}
+
+@keyframes pz-halo-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.94);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes pz-shimmer-sweep {
+  0% {
+    transform: translate3d(-100%, 0, 0);
+  }
+  100% {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+
+@keyframes pz-phrase-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes pz-progress-slide {
+  0% {
+    transform: translate3d(-65%, 0, 0);
+  }
+  100% {
+    transform: translate3d(165%, 0, 0);
+  }
+}
+
+.pz-loupe-wander {
+  will-change: transform;
+}
+
+.pz-loupe-halo {
+  will-change: transform, opacity;
+}
+
+.pz-skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.pz-skeleton-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--pz-accent-soft) 50%,
+    transparent 100%
+  );
+  transform: translate3d(-100%, 0, 0);
+  pointer-events: none;
+}
+
+.pz-phrase-enter {
+  animation: pz-phrase-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.pz-loading-track {
+  position: relative;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: var(--pz-well);
+  border: 1px solid var(--pz-border);
+}
+
+.pz-loading-runner {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 42%;
+  border-radius: 9999px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--pz-accent) 50%,
+    transparent 100%
+  );
+  animation: pz-progress-slide 1.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pz-loupe-wander {
+    animation: pz-loupe-orbit-compact 8.2s ease-in-out infinite;
+  }
+
+  @media (min-width: 640px) {
+    .pz-loupe-wander {
+      animation: pz-loupe-orbit 9.4s ease-in-out infinite;
+    }
+  }
+
+  .pz-loupe-halo {
+    animation: pz-halo-breathe 2.6s ease-in-out infinite;
+  }
+
+  .pz-skeleton-shimmer::after {
+    animation: pz-shimmer-sweep 2.4s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pz-phrase-enter {
+    animation: none;
+  }
+
+  .pz-loading-runner {
+    animation-duration: 8s;
+  }
+}

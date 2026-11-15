@@ -116,6 +116,14 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
 
   const selectedPixelIdRef = useRef<string>(REFERENCE_PIXEL_ID);
   const hasLoadedOnceRef = useRef<boolean>(false);
+  const hasDataRef = useRef<boolean>(false);
+
+  const resetTargetData = useCallback(() => {
+    hasDataRef.current = false;
+    setData(null);
+    setSelectedPixel(null);
+    setError(null);
+  }, []);
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -144,8 +152,9 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     }
 
     const ctrl = new AbortController();
-    if (!hasLoadedOnceRef.current) {
+    if (!hasDataRef.current) {
       setLoading(true);
+      setRevalidating(false);
     } else {
       setRevalidating(true);
     }
@@ -154,6 +163,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
     analyze(params, ctrl.signal)
       .then((res) => {
         hasLoadedOnceRef.current = true;
+        hasDataRef.current = true;
         setData(res);
         if (res.grid_pixels.length > 0) {
           const targetId = selectedPixelIdRef.current || REFERENCE_PIXEL_ID;
@@ -202,6 +212,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
   const selectScenario = useCallback(
     (scenarioId: string, defaultStart?: string, defaultEnd?: string) => {
       selectedPixelIdRef.current = REFERENCE_PIXEL_ID;
+      resetTargetData();
       const mappedDamId = SCENARIO_TO_DAM_ID[scenarioId] ?? null;
       const matchedDam = mappedDamId
         ? dams.find((d) => d.id === mappedDamId) ?? null
@@ -223,27 +234,31 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
         custom_name: matchedDam ? matchedDam.name : prev.custom_name,
       }));
     },
-    [dams],
+    [dams, resetTargetData],
   );
 
-  const selectDam = useCallback((dam: DamCatalogItem) => {
-    selectedPixelIdRef.current = REFERENCE_PIXEL_ID;
-    const start = dam.default_start || "2026-03-01";
-    const end = dam.default_end || "2026-09-15";
+  const selectDam = useCallback(
+    (dam: DamCatalogItem) => {
+      selectedPixelIdRef.current = REFERENCE_PIXEL_ID;
+      resetTargetData();
+      const start = dam.default_start || "2026-03-01";
+      const end = dam.default_end || "2026-09-15";
 
-    setHasSelection(true);
-    setSelectedDamId(dam.id);
-    setIsFreePoint(false);
-    setParams((prev) => ({
-      ...prev,
-      scenario_id: "custom",
-      start_date: start,
-      end_date: end,
-      custom_lat: dam.lat,
-      custom_lon: dam.lon,
-      custom_name: dam.name,
-    }));
-  }, []);
+      setHasSelection(true);
+      setSelectedDamId(dam.id);
+      setIsFreePoint(false);
+      setParams((prev) => ({
+        ...prev,
+        scenario_id: "custom",
+        start_date: start,
+        end_date: end,
+        custom_lat: dam.lat,
+        custom_lon: dam.lon,
+        custom_name: dam.name,
+      }));
+    },
+    [resetTargetData],
+  );
 
   const selectFreePoint = useCallback(
     (lat: number, lon: number) => {
@@ -253,6 +268,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       selectedPixelIdRef.current = REFERENCE_PIXEL_ID;
+      resetTargetData();
       setHasSelection(true);
       setSelectedDamId(null);
       setIsFreePoint(true);
@@ -266,15 +282,17 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
         custom_name: `Ponto Personalizado (${lat.toFixed(4)}, ${lon.toFixed(4)})`,
       }));
     },
-    [dams, selectDam],
+    [dams, resetTargetData, selectDam],
   );
 
   const clearSelection = useCallback(() => {
     setHasSelection(false);
     setSelectedDamId(null);
     setIsFreePoint(false);
-    setError(null);
-  }, []);
+    setLoading(false);
+    setRevalidating(false);
+    resetTargetData();
+  }, [resetTargetData]);
 
   const updatePeriod = useCallback((startDate: string, endDate: string) => {
     setParams((prev) => ({
@@ -287,6 +305,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
   const runCustom = useCallback(
     (input: CustomSearchInput) => {
       selectedPixelIdRef.current = REFERENCE_PIXEL_ID;
+      resetTargetData();
       const matched = findDamByCoords(dams, input.lat, input.lon);
       const range = computeFifteenYearRange(input.endDate || "2026-11-15");
 
@@ -316,7 +335,7 @@ export function AnalysisProvider({ children }: { children: React.ReactNode }) {
         };
       });
     },
-    [dams],
+    [dams, resetTargetData],
   );
 
   const selectPixel = useCallback((pixel: GridPixel) => {

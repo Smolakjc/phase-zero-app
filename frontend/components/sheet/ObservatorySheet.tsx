@@ -21,6 +21,7 @@ import {
   MountainIcon,
 } from "../icons/SurveyIcons";
 import { TerrainViewport3D } from "../viewport/TerrainViewport3D";
+import { ObservatoryLoadingState } from "./ObservatoryLoadingState";
 
 export interface ObservatorySheetProps {
   data: AnalysisResponse | null;
@@ -47,7 +48,7 @@ export function ObservatorySheet({
   params,
   selectedPixel,
   isFreePoint,
-  loading: _loading,
+  loading,
   minCoherenceDraft: _minCoherenceDraft,
   resolvedTheme,
   onSetParam: _onSetParam,
@@ -248,18 +249,12 @@ export function ObservatorySheet({
 
         {/* Corpo rolável do menu */}
         <div className="flex-1 overflow-y-auto overscroll-contain p-3.5 sm:p-5 space-y-4">
-          {!data || !selectedPixel ? (
-            <div className="flex flex-col items-center justify-center min-h-[55vh] text-center space-y-3">
-              <div className="w-8 h-8 rounded-full border-2 border-[var(--pz-accent)] border-t-transparent animate-spin" />
-              <div className="space-y-1">
-                <h3 className="text-sm font-semibold tracking-tight text-[var(--pz-text)]">
-                  Sincronizando telemetria orbital...
-                </h3>
-                <p className="text-xs text-[var(--pz-muted)] max-w-sm">
-                  Recuperando séries temporais InSAR e dados hidroclimáticos.
-                </p>
-              </div>
-            </div>
+          {loading || !data || !selectedPixel ? (
+            <ObservatoryLoadingState
+              targetName={cleanLocationName}
+              lat={data?.scenario_meta.lat ?? params.custom_lat ?? 0}
+              lon={data?.scenario_meta.lon ?? params.custom_lon ?? 0}
+            />
           ) : (
             <>
               {/* 1. Diagnóstico Geral do Alvo: StatusCard direto e limpo */}

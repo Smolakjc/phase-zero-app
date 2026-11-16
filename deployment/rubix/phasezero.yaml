@@ -17,7 +17,7 @@ spec:
         - name: ghcr-secret
       containers:
         - name: phasezero
-          image: ghcr.io/smolakjc/phasezero:9838a6e38b202f89bc3c49dfc1134bad3b075728
+          image: ghcr.io/smolakjc/phasezero:567954fa30f8a79c74a05bf7f786d0f4d9a498b6
           imagePullPolicy: Always
           ports:
             - name: http
@@ -76,7 +76,7 @@ spec:
         - name: ghcr-secret
       containers:
         - name: api-phasezero
-          image: ghcr.io/smolakjc/api-phasezero:9838a6e38b202f89bc3c49dfc1134bad3b075728
+          image: ghcr.io/smolakjc/api-phasezero:567954fa30f8a79c74a05bf7f786d0f4d9a498b6
           imagePullPolicy: Always
           ports:
             - name: http
